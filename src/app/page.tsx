@@ -12,7 +12,7 @@ import PaymentScreen from "@/components/screens/PaymentScreen";
 import OrdersScreen from "@/components/screens/OrdersScreen";
 import FooterNav, { type FooterTab } from "@/components/ui/FooterNav";
 
-const screensWithFooter = ["home", "tables", "guest-count", "check", "order", "payment", "orders"];
+const screensWithFooter = ["guest-count", "check", "order", "payment", "orders"];
 
 export default function App() {
   const currentScreen = useOrderStore((s) => s.currentScreen);

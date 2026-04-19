@@ -460,15 +460,9 @@ export default function PaymentScreen() {
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto">
-        {/* Payment title + close */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--outline-variant)]">
+        {/* Payment title */}
+        <div className="flex items-center px-4 py-3 border-b border-[var(--outline-variant)]">
           <h1 className="text-xl font-semibold">Payment</h1>
-          <button
-            onClick={handleClose}
-            className="w-9 h-9 flex items-center justify-center rounded-full active:bg-gray-100"
-          >
-            <X size={20} />
-          </button>
         </div>
 
         {/* View items (collapsible) */}
