@@ -1,0 +1,1592 @@
+[
+  {
+    "id": "book-food",
+    "name": "Food",
+    "categories": [
+      {
+        "id": "cat-appetizers",
+        "name": "Appetizers",
+        "items": [
+          {
+            "id": "item-calamari",
+            "name": "Calamari",
+            "price": 14,
+            "description": "Lightly dusted and fried golden, served with marinara and lemon aioli",
+            "modifierGroups": []
+          },
+          {
+            "id": "item-truffle-fries",
+            "name": "Truffle Fries",
+            "price": 13,
+            "description": "Hand-cut fries tossed in truffle oil, parmesan, and fresh herbs",
+            "modifierGroups": []
+          },
+          {
+            "id": "item-crispy-tempura-shrimp",
+            "name": "Crispy Tempura Shrimp",
+            "price": 17,
+            "description": "With yuzu kosho aioli and pickled daikon radish slaw",
+            "modifierGroups": []
+          },
+          {
+            "id": "item-duck-confit-spring-rolls",
+            "name": "Duck Confit Spring Rolls",
+            "price": 16,
+            "description": "With hoisin plum sauce and pickled carrot slaw",
+            "modifierGroups": []
+          },
+          {
+            "id": "item-burrata",
+            "name": "Burrata",
+            "price": 16,
+            "description": "Creamy burrata with heirloom tomatoes, basil oil, and aged balsamic",
+            "modifierGroups": []
+          },
+          {
+            "id": "item-tuna-tartare",
+            "name": "Ahi Tuna Tartare",
+            "price": 18,
+            "description": "Sushi-grade tuna with avocado, sesame, soy-ginger dressing, and wonton crisps",
+            "modifierGroups": []
+          },
+          {
+            "id": "item-charcuterie",
+            "name": "Charcuterie Board",
+            "price": 24,
+            "description": "Selection of cured meats, artisan cheeses, honeycomb, marcona almonds, and grilled bread",
+            "modifierGroups": [
+              {
+                "id": "mg-charcuterie-size",
+                "name": "Board Size",
+                "required": true,
+                "minSelect": 1,
+                "maxSelect": 1,
+                "options": [
+                  { "id": "mod-charc-small", "name": "Small (2 person)", "price": 0 },
+                  { "id": "mod-charc-large", "name": "Large (4 person)", "price": 14 }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "item-beef-carpaccio",
+            "name": "Beef Carpaccio",
+            "price": 17,
+            "description": "Thinly sliced tenderloin with arugula, capers, shaved parmesan, and truffle vinaigrette",
+            "modifierGroups": []
+          }
+        ]
+      },
+      {
+        "id": "cat-salads",
+        "name": "Salads",
+        "items": [
+          {
+            "id": "item-warm-salad",
+            "name": "Warm Salad",
+            "price": 15,
+            "description": "Roasted beets, warm goat cheese, candied walnuts, and arugula with sherry vinaigrette",
+            "modifierGroups": [
+              {
+                "id": "mg-warm-salad-dressing",
+                "name": "Dressing",
+                "required": true,
+                "minSelect": 1,
+                "maxSelect": 1,
+                "options": [
+                  { "id": "mod-sherry-vin", "name": "Sherry Vinaigrette", "price": 0 },
+                  { "id": "mod-balsamic-vin", "name": "Balsamic Vinaigrette", "price": 0 },
+                  { "id": "mod-lemon-herb", "name": "Lemon Herb", "price": 0 },
+                  { "id": "mod-ranch", "name": "Buttermilk Ranch", "price": 0 }
+                ]
+              },
+              {
+                "id": "mg-warm-salad-protein",
+                "name": "Add Protein",
+                "required": false,
+                "minSelect": 0,
+                "maxSelect": 1,
+                "options": [
+                  { "id": "mod-add-chicken", "name": "Grilled Chicken", "price": 8 },
+                  { "id": "mod-add-salmon", "name": "Pan-Seared Salmon", "price": 12 },
+                  { "id": "mod-add-shrimp", "name": "Grilled Shrimp", "price": 10 }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "item-caesar-salad",
+            "name": "Classic Caesar",
+            "price": 14,
+            "description": "Crisp romaine, house-made croutons, white anchovies, and shaved parmesan",
+            "modifierGroups": [
+              {
+                "id": "mg-caesar-protein",
+                "name": "Add Protein",
+                "required": false,
+                "minSelect": 0,
+                "maxSelect": 1,
+                "options": [
+                  { "id": "mod-caesar-chicken", "name": "Grilled Chicken", "price": 8 },
+                  { "id": "mod-caesar-salmon", "name": "Pan-Seared Salmon", "price": 12 },
+                  { "id": "mod-caesar-shrimp", "name": "Grilled Shrimp", "price": 10 }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "item-wedge-salad",
+            "name": "Iceberg Wedge",
+            "price": 13,
+            "description": "Blue cheese crumbles, applewood smoked bacon, cherry tomatoes, and blue cheese dressing",
+            "modifierGroups": [
+              {
+                "id": "mg-wedge-dressing",
+                "name": "Dressing",
+                "required": true,
+                "minSelect": 1,
+                "maxSelect": 1,
+                "options": [
+                  { "id": "mod-wedge-blue", "name": "Blue Cheese", "price": 0 },
+                  { "id": "mod-wedge-ranch", "name": "Buttermilk Ranch", "price": 0 },
+                  { "id": "mod-wedge-balsamic", "name": "Balsamic Vinaigrette", "price": 0 }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "item-kale-salad",
+            "name": "Tuscan Kale Salad",
+            "price": 14,
+            "description": "Shaved kale, dried cranberries, toasted pine nuts, pecorino, and lemon vinaigrette",
+            "modifierGroups": []
+          }
+        ]
+      },
+      {
+        "id": "cat-soup",
+        "name": "Soup",
+        "items": [
+          {
+            "id": "item-lobster-bisque",
+            "name": "Lobster Bisque",
+            "price": 14,
+            "description": "Creamy and rich with chunks of Maine lobster, finished with brandy cream",
+            "modifierGroups": []
+          },
+          {
+            "id": "item-french-onion",
+            "name": "French Onion Soup",
+            "price": 12,
+            "description": "Caramelized onions in rich beef broth, topped with gruyère crouton",
+            "modifierGroups": []
+          },
+          {
+            "id": "item-soup-of-day",
+            "name": "Soup of the Day",
+            "price": 11,
+            "description": "Ask your server for today's selection",
+            "modifierGroups": [],
+            "soldOut": true
+          }
+        ]
+      },
+      {
+        "id": "cat-steak",
+        "name": "Steak",
+        "items": [
+          {
+            "id": "item-filet-mignon",
+            "name": "Filet Mignon",
+            "price": 56,
+            "description": "8oz center-cut tenderloin, served with roasted garlic mashed potatoes and asparagus",
+            "modifierGroups": [
+              {
+                "id": "mg-filet-temp",
+                "name": "Temperature",
+                "required": true,
+                "minSelect": 1,
+                "maxSelect": 1,
+                "options": [
+                  { "id": "mod-filet-rare", "name": "Rare", "price": 0 },
+                  { "id": "mod-filet-mr", "name": "Medium Rare", "price": 0 },
+                  { "id": "mod-filet-med", "name": "Medium", "price": 0 },
+                  { "id": "mod-filet-mw", "name": "Medium Well", "price": 0 },
+                  { "id": "mod-filet-well", "name": "Well Done", "price": 0 }
+                ]
+              },
+              {
+                "id": "mg-filet-sauce",
+                "name": "Sauce",
+                "required": false,
+                "minSelect": 0,
+                "maxSelect": 1,
+                "options": [
+                  { "id": "mod-filet-bearnaise", "name": "Béarnaise", "price": 0 },
+                  { "id": "mod-filet-peppercorn", "name": "Peppercorn", "price": 0 },
+                  { "id": "mod-filet-redwine", "name": "Red Wine Reduction", "price": 0 },
+                  { "id": "mod-filet-bleu", "name": "Blue Cheese Butter", "price": 2 }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "item-ribeye",
+            "name": "Bone-In Ribeye",
+            "price": 62,
+            "description": "16oz prime ribeye, dry-aged 28 days, with truffle butter and roasted bone marrow",
+            "modifierGroups": [
+              {
+                "id": "mg-ribeye-temp",
+                "name": "Temperature",
+                "required": true,
+                "minSelect": 1,
+                "maxSelect": 1,
+                "options": [
+                  { "id": "mod-ribeye-rare", "name": "Rare", "price": 0 },
+                  { "id": "mod-ribeye-mr", "name": "Medium Rare", "price": 0 },
+                  { "id": "mod-ribeye-med", "name": "Medium", "price": 0 },
+                  { "id": "mod-ribeye-mw", "name": "Medium Well", "price": 0 },
+                  { "id": "mod-ribeye-well", "name": "Well Done", "price": 0 }
+                ]
+              },
+              {
+                "id": "mg-ribeye-sauce",
+                "name": "Sauce",
+                "required": false,
+                "minSelect": 0,
+                "maxSelect": 1,
+                "options": [
+                  { "id": "mod-ribeye-bearnaise", "name": "Béarnaise", "price": 0 },
+                  { "id": "mod-ribeye-peppercorn", "name": "Peppercorn", "price": 0 },
+                  { "id": "mod-ribeye-chimichurri", "name": "Chimichurri", "price": 0 }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "item-ny-strip",
+            "name": "New York Strip",
+            "price": 52,
+            "description": "14oz prime strip, chargrilled, with herb compound butter",
+            "modifierGroups": [
+              {
+                "id": "mg-strip-temp",
+                "name": "Temperature",
+                "required": true,
+                "minSelect": 1,
+                "maxSelect": 1,
+                "options": [
+                  { "id": "mod-strip-rare", "name": "Rare", "price": 0 },
+                  { "id": "mod-strip-mr", "name": "Medium Rare", "price": 0 },
+                  { "id": "mod-strip-med", "name": "Medium", "price": 0 },
+                  { "id": "mod-strip-mw", "name": "Medium Well", "price": 0 },
+                  { "id": "mod-strip-well", "name": "Well Done", "price": 0 }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "item-wagyu",
+            "name": "A5 Wagyu Striploin",
+            "price": 95,
+            "description": "6oz Japanese A5 wagyu, lightly seared, with sea salt and wasabi",
+            "modifierGroups": [
+              {
+                "id": "mg-wagyu-temp",
+                "name": "Temperature",
+                "required": true,
+                "minSelect": 1,
+                "maxSelect": 1,
+                "options": [
+                  { "id": "mod-wagyu-rare", "name": "Rare", "price": 0 },
+                  { "id": "mod-wagyu-mr", "name": "Medium Rare", "price": 0 },
+                  { "id": "mod-wagyu-med", "name": "Medium", "price": 0 }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "item-steak-sides",
+            "name": "Steak Side Upgrades",
+            "price": 0,
+            "description": "Enhance your steak with premium sides",
+            "modifierGroups": [
+              {
+                "id": "mg-steak-sides",
+                "name": "Premium Sides",
+                "required": true,
+                "minSelect": 1,
+                "maxSelect": 3,
+                "options": [
+                  { "id": "mod-side-lobstertail", "name": "Butter-Poached Lobster Tail", "price": 28 },
+                  { "id": "mod-side-truffle-mac", "name": "Truffle Mac & Cheese", "price": 12 },
+                  { "id": "mod-side-creamed-spinach", "name": "Creamed Spinach", "price": 9 },
+                  { "id": "mod-side-gratin", "name": "Potato Gratin", "price": 10 },
+                  { "id": "mod-side-asparagus", "name": "Grilled Asparagus", "price": 9 },
+                  { "id": "mod-side-mushrooms", "name": "Sautéed Wild Mushrooms", "price": 11 }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "cat-seafood",
+        "name": "Seafood",
+        "items": [
+          {
+            "id": "item-salmon",
+            "name": "Pan-Seared Scottish Salmon",
+            "price": 36,
+            "description": "With lemon-dill beurre blanc, fingerling potatoes, and haricots verts",
+            "modifierGroups": [
+              {
+                "id": "mg-salmon-prep",
+                "name": "Preparation",
+                "required": true,
+                "minSelect": 1,
+                "maxSelect": 1,
+                "options": [
+                  { "id": "mod-salmon-seared", "name": "Pan-Seared", "price": 0 },
+                  { "id": "mod-salmon-grilled", "name": "Grilled", "price": 0 },
+                  { "id": "mod-salmon-blackened", "name": "Blackened", "price": 0 }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "item-sea-bass",
+            "name": "Chilean Sea Bass",
+            "price": 44,
+            "description": "Miso-glazed, with bok choy, shiitake mushrooms, and jasmine rice",
+            "modifierGroups": []
+          },
+          {
+            "id": "item-scallops",
+            "name": "Seared Diver Scallops",
+            "price": 40,
+            "description": "With cauliflower purée, crispy pancetta, brown butter, and capers",
+            "modifierGroups": []
+          },
+          {
+            "id": "item-lobster",
+            "name": "Whole Maine Lobster",
+            "price": 65,
+            "description": "2lb lobster with drawn butter, roasted corn, and new potatoes",
+            "modifierGroups": [
+              {
+                "id": "mg-lobster-prep",
+                "name": "Preparation",
+                "required": true,
+                "minSelect": 1,
+                "maxSelect": 1,
+                "options": [
+                  { "id": "mod-lobster-steamed", "name": "Steamed", "price": 0 },
+                  { "id": "mod-lobster-grilled", "name": "Grilled", "price": 0 },
+                  { "id": "mod-lobster-baked", "name": "Baked Stuffed", "price": 6 }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "item-branzino",
+            "name": "Grilled Branzino",
+            "price": 38,
+            "description": "Whole Mediterranean sea bass with olive tapenade, cherry tomatoes, and herbs",
+            "modifierGroups": []
+          }
+        ]
+      },
+      {
+        "id": "cat-pasta",
+        "name": "Pasta",
+        "items": [
+          {
+            "id": "item-truffle-risotto",
+            "name": "Black Truffle Risotto",
+            "price": 28,
+            "description": "Arborio rice with black truffle, wild mushrooms, and aged parmesan",
+            "modifierGroups": []
+          },
+          {
+            "id": "item-lobster-linguine",
+            "name": "Lobster Linguine",
+            "price": 34,
+            "description": "Fresh linguine with butter-poached lobster, cherry tomatoes, and tarragon cream",
+            "modifierGroups": []
+          },
+          {
+            "id": "item-short-rib-pappardelle",
+            "name": "Braised Short Rib Pappardelle",
+            "price": 29,
+            "description": "Hand-cut pappardelle with slow-braised short rib ragù and gremolata",
+            "modifierGroups": []
+          },
+          {
+            "id": "item-cacio-pepe",
+            "name": "Cacio e Pepe",
+            "price": 22,
+            "description": "House-made tonnarelli with pecorino romano and cracked black pepper",
+            "modifierGroups": [
+              {
+                "id": "mg-cacio-addon",
+                "name": "Add Protein",
+                "required": false,
+                "minSelect": 0,
+                "maxSelect": 1,
+                "options": [
+                  { "id": "mod-cacio-chicken", "name": "Grilled Chicken", "price": 8 },
+                  { "id": "mod-cacio-shrimp", "name": "Grilled Shrimp", "price": 10 },
+                  { "id": "mod-cacio-truffle", "name": "Shaved Black Truffle", "price": 15 }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "item-gnocchi",
+            "name": "Ricotta Gnocchi",
+            "price": 25,
+            "description": "Pillowy gnocchi with brown butter, sage, butternut squash, and toasted hazelnuts",
+            "modifierGroups": [],
+            "soldOut": true
+          }
+        ]
+      },
+      {
+        "id": "cat-poultry",
+        "name": "Poultry",
+        "items": [
+          {
+            "id": "item-roast-chicken",
+            "name": "Herb-Roasted Half Chicken",
+            "price": 30,
+            "description": "Free-range chicken with lemon jus, roasted root vegetables, and crispy skin",
+            "modifierGroups": []
+          },
+          {
+            "id": "item-duck-breast",
+            "name": "Pan-Seared Duck Breast",
+            "price": 38,
+            "description": "With cherry gastrique, sweet potato purée, and wilted greens",
+            "modifierGroups": [
+              {
+                "id": "mg-duck-temp",
+                "name": "Temperature",
+                "required": true,
+                "minSelect": 1,
+                "maxSelect": 1,
+                "options": [
+                  { "id": "mod-duck-mr", "name": "Medium Rare", "price": 0 },
+                  { "id": "mod-duck-med", "name": "Medium", "price": 0 },
+                  { "id": "mod-duck-mw", "name": "Medium Well", "price": 0 }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "item-chicken-milanese",
+            "name": "Chicken Milanese",
+            "price": 27,
+            "description": "Panko-crusted chicken cutlet with arugula, shaved parmesan, and lemon vinaigrette",
+            "modifierGroups": []
+          }
+        ]
+      },
+      {
+        "id": "cat-burgers",
+        "name": "Burgers & Sandwiches",
+        "items": [
+          {
+            "id": "item-signature-burger",
+            "name": "The Signature Burger",
+            "price": 22,
+            "description": "Dry-aged beef blend, aged cheddar, caramelized onion, house pickles, brioche bun",
+            "modifierGroups": [
+              {
+                "id": "mg-burger-temp",
+                "name": "Temperature",
+                "required": true,
+                "minSelect": 1,
+                "maxSelect": 1,
+                "options": [
+                  { "id": "mod-burger-mr", "name": "Medium Rare", "price": 0 },
+                  { "id": "mod-burger-med", "name": "Medium", "price": 0 },
+                  { "id": "mod-burger-mw", "name": "Medium Well", "price": 0 },
+                  { "id": "mod-burger-well", "name": "Well Done", "price": 0 }
+                ]
+              },
+              {
+                "id": "mg-burger-addons",
+                "name": "Add-Ons",
+                "required": false,
+                "minSelect": 0,
+                "maxSelect": 5,
+                "options": [
+                  { "id": "mod-burger-bacon", "name": "Applewood Bacon", "price": 3 },
+                  { "id": "mod-burger-egg", "name": "Fried Egg", "price": 2 },
+                  { "id": "mod-burger-avocado", "name": "Avocado", "price": 3 },
+                  { "id": "mod-burger-mushroom", "name": "Sautéed Mushrooms", "price": 2 },
+                  { "id": "mod-burger-truffle-aioli", "name": "Truffle Aioli", "price": 2 },
+                  { "id": "mod-burger-blue", "name": "Blue Cheese Crumbles", "price": 2 }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "item-wagyu-burger",
+            "name": "Wagyu Smash Burger",
+            "price": 28,
+            "description": "Double wagyu patties, American cheese, special sauce, shredded lettuce, brioche bun",
+            "modifierGroups": [
+              {
+                "id": "mg-wagyu-burger-temp",
+                "name": "Temperature",
+                "required": true,
+                "minSelect": 1,
+                "maxSelect": 1,
+                "options": [
+                  { "id": "mod-wburger-mr", "name": "Medium Rare", "price": 0 },
+                  { "id": "mod-wburger-med", "name": "Medium", "price": 0 },
+                  { "id": "mod-wburger-mw", "name": "Medium Well", "price": 0 }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "item-club-sandwich",
+            "name": "Grilled Chicken Club",
+            "price": 19,
+            "description": "Herb-marinated chicken, bacon, avocado, tomato, and garlic aioli on sourdough",
+            "modifierGroups": []
+          },
+          {
+            "id": "item-prime-dip",
+            "name": "Prime Rib French Dip",
+            "price": 24,
+            "description": "Slow-roasted prime rib, gruyère, horseradish cream, au jus, on a toasted hoagie",
+            "modifierGroups": []
+          }
+        ]
+      },
+      {
+        "id": "cat-combos",
+        "name": "Combos",
+        "items": [
+          {
+            "id": "item-steak-combo",
+            "name": "Steak Combo",
+            "price": 42,
+            "description": "Choose your steak, a side, and a drink",
+            "isCombo": true,
+            "modifierGroups": [],
+            "comboGroups": [
+              {
+                "id": "cg-steak-pick",
+                "name": "Choose Your Steak",
+                "required": true,
+                "minSelect": 1,
+                "maxSelect": 1,
+                "components": [
+                  {
+                    "id": "cc-ny-strip",
+                    "name": "New York Strip 12oz",
+                    "price": 0,
+                    "modifierGroups": [
+                      {
+                        "id": "mg-cc-ny-temp",
+                        "name": "Temperature",
+                        "required": true,
+                        "minSelect": 1,
+                        "maxSelect": 1,
+                        "options": [
+                          { "id": "mod-cc-ny-rare", "name": "Rare", "price": 0 },
+                          { "id": "mod-cc-ny-mr", "name": "Medium Rare", "price": 0 },
+                          { "id": "mod-cc-ny-med", "name": "Medium", "price": 0 },
+                          { "id": "mod-cc-ny-mw", "name": "Medium Well", "price": 0 },
+                          { "id": "mod-cc-ny-well", "name": "Well Done", "price": 0 }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "id": "cc-ribeye",
+                    "name": "Ribeye 14oz",
+                    "price": 6,
+                    "modifierGroups": [
+                      {
+                        "id": "mg-cc-rib-temp",
+                        "name": "Temperature",
+                        "required": true,
+                        "minSelect": 1,
+                        "maxSelect": 1,
+                        "options": [
+                          { "id": "mod-cc-rib-rare", "name": "Rare", "price": 0 },
+                          { "id": "mod-cc-rib-mr", "name": "Medium Rare", "price": 0 },
+                          { "id": "mod-cc-rib-med", "name": "Medium", "price": 0 },
+                          { "id": "mod-cc-rib-mw", "name": "Medium Well", "price": 0 },
+                          { "id": "mod-cc-rib-well", "name": "Well Done", "price": 0 }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "id": "cc-filet",
+                    "name": "Filet Mignon 8oz",
+                    "price": 10,
+                    "modifierGroups": [
+                      {
+                        "id": "mg-cc-fil-temp",
+                        "name": "Temperature",
+                        "required": true,
+                        "minSelect": 1,
+                        "maxSelect": 1,
+                        "options": [
+                          { "id": "mod-cc-fil-rare", "name": "Rare", "price": 0 },
+                          { "id": "mod-cc-fil-mr", "name": "Medium Rare", "price": 0 },
+                          { "id": "mod-cc-fil-med", "name": "Medium", "price": 0 },
+                          { "id": "mod-cc-fil-mw", "name": "Medium Well", "price": 0 },
+                          { "id": "mod-cc-fil-well", "name": "Well Done", "price": 0 }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "id": "cg-steak-side",
+                "name": "Choose Your Side",
+                "required": true,
+                "minSelect": 1,
+                "maxSelect": 1,
+                "components": [
+                  { "id": "cc-side-mash", "name": "Garlic Mashed Potatoes", "price": 0, "modifierGroups": [] },
+                  { "id": "cc-side-fries", "name": "Truffle Fries", "price": 0, "modifierGroups": [] },
+                  { "id": "cc-side-caesar", "name": "Caesar Salad", "price": 0, "modifierGroups": [] },
+                  { "id": "cc-side-asparagus", "name": "Grilled Asparagus", "price": 2, "modifierGroups": [] },
+                  { "id": "cc-side-lobster-mac", "name": "Lobster Mac & Cheese", "price": 5, "modifierGroups": [] }
+                ]
+              },
+              {
+                "id": "cg-steak-drink",
+                "name": "Choose Your Drink",
+                "required": true,
+                "minSelect": 1,
+                "maxSelect": 1,
+                "components": [
+                  { "id": "cc-drink-soda", "name": "Fountain Soda", "price": 0, "modifierGroups": [] },
+                  { "id": "cc-drink-iced-tea", "name": "Iced Tea", "price": 0, "modifierGroups": [] },
+                  { "id": "cc-drink-lemonade", "name": "Fresh Lemonade", "price": 0, "modifierGroups": [] },
+                  { "id": "cc-drink-beer", "name": "Draft Beer", "price": 3, "modifierGroups": [] },
+                  { "id": "cc-drink-wine", "name": "House Wine", "price": 5, "modifierGroups": [] }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "item-seafood-combo",
+            "name": "Seafood Combo",
+            "price": 38,
+            "description": "Choose your seafood, a side, and a drink",
+            "isCombo": true,
+            "modifierGroups": [],
+            "comboGroups": [
+              {
+                "id": "cg-sea-pick",
+                "name": "Choose Your Seafood",
+                "required": true,
+                "minSelect": 1,
+                "maxSelect": 1,
+                "components": [
+                  {
+                    "id": "cc-salmon",
+                    "name": "Grilled Salmon",
+                    "price": 0,
+                    "modifierGroups": [
+                      {
+                        "id": "mg-cc-sal-cook",
+                        "name": "Doneness",
+                        "required": true,
+                        "minSelect": 1,
+                        "maxSelect": 1,
+                        "options": [
+                          { "id": "mod-cc-sal-med", "name": "Medium", "price": 0 },
+                          { "id": "mod-cc-sal-mw", "name": "Medium Well", "price": 0 },
+                          { "id": "mod-cc-sal-well", "name": "Well Done", "price": 0 }
+                        ]
+                      }
+                    ]
+                  },
+                  { "id": "cc-shrimp", "name": "Garlic Butter Shrimp", "price": 0, "modifierGroups": [] },
+                  { "id": "cc-lobster-tail", "name": "Lobster Tail", "price": 12, "modifierGroups": [] },
+                  {
+                    "id": "cc-ahi-tuna",
+                    "name": "Seared Ahi Tuna",
+                    "price": 4,
+                    "modifierGroups": [
+                      {
+                        "id": "mg-cc-ahi-cook",
+                        "name": "Doneness",
+                        "required": true,
+                        "minSelect": 1,
+                        "maxSelect": 1,
+                        "options": [
+                          { "id": "mod-cc-ahi-rare", "name": "Rare", "price": 0 },
+                          { "id": "mod-cc-ahi-mr", "name": "Medium Rare", "price": 0 }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "id": "cg-sea-side",
+                "name": "Choose Your Side",
+                "required": true,
+                "minSelect": 1,
+                "maxSelect": 1,
+                "components": [
+                  { "id": "cc-sea-side-rice", "name": "Jasmine Rice", "price": 0, "modifierGroups": [] },
+                  { "id": "cc-sea-side-mash", "name": "Garlic Mashed Potatoes", "price": 0, "modifierGroups": [] },
+                  { "id": "cc-sea-side-veg", "name": "Seasonal Vegetables", "price": 0, "modifierGroups": [] },
+                  { "id": "cc-sea-side-caesar", "name": "Caesar Salad", "price": 0, "modifierGroups": [] }
+                ]
+              },
+              {
+                "id": "cg-sea-drink",
+                "name": "Choose Your Drink",
+                "required": true,
+                "minSelect": 1,
+                "maxSelect": 1,
+                "components": [
+                  { "id": "cc-sea-drink-soda", "name": "Fountain Soda", "price": 0, "modifierGroups": [] },
+                  { "id": "cc-sea-drink-tea", "name": "Iced Tea", "price": 0, "modifierGroups": [] },
+                  { "id": "cc-sea-drink-wine", "name": "House White Wine", "price": 5, "modifierGroups": [] }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "item-burger-combo",
+            "name": "Burger Combo",
+            "price": 22,
+            "description": "Choose your burger, a side, and a drink",
+            "isCombo": true,
+            "modifierGroups": [],
+            "comboGroups": [
+              {
+                "id": "cg-burger-pick",
+                "name": "Choose Your Burger",
+                "required": true,
+                "minSelect": 1,
+                "maxSelect": 1,
+                "components": [
+                  {
+                    "id": "cc-classic-burger",
+                    "name": "Classic Burger",
+                    "price": 0,
+                    "modifierGroups": [
+                      {
+                        "id": "mg-cc-cb-temp",
+                        "name": "Temperature",
+                        "required": true,
+                        "minSelect": 1,
+                        "maxSelect": 1,
+                        "options": [
+                          { "id": "mod-cc-cb-mr", "name": "Medium Rare", "price": 0 },
+                          { "id": "mod-cc-cb-med", "name": "Medium", "price": 0 },
+                          { "id": "mod-cc-cb-mw", "name": "Medium Well", "price": 0 },
+                          { "id": "mod-cc-cb-well", "name": "Well Done", "price": 0 }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "id": "cc-bacon-burger",
+                    "name": "Bacon Cheeseburger",
+                    "price": 3,
+                    "modifierGroups": [
+                      {
+                        "id": "mg-cc-bb-temp",
+                        "name": "Temperature",
+                        "required": true,
+                        "minSelect": 1,
+                        "maxSelect": 1,
+                        "options": [
+                          { "id": "mod-cc-bb-mr", "name": "Medium Rare", "price": 0 },
+                          { "id": "mod-cc-bb-med", "name": "Medium", "price": 0 },
+                          { "id": "mod-cc-bb-mw", "name": "Medium Well", "price": 0 },
+                          { "id": "mod-cc-bb-well", "name": "Well Done", "price": 0 }
+                        ]
+                      }
+                    ]
+                  },
+                  { "id": "cc-veggie-burger", "name": "Veggie Burger", "price": 0, "modifierGroups": [] }
+                ]
+              },
+              {
+                "id": "cg-burger-side",
+                "name": "Choose Your Side",
+                "required": true,
+                "minSelect": 1,
+                "maxSelect": 1,
+                "components": [
+                  { "id": "cc-bg-side-fries", "name": "French Fries", "price": 0, "modifierGroups": [] },
+                  { "id": "cc-bg-side-onion", "name": "Onion Rings", "price": 2, "modifierGroups": [] },
+                  { "id": "cc-bg-side-salad", "name": "Side Salad", "price": 0, "modifierGroups": [] },
+                  { "id": "cc-bg-side-slaw", "name": "Coleslaw", "price": 0, "modifierGroups": [] }
+                ]
+              },
+              {
+                "id": "cg-burger-drink",
+                "name": "Choose Your Drink",
+                "required": true,
+                "minSelect": 1,
+                "maxSelect": 1,
+                "components": [
+                  { "id": "cc-bg-drink-soda", "name": "Fountain Soda", "price": 0, "modifierGroups": [] },
+                  { "id": "cc-bg-drink-tea", "name": "Iced Tea", "price": 0, "modifierGroups": [] },
+                  { "id": "cc-bg-drink-shake", "name": "Milkshake", "price": 4, "modifierGroups": [] }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "item-deluxe-combo-2",
+            "name": "Deluxe Combo for 2",
+            "price": 120,
+            "description": "3 main courses, 2 sides, and 2 drinks — perfect for sharing",
+            "isCombo": true,
+            "modifierGroups": [],
+            "comboGroups": [
+              {
+                "id": "cg-dlx-main",
+                "name": "Choose 3 Main Courses",
+                "required": true,
+                "minSelect": 3,
+                "maxSelect": 3,
+                "components": [
+                  {
+                    "id": "cc-dlx-ny-strip",
+                    "name": "New York Strip 12oz",
+                    "price": 0,
+                    "modifierGroups": [
+                      {
+                        "id": "mg-dlx-ny-temp",
+                        "name": "Temperature",
+                        "required": true,
+                        "minSelect": 1,
+                        "maxSelect": 1,
+                        "options": [
+                          { "id": "mod-dlx-ny-rare", "name": "Rare", "price": 0 },
+                          { "id": "mod-dlx-ny-mr", "name": "Medium Rare", "price": 0 },
+                          { "id": "mod-dlx-ny-med", "name": "Medium", "price": 0 },
+                          { "id": "mod-dlx-ny-mw", "name": "Medium Well", "price": 0 },
+                          { "id": "mod-dlx-ny-well", "name": "Well Done", "price": 0 }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "id": "cc-dlx-ribeye",
+                    "name": "Ribeye 14oz",
+                    "price": 6,
+                    "modifierGroups": [
+                      {
+                        "id": "mg-dlx-rib-temp",
+                        "name": "Temperature",
+                        "required": true,
+                        "minSelect": 1,
+                        "maxSelect": 1,
+                        "options": [
+                          { "id": "mod-dlx-rib-rare", "name": "Rare", "price": 0 },
+                          { "id": "mod-dlx-rib-mr", "name": "Medium Rare", "price": 0 },
+                          { "id": "mod-dlx-rib-med", "name": "Medium", "price": 0 },
+                          { "id": "mod-dlx-rib-mw", "name": "Medium Well", "price": 0 },
+                          { "id": "mod-dlx-rib-well", "name": "Well Done", "price": 0 }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "id": "cc-dlx-filet",
+                    "name": "Filet Mignon 8oz",
+                    "price": 10,
+                    "modifierGroups": [
+                      {
+                        "id": "mg-dlx-fil-temp",
+                        "name": "Temperature",
+                        "required": true,
+                        "minSelect": 1,
+                        "maxSelect": 1,
+                        "options": [
+                          { "id": "mod-dlx-fil-rare", "name": "Rare", "price": 0 },
+                          { "id": "mod-dlx-fil-mr", "name": "Medium Rare", "price": 0 },
+                          { "id": "mod-dlx-fil-med", "name": "Medium", "price": 0 },
+                          { "id": "mod-dlx-fil-mw", "name": "Medium Well", "price": 0 },
+                          { "id": "mod-dlx-fil-well", "name": "Well Done", "price": 0 }
+                        ]
+                      }
+                    ]
+                  },
+                  { "id": "cc-dlx-lobster", "name": "Lobster Tail", "price": 12, "modifierGroups": [] },
+                  {
+                    "id": "cc-dlx-sea-bass",
+                    "name": "Chilean Sea Bass",
+                    "price": 8,
+                    "modifierGroups": [
+                      {
+                        "id": "mg-dlx-sb-cook",
+                        "name": "Doneness",
+                        "required": true,
+                        "minSelect": 1,
+                        "maxSelect": 1,
+                        "options": [
+                          { "id": "mod-dlx-sb-med", "name": "Medium", "price": 0 },
+                          { "id": "mod-dlx-sb-mw", "name": "Medium Well", "price": 0 },
+                          { "id": "mod-dlx-sb-well", "name": "Well Done", "price": 0 }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "id": "cg-dlx-side",
+                "name": "Choose 2 Sides",
+                "required": true,
+                "minSelect": 2,
+                "maxSelect": 2,
+                "components": [
+                  { "id": "cc-dlx-side-mash", "name": "Garlic Mashed Potatoes", "price": 0, "modifierGroups": [] },
+                  { "id": "cc-dlx-side-fries", "name": "Truffle Fries", "price": 0, "modifierGroups": [] },
+                  { "id": "cc-dlx-side-caesar", "name": "Caesar Salad", "price": 0, "modifierGroups": [] },
+                  { "id": "cc-dlx-side-asparagus", "name": "Grilled Asparagus", "price": 2, "modifierGroups": [] },
+                  { "id": "cc-dlx-side-lobster-mac", "name": "Lobster Mac & Cheese", "price": 5, "modifierGroups": [] }
+                ]
+              },
+              {
+                "id": "cg-dlx-drink",
+                "name": "Choose 2 Drinks",
+                "required": true,
+                "minSelect": 2,
+                "maxSelect": 2,
+                "components": [
+                  { "id": "cc-dlx-drink-soda", "name": "Fountain Soda", "price": 0, "modifierGroups": [] },
+                  { "id": "cc-dlx-drink-tea", "name": "Iced Tea", "price": 0, "modifierGroups": [] },
+                  { "id": "cc-dlx-drink-lemonade", "name": "Fresh Lemonade", "price": 0, "modifierGroups": [] },
+                  { "id": "cc-dlx-drink-beer", "name": "Draft Beer", "price": 3, "modifierGroups": [] },
+                  { "id": "cc-dlx-drink-wine", "name": "House Wine", "price": 5, "modifierGroups": [] }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "book-drinks",
+    "name": "Drinks",
+    "categories": [
+      {
+        "id": "cat-cocktails",
+        "name": "Cocktails",
+        "items": [
+          {
+            "id": "item-old-fashioned",
+            "name": "Smoked Old Fashioned",
+            "price": 18,
+            "description": "Woodford Reserve bourbon, demerara, Angostura bitters, smoked tableside",
+            "modifierGroups": []
+          },
+          {
+            "id": "item-espresso-martini",
+            "name": "Espresso Martini",
+            "price": 17,
+            "description": "Grey Goose vodka, Kahlúa, fresh espresso, vanilla",
+            "modifierGroups": []
+          },
+          {
+            "id": "item-spicy-margarita",
+            "name": "Spicy Margarita",
+            "price": 16,
+            "description": "Casamigos blanco, fresh lime, agave, muddled jalapeño, Tajín rim",
+            "modifierGroups": []
+          },
+          {
+            "id": "item-manhattan",
+            "name": "Classic Manhattan",
+            "price": 17,
+            "description": "Bulleit rye, sweet vermouth, Angostura bitters, Luxardo cherry",
+            "modifierGroups": []
+          },
+          {
+            "id": "item-negroni",
+            "name": "Negroni",
+            "price": 16,
+            "description": "Tanqueray gin, Campari, sweet vermouth, orange peel",
+            "modifierGroups": []
+          },
+          {
+            "id": "item-french75",
+            "name": "French 75",
+            "price": 18,
+            "description": "Hendrick's gin, fresh lemon, simple syrup, topped with Champagne",
+            "modifierGroups": []
+          },
+          {
+            "id": "item-aperol-spritz",
+            "name": "Aperol Spritz",
+            "price": 15,
+            "description": "Aperol, Prosecco, soda water, orange slice",
+            "modifierGroups": []
+          }
+        ]
+      },
+      {
+        "id": "cat-wine-red",
+        "name": "Wine (Red)",
+        "items": [
+          {
+            "id": "item-cabernet",
+            "name": "Cabernet Sauvignon",
+            "price": 18,
+            "description": "Jordan, Alexander Valley, Sonoma County 2019",
+            "modifierGroups": [
+              {
+                "id": "mg-cab-pour",
+                "name": "Pour Size",
+                "required": true,
+                "minSelect": 1,
+                "maxSelect": 1,
+                "options": [
+                  { "id": "mod-cab-glass", "name": "Glass (6oz)", "price": 0 },
+                  { "id": "mod-cab-bottle", "name": "Bottle", "price": 54 }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "item-pinot-noir",
+            "name": "Pinot Noir",
+            "price": 16,
+            "description": "Erath, Willamette Valley, Oregon 2020",
+            "modifierGroups": [
+              {
+                "id": "mg-pn-pour",
+                "name": "Pour Size",
+                "required": true,
+                "minSelect": 1,
+                "maxSelect": 1,
+                "options": [
+                  { "id": "mod-pn-glass", "name": "Glass (6oz)", "price": 0 },
+                  { "id": "mod-pn-bottle", "name": "Bottle", "price": 48 }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "item-malbec",
+            "name": "Malbec",
+            "price": 15,
+            "description": "Catena, Mendoza, Argentina 2021",
+            "modifierGroups": [
+              {
+                "id": "mg-malbec-pour",
+                "name": "Pour Size",
+                "required": true,
+                "minSelect": 1,
+                "maxSelect": 1,
+                "options": [
+                  { "id": "mod-malbec-glass", "name": "Glass (6oz)", "price": 0 },
+                  { "id": "mod-malbec-bottle", "name": "Bottle", "price": 44 }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "cat-wine-white",
+        "name": "Wine (White)",
+        "items": [
+          {
+            "id": "item-chardonnay",
+            "name": "Chardonnay",
+            "price": 16,
+            "description": "Rombauer, Carneros, Napa Valley 2021",
+            "modifierGroups": [
+              {
+                "id": "mg-chard-pour",
+                "name": "Pour Size",
+                "required": true,
+                "minSelect": 1,
+                "maxSelect": 1,
+                "options": [
+                  { "id": "mod-chard-glass", "name": "Glass (6oz)", "price": 0 },
+                  { "id": "mod-chard-bottle", "name": "Bottle", "price": 50 }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "item-sauvignon-blanc",
+            "name": "Sauvignon Blanc",
+            "price": 14,
+            "description": "Cloudy Bay, Marlborough, New Zealand 2022",
+            "modifierGroups": [
+              {
+                "id": "mg-sb-pour",
+                "name": "Pour Size",
+                "required": true,
+                "minSelect": 1,
+                "maxSelect": 1,
+                "options": [
+                  { "id": "mod-sb-glass", "name": "Glass (6oz)", "price": 0 },
+                  { "id": "mod-sb-bottle", "name": "Bottle", "price": 42 }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "item-prosecco",
+            "name": "Prosecco",
+            "price": 13,
+            "description": "La Marca, Veneto, Italy NV",
+            "modifierGroups": [
+              {
+                "id": "mg-prosecco-pour",
+                "name": "Pour Size",
+                "required": true,
+                "minSelect": 1,
+                "maxSelect": 1,
+                "options": [
+                  { "id": "mod-prosecco-glass", "name": "Glass (6oz)", "price": 0 },
+                  { "id": "mod-prosecco-bottle", "name": "Bottle", "price": 38 }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "cat-beer",
+        "name": "Beer",
+        "items": [
+          {
+            "id": "item-ipa",
+            "name": "Lagunitas IPA",
+            "price": 9,
+            "description": "West Coast IPA, hoppy and balanced",
+            "modifierGroups": []
+          },
+          {
+            "id": "item-pilsner",
+            "name": "Pilsner Urquell",
+            "price": 8,
+            "description": "Czech pilsner, crisp and refreshing",
+            "modifierGroups": []
+          },
+          {
+            "id": "item-stout",
+            "name": "Guinness Draught",
+            "price": 9,
+            "description": "Irish dry stout, smooth and creamy",
+            "modifierGroups": []
+          },
+          {
+            "id": "item-wheat-beer",
+            "name": "Blue Moon Belgian White",
+            "price": 8,
+            "description": "Belgian-style wheat ale with Valencia orange peel",
+            "modifierGroups": []
+          },
+          {
+            "id": "item-local-draft",
+            "name": "Rotating Local Draft",
+            "price": 10,
+            "description": "Ask your server for this week's featured local craft beer",
+            "modifierGroups": []
+          }
+        ]
+      },
+      {
+        "id": "cat-non-alcoholic",
+        "name": "Non-Alcoholic",
+        "items": [
+          {
+            "id": "item-sparkling-water",
+            "name": "San Pellegrino",
+            "price": 5,
+            "description": "750ml bottle of Italian sparkling mineral water",
+            "modifierGroups": []
+          },
+          {
+            "id": "item-still-water",
+            "name": "Acqua Panna",
+            "price": 5,
+            "description": "750ml bottle of Tuscan still mineral water",
+            "modifierGroups": []
+          },
+          {
+            "id": "item-fresh-juice",
+            "name": "Fresh-Pressed Juice",
+            "price": 8,
+            "description": "Made to order",
+            "modifierGroups": [
+              {
+                "id": "mg-juice-flavor",
+                "name": "Flavor",
+                "required": true,
+                "minSelect": 1,
+                "maxSelect": 1,
+                "options": [
+                  { "id": "mod-juice-orange", "name": "Orange", "price": 0 },
+                  { "id": "mod-juice-grapefruit", "name": "Grapefruit", "price": 0 },
+                  { "id": "mod-juice-green", "name": "Green (Kale, Apple, Ginger)", "price": 2 }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "item-soft-drink",
+            "name": "Soft Drink",
+            "price": 4,
+            "description": "Coca-Cola, Diet Coke, Sprite, or Ginger Ale",
+            "modifierGroups": [
+              {
+                "id": "mg-soda-choice",
+                "name": "Selection",
+                "required": true,
+                "minSelect": 1,
+                "maxSelect": 1,
+                "options": [
+                  { "id": "mod-soda-coke", "name": "Coca-Cola", "price": 0 },
+                  { "id": "mod-soda-diet", "name": "Diet Coke", "price": 0 },
+                  { "id": "mod-soda-sprite", "name": "Sprite", "price": 0 },
+                  { "id": "mod-soda-ginger", "name": "Ginger Ale", "price": 0 }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "item-iced-tea",
+            "name": "House-Brewed Iced Tea",
+            "price": 4,
+            "description": "Black tea or peach tea, unsweetened or sweetened",
+            "modifierGroups": []
+          },
+          {
+            "id": "item-coffee",
+            "name": "Espresso / Coffee",
+            "price": 5,
+            "description": "Locally roasted single-origin",
+            "modifierGroups": [
+              {
+                "id": "mg-coffee-type",
+                "name": "Type",
+                "required": true,
+                "minSelect": 1,
+                "maxSelect": 1,
+                "options": [
+                  { "id": "mod-coffee-espresso", "name": "Espresso", "price": 0 },
+                  { "id": "mod-coffee-double", "name": "Double Espresso", "price": 2 },
+                  { "id": "mod-coffee-americano", "name": "Americano", "price": 0 },
+                  { "id": "mod-coffee-cappuccino", "name": "Cappuccino", "price": 1 },
+                  { "id": "mod-coffee-latte", "name": "Latte", "price": 1 },
+                  { "id": "mod-coffee-drip", "name": "Drip Coffee", "price": 0 }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "book-dessert",
+    "name": "Dessert",
+    "categories": [
+      {
+        "id": "cat-desserts",
+        "name": "Desserts",
+        "items": [
+          {
+            "id": "item-creme-brulee",
+            "name": "Classic Crème Brûlée",
+            "price": 13,
+            "description": "Madagascar vanilla bean custard with caramelized sugar crust",
+            "modifierGroups": []
+          },
+          {
+            "id": "item-chocolate-lava",
+            "name": "Molten Chocolate Lava Cake",
+            "price": 14,
+            "description": "Valrhona dark chocolate with vanilla bean ice cream and raspberry coulis",
+            "modifierGroups": []
+          },
+          {
+            "id": "item-tiramisu",
+            "name": "Tiramisu",
+            "price": 13,
+            "description": "Espresso-soaked ladyfingers with mascarpone cream and cocoa",
+            "modifierGroups": []
+          },
+          {
+            "id": "item-cheesecake",
+            "name": "New York Cheesecake",
+            "price": 13,
+            "description": "Creamy cheesecake with graham cracker crust",
+            "modifierGroups": [
+              {
+                "id": "mg-cheesecake-topping",
+                "name": "Topping",
+                "required": false,
+                "minSelect": 0,
+                "maxSelect": 1,
+                "options": [
+                  { "id": "mod-cc-strawberry", "name": "Fresh Strawberry Compote", "price": 0 },
+                  { "id": "mod-cc-caramel", "name": "Salted Caramel", "price": 0 },
+                  { "id": "mod-cc-chocolate", "name": "Chocolate Ganache", "price": 0 }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "item-affogato",
+            "name": "Affogato",
+            "price": 10,
+            "description": "Double espresso poured over vanilla gelato",
+            "modifierGroups": []
+          },
+          {
+            "id": "item-key-lime",
+            "name": "Key Lime Tart",
+            "price": 12,
+            "description": "Tangy key lime curd, toasted meringue, graham cracker crust",
+            "modifierGroups": [],
+            "soldOut": true
+          },
+          {
+            "id": "item-sorbet",
+            "name": "Seasonal Sorbet Trio",
+            "price": 10,
+            "description": "Three scoops of house-made seasonal fruit sorbets",
+            "modifierGroups": []
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "book-kids",
+    "name": "Kids Menu",
+    "categories": [
+      {
+        "id": "cat-kids-entrees",
+        "name": "Kids Entrees",
+        "items": [
+          {
+            "id": "item-kids-burger-combo",
+            "name": "Kids Cheeseburger Combo",
+            "price": 12,
+            "description": "Mini cheeseburger with fries and a drink",
+            "isCombo": true,
+            "modifierGroups": [
+              {
+                "id": "mg-kids-burger-temp",
+                "name": "Burger Temperature",
+                "required": true,
+                "minSelect": 1,
+                "maxSelect": 1,
+                "options": [
+                  { "id": "mod-kb-med", "name": "Medium", "price": 0 },
+                  { "id": "mod-kb-mw", "name": "Medium Well", "price": 0 },
+                  { "id": "mod-kb-well", "name": "Well Done", "price": 0 }
+                ]
+              },
+              {
+                "id": "mg-kids-burger-side",
+                "name": "Side",
+                "required": true,
+                "minSelect": 1,
+                "maxSelect": 1,
+                "options": [
+                  { "id": "mod-kb-fries", "name": "French Fries", "price": 0 },
+                  { "id": "mod-kb-fruit", "name": "Fresh Fruit Cup", "price": 0 },
+                  { "id": "mod-kb-mac", "name": "Mac & Cheese", "price": 2 }
+                ]
+              },
+              {
+                "id": "mg-kids-burger-drink",
+                "name": "Drink",
+                "required": true,
+                "minSelect": 1,
+                "maxSelect": 1,
+                "options": [
+                  { "id": "mod-kb-lemonade", "name": "Lemonade", "price": 0 },
+                  { "id": "mod-kb-milk", "name": "Milk", "price": 0 },
+                  { "id": "mod-kb-chocmilk", "name": "Chocolate Milk", "price": 0 },
+                  { "id": "mod-kb-juice", "name": "Apple Juice", "price": 0 }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "item-kids-chicken-combo",
+            "name": "Kids Chicken Tenders Combo",
+            "price": 11,
+            "description": "Crispy chicken tenders with fries and a drink",
+            "isCombo": true,
+            "modifierGroups": [
+              {
+                "id": "mg-kids-ct-side",
+                "name": "Side",
+                "required": true,
+                "minSelect": 1,
+                "maxSelect": 1,
+                "options": [
+                  { "id": "mod-kct-fries", "name": "French Fries", "price": 0 },
+                  { "id": "mod-kct-fruit", "name": "Fresh Fruit Cup", "price": 0 },
+                  { "id": "mod-kct-mac", "name": "Mac & Cheese", "price": 2 }
+                ]
+              },
+              {
+                "id": "mg-kids-ct-drink",
+                "name": "Drink",
+                "required": true,
+                "minSelect": 1,
+                "maxSelect": 1,
+                "options": [
+                  { "id": "mod-kct-lemonade", "name": "Lemonade", "price": 0 },
+                  { "id": "mod-kct-milk", "name": "Milk", "price": 0 },
+                  { "id": "mod-kct-chocmilk", "name": "Chocolate Milk", "price": 0 },
+                  { "id": "mod-kct-juice", "name": "Apple Juice", "price": 0 }
+                ]
+              },
+              {
+                "id": "mg-kids-ct-dip",
+                "name": "Dipping Sauce",
+                "required": false,
+                "minSelect": 0,
+                "maxSelect": 2,
+                "options": [
+                  { "id": "mod-kct-ketchup", "name": "Ketchup", "price": 0 },
+                  { "id": "mod-kct-bbq", "name": "BBQ Sauce", "price": 0 },
+                  { "id": "mod-kct-honey", "name": "Honey Mustard", "price": 0 },
+                  { "id": "mod-kct-ranch", "name": "Ranch", "price": 0 }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "item-kids-pasta-combo",
+            "name": "Kids Pasta Combo",
+            "price": 10,
+            "description": "Choice of pasta with butter or marinara, served with a drink",
+            "isCombo": true,
+            "modifierGroups": [
+              {
+                "id": "mg-kids-pasta-type",
+                "name": "Pasta & Sauce",
+                "required": true,
+                "minSelect": 1,
+                "maxSelect": 1,
+                "options": [
+                  { "id": "mod-kp-mac", "name": "Mac & Cheese", "price": 0 },
+                  { "id": "mod-kp-butter", "name": "Penne with Butter", "price": 0 },
+                  { "id": "mod-kp-marinara", "name": "Penne with Marinara", "price": 0 }
+                ]
+              },
+              {
+                "id": "mg-kids-pasta-drink",
+                "name": "Drink",
+                "required": true,
+                "minSelect": 1,
+                "maxSelect": 1,
+                "options": [
+                  { "id": "mod-kp-lemonade", "name": "Lemonade", "price": 0 },
+                  { "id": "mod-kp-milk", "name": "Milk", "price": 0 },
+                  { "id": "mod-kp-chocmilk", "name": "Chocolate Milk", "price": 0 },
+                  { "id": "mod-kp-juice", "name": "Apple Juice", "price": 0 }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "item-kids-grilled-chicken",
+            "name": "Kids Grilled Chicken",
+            "price": 11,
+            "description": "Grilled chicken breast with steamed broccoli and rice",
+            "modifierGroups": []
+          },
+          {
+            "id": "item-kids-fish",
+            "name": "Kids Fish & Chips",
+            "price": 11,
+            "description": "Lightly battered cod with fries and tartar sauce",
+            "modifierGroups": []
+          }
+        ]
+      },
+      {
+        "id": "cat-kids-drinks",
+        "name": "Kids Drinks",
+        "items": [
+          {
+            "id": "item-kids-lemonade",
+            "name": "Fresh Lemonade",
+            "price": 4,
+            "description": "House-made with fresh lemons",
+            "modifierGroups": []
+          },
+          {
+            "id": "item-kids-milk",
+            "name": "Milk",
+            "price": 3,
+            "modifierGroups": [
+              {
+                "id": "mg-milk-type",
+                "name": "Type",
+                "required": true,
+                "minSelect": 1,
+                "maxSelect": 1,
+                "options": [
+                  { "id": "mod-milk-whole", "name": "Whole Milk", "price": 0 },
+                  { "id": "mod-milk-choc", "name": "Chocolate Milk", "price": 1 }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "item-kids-juice",
+            "name": "Juice Box",
+            "price": 3,
+            "description": "Apple or orange juice",
+            "modifierGroups": [
+              {
+                "id": "mg-juice-type",
+                "name": "Flavor",
+                "required": true,
+                "minSelect": 1,
+                "maxSelect": 1,
+                "options": [
+                  { "id": "mod-jb-apple", "name": "Apple", "price": 0 },
+                  { "id": "mod-jb-orange", "name": "Orange", "price": 0 }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "item-kids-shirley",
+            "name": "Shirley Temple",
+            "price": 4,
+            "description": "Sprite with grenadine and a maraschino cherry",
+            "modifierGroups": []
+          }
+        ]
+      }
+    ]
+  }
+]

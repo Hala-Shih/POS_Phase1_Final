@@ -1,0 +1,6 @@
+[
+  { "id": "s1", "name": "James K.", "pin": "123", "role": "server" },
+  { "id": "s2", "name": "Sarah M.", "pin": "1234", "role": "server" },
+  { "id": "s3", "name": "Mike R.", "pin": "0000", "role": "manager" },
+  { "id": "s4", "name": "Lisa T.", "pin": "9999", "role": "server" }
+]
