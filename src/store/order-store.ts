@@ -147,7 +147,7 @@ export const useOrderStore = create<OrderState>((set, get) => ({
         sent: false,
         totalPrice: computeItemTotal(basePrice, 1, modifiers, comboSelections),
       };
-      set({ cartItems: [...get().cartItems, newItem] });
+      set({ cartItems: [newItem, ...get().cartItems] });
       return;
     }
 
@@ -196,7 +196,7 @@ export const useOrderStore = create<OrderState>((set, get) => ({
         sent: false,
         totalPrice: computeItemTotal(basePrice, 1, modifiers),
       };
-      set({ cartItems: [...get().cartItems, newItem] });
+      set({ cartItems: [newItem, ...get().cartItems] });
     }
   },
 
