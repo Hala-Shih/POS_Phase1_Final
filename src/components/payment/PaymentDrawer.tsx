@@ -71,7 +71,7 @@ function UnitDescription({ item }: { item: CartItem }) {
             return (
               <span key={`${s.groupId}-${s.component.id}-${ci}`}>
                 {ci > 0 && " · "}
-                {s.groupName}: {s.component.name}
+                {s.component.name}
                 {compDelta ? (
                   <span className="ml-1 font-medium" style={{ color: "#6750A4" }}>
                     {formatSignedCurrency(compDelta)}
@@ -370,6 +370,7 @@ export default function PaymentDrawer({
           <div className="grid grid-cols-2 gap-2.5">
             {mainButtons.map(({ id, label, icon: Icon }) => (
               <button key={id} type="button"
+                disabled={cartItems.length === 0}
                 onClick={() => {
                   if (id === "split")    { setView("split");  return; }
                   if (id === "cash")     { setView("cash");   return; }
@@ -378,7 +379,7 @@ export default function PaymentDrawer({
                   if (id === "multiple") { onMultiplePayment(); return; }
                   if (id === "print")    { onPrint(); return; }
                 }}
-                className="flex items-center gap-2 rounded-xl border border-gray-200 bg-gray-50 h-11 px-3 text-left text-[13px] font-medium text-gray-800 transition hover:bg-gray-100">
+                className="flex items-center gap-2 rounded-xl border border-gray-200 bg-gray-50 h-11 px-3 text-left text-[13px] font-medium text-gray-800 transition hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-gray-50">
                 <span className="inline-flex h-7 w-7 items-center justify-center text-gray-600 shrink-0">
                   <Icon size={16} />
                 </span>

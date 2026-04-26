@@ -28,7 +28,7 @@ interface ActionDrawerProps {
 }
 
 export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMultiplePayment, itemContext }: ActionDrawerProps) {
-  const { cartItems, cartTotal, checkTip, setCheckTip, markAllSent, resetOrder, setItemDiscount, removeItem, updateQuantity, updateNote, updatePriceAdjustment, setItemPriceOverride, toggleBreakline, updateItemModifiers, updateComboSelections, splitAndUpdateNotes } = useOrderStore();
+  const { cartItems, cartTotal, checkTip, setCheckTip, markAllSent, resetOrder, setItemDiscount, removeItem, updateQuantity, updateNote, updatePriceAdjustment, setItemPriceOverride, toggleBreakline, updateItemModifiers, updateComboSelections, splitAndUpdateNotes, splitCartItemToSingleItems, splitOneAndUpdateModifiers, consolidateCart } = useOrderStore();
 
   // Check-level states
   const [showVoidConfirm, setShowVoidConfirm] = useState(false);
@@ -64,6 +64,9 @@ export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMul
   const [showModifySheet, setShowModifySheet] = useState(false);
   const [localModSelections, setLocalModSelections] = useState<Record<string, Modifier[]>>({});
   const [originalModSelections, setOriginalModSelections] = useState<Record<string, Modifier[]>>({});
+  // For combo modify: cart item ids that should be presented as separate orders
+  // (after splitting a stacked combo line so each unit can be modified independently).
+  const [modifyComboCartItemIds, setModifyComboCartItemIds] = useState<string[]>([]);
 
   const unsentItems = cartItems.filter((i) => !i.sent);
   const hasUnsentItems = unsentItems.length > 0;
@@ -299,6 +302,7 @@ export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMul
     setShowModifySheet(false);
     setLocalModSelections({});
     setOriginalModSelections({});
+    setModifyComboCartItemIds([]);
   };
   // Shared function: open modify panel with pre-populated selections
   const openModifyPanel = () => {
@@ -307,6 +311,14 @@ export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMul
     cartItem.modifiers.forEach((cm) => { initial[cm.groupId] = [...cm.modifiers]; });
     setLocalModSelections(initial);
     setOriginalModSelections(initial);
+    // For combos with stacked qty > 1, split into individual cart items so
+    // each unit can be modified independently in the combo config sheet.
+    if (isCombo && cartItem.quantity > 1) {
+      const ids = splitCartItemToSingleItems(cartItem.id);
+      setModifyComboCartItemIds(ids);
+    } else {
+      setModifyComboCartItemIds([cartItem.id]);
+    }
     setShowModifySheet(true);
   };
 
@@ -327,7 +339,7 @@ export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMul
 
           {/* Item header + order tabs — unified section matching combo sheet pattern */}
           <div className="border-b border-gray-100 shrink-0">
-            {/* Title row + qty editor */}
+            {/* Title row */}
             <div className="flex items-center gap-2 px-4 pb-2">
               {isItemLevel2PanelOpen && (
                 <button
@@ -342,60 +354,62 @@ export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMul
                 <p className="text-[13px] font-medium leading-snug truncate">{cartItem.name}</p>
               </div>
               <ActionPriceColumn item={cartItem} />
-              <div className="flex items-center gap-3 shrink-0">
-                <button
-                  onClick={() => {
-                    if (cartItem.sent) return;
-                    if (cartItem.quantity <= 1) { removeItem(cartItem.id); handleClose(); }
-                    else updateQuantity(cartItem.id, -1);
-                  }}
-                  className="w-7 h-7 rounded-full border border-[var(--outline-variant)] flex items-center justify-center active:bg-gray-100 disabled:opacity-30"
-                  disabled={cartItem.sent}
-                >
-                  {cartItem.quantity <= 1 ? <Trash2 size={12} className="text-[var(--error)]" /> : <Minus size={12} />}
-                </button>
-                <span className="text-[13px] font-semibold min-w-[16px] text-center">{cartItem.quantity}</span>
-                <button
-                  onClick={() => {
-                    if (cartItem.sent) return;
-                    updateQuantity(cartItem.id, 1);
-                  }}
-                  className="w-7 h-7 rounded-full border border-[var(--outline-variant)] flex items-center justify-center active:bg-gray-100 disabled:opacity-30"
-                  disabled={cartItem.sent}
-                >
-                  <Plus size={12} />
-                </button>
-              </div>
               <button onClick={handleClose} className="w-7 h-7 flex items-center justify-center rounded-full active:bg-gray-100 shrink-0">
                 <X size={16} />
               </button>
             </div>
 
-            {/* Order tabs row — only shown when drilled into a sub-panel (notes / discount / price) */}
-            {noteOrderTabs.length > 1 && isItemLevel2PanelOpen && (
-              <div className="flex gap-2 px-4 pb-2 overflow-x-auto no-scrollbar">
-                {noteOrderTabs.map((tab) => {
-                  const hasOrderNote = ((noteDrafts[tab.key] ?? tab.note ?? "").trim().length > 0);
-                  return (
-                    <button
-                      key={tab.key}
-                      onClick={() => {
-                        setActiveNoteOrderKey(tab.key);
-                        setNoteText(noteDrafts[tab.key] ?? tab.note ?? "");
-                      }}
-                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-medium shrink-0 transition-colors ${
-                        tab.key === selectedNoteTab?.key
-                          ? "border-[var(--primary)] bg-[var(--primary-light)]"
-                          : "border-[var(--outline-variant)]"
-                      }`}
-                    >
-                      {hasOrderNote && <Check size={12} className="text-[var(--primary)]" />}
-                      {tab.label}
-                    </button>
-                  );
-                })}
-              </div>
-            )}
+            {/* Quantity editor + order tabs — share one row to save space */}
+            <div className="flex items-center gap-3 px-4 pb-2">
+              <button
+                onClick={() => {
+                  if (cartItem.sent) return;
+                  if (cartItem.quantity <= 1) { removeItem(cartItem.id); handleClose(); }
+                  else updateQuantity(cartItem.id, -1);
+                }}
+                className="w-7 h-7 rounded-full border border-[var(--outline-variant)] flex items-center justify-center active:bg-gray-100 disabled:opacity-30 shrink-0"
+                disabled={cartItem.sent}
+              >
+                {cartItem.quantity <= 1 ? <Trash2 size={12} className="text-[var(--error)]" /> : <Minus size={12} />}
+              </button>
+              <span className="text-[13px] font-semibold min-w-[16px] text-center shrink-0">{cartItem.quantity}</span>
+              <button
+                onClick={() => {
+                  if (cartItem.sent) return;
+                  updateQuantity(cartItem.id, 1);
+                }}
+                className="w-7 h-7 rounded-full border border-[var(--outline-variant)] flex items-center justify-center active:bg-gray-100 disabled:opacity-30 shrink-0"
+                disabled={cartItem.sent}
+              >
+                <Plus size={12} />
+              </button>
+
+              {/* Order tabs — inline, horizontally scrollable when overflowing */}
+              {noteOrderTabs.length > 1 && isItemLevel2PanelOpen && (
+                <div className="flex gap-2 overflow-x-auto no-scrollbar min-w-0 flex-1">
+                  {noteOrderTabs.map((tab) => {
+                    const hasOrderNote = ((noteDrafts[tab.key] ?? tab.note ?? "").trim().length > 0);
+                    return (
+                      <button
+                        key={tab.key}
+                        onClick={() => {
+                          setActiveNoteOrderKey(tab.key);
+                          setNoteText(noteDrafts[tab.key] ?? tab.note ?? "");
+                        }}
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-medium shrink-0 transition-colors ${
+                          tab.key === selectedNoteTab?.key
+                            ? "border-[var(--primary)] bg-[var(--primary-light)]"
+                            : "border-[var(--outline-variant)]"
+                        }`}
+                      >
+                        {hasOrderNote && <Check size={12} className="text-[var(--primary)]" />}
+                        {tab.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Modifier / combo / note / discount details with inline deltas
@@ -416,72 +430,78 @@ export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMul
             {/* Notes input (expanded inline) */}
             {showNoteInput ? (
               <div className="px-4 py-4">
-                <p className="text-[12px] text-[var(--outline)] mb-2">Add a note for the kitchen</p>
-                <textarea
-                  autoFocus
-                  value={selectedNoteTab ? (noteDrafts[selectedNoteTab.key] ?? "") : ""}
-                  onChange={(e) => {
-                    if (!selectedNoteTab) return;
-                    const next = e.target.value;
-                    setNoteText(next);
-                    setNoteDrafts((prev) => ({ ...prev, [selectedNoteTab.key]: next }));
-                  }}
-                  placeholder="e.g. No salt, extra crispy..."
-                  rows={3}
-                  className="w-full rounded-xl border border-[var(--outline-variant)] px-3 py-2 text-[13px] outline-none resize-none focus:border-[var(--primary)]"
-                />
-
-                {/* Optional price adjustment for this item. Sign toggle + numeric
-                    input — `inputMode="decimal"` triggers the Android numeric
-                    keypad. Leave blank for no adjustment. */}
-                <p className="text-[12px] text-[var(--outline)] mt-3 mb-2">Price adjustment (optional)</p>
-                <div className="flex items-center gap-2">
-                  <div className="flex rounded-xl border border-[var(--outline-variant)] overflow-hidden shrink-0">
-                    <button
-                      type="button"
-                      onClick={() => setNoteAdjustSign("+")}
-                      className={`w-10 h-10 flex items-center justify-center text-[15px] font-semibold ${
-                        noteAdjustSign === "+"
-                          ? "bg-[var(--primary-light)] text-[var(--primary)]"
-                          : "text-[var(--outline)] active:bg-gray-50"
-                      }`}
-                      aria-pressed={noteAdjustSign === "+"}
-                      aria-label="Increase price"
-                    >
-                      +
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setNoteAdjustSign("-")}
-                      className={`w-10 h-10 flex items-center justify-center text-[15px] font-semibold border-l border-[var(--outline-variant)] ${
-                        noteAdjustSign === "-"
-                          ? "bg-[var(--primary-light)] text-[var(--primary)]"
-                          : "text-[var(--outline)] active:bg-gray-50"
-                      }`}
-                      aria-pressed={noteAdjustSign === "-"}
-                      aria-label="Decrease price"
-                    >
-                      −
-                    </button>
+                <div className="flex gap-3 items-start">
+                  {/* Note column */}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[12px] text-[var(--outline)] mb-2">Add a note for the kitchen</p>
+                    <textarea
+                      autoFocus
+                      value={selectedNoteTab ? (noteDrafts[selectedNoteTab.key] ?? "") : ""}
+                      onChange={(e) => {
+                        if (!selectedNoteTab) return;
+                        const next = e.target.value;
+                        setNoteText(next);
+                        setNoteDrafts((prev) => ({ ...prev, [selectedNoteTab.key]: next }));
+                      }}
+                      placeholder="Add notes"
+                      rows={1}
+                      className="w-full h-11 rounded-xl border border-[var(--outline-variant)] px-3 py-2 text-[13px] outline-none resize-none focus:border-[var(--primary)]"
+                    />
                   </div>
-                  <span className="text-[15px] font-semibold text-[var(--outline)]">$</span>
-                  <input
-                    type="number"
-                    inputMode="decimal"
-                    pattern="[0-9]*"
-                    min="0"
-                    step="0.01"
-                    value={noteAdjustInput}
-                    onChange={(e) => {
-                      const sanitized = e.target.value
-                        .replace(/[^\d.]/g, "")
-                        .replace(/(\..*)\./g, "$1")
-                        .replace(/^(\d+\.\d{0,2}).*$/, "$1");
-                      setNoteAdjustInput(sanitized);
-                    }}
-                    placeholder="0.00"
-                    className="flex-1 h-10 rounded-xl border border-[var(--outline-variant)] px-3 text-[15px] outline-none focus:border-[var(--primary)]"
-                  />
+
+                  {/* Optional price adjustment for this item. Sign toggle + numeric
+                      input — `inputMode="decimal"` triggers the Android numeric
+                      keypad. Leave blank for no adjustment. */}
+                  <div className="shrink-0">
+                    <p className="text-[12px] text-[var(--outline)] mb-2">Price adjustment</p>
+                    <div className="flex items-center gap-1.5">
+                      <div className="flex rounded-xl border border-[var(--outline-variant)] overflow-hidden shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => setNoteAdjustSign("+")}
+                          className={`w-9 h-11 flex items-center justify-center text-[15px] font-semibold ${
+                            noteAdjustSign === "+"
+                              ? "bg-[var(--primary-light)] text-[var(--primary)]"
+                              : "text-[var(--outline)] active:bg-gray-50"
+                          }`}
+                          aria-pressed={noteAdjustSign === "+"}
+                          aria-label="Increase price"
+                        >
+                          +
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setNoteAdjustSign("-")}
+                          className={`w-9 h-11 flex items-center justify-center text-[15px] font-semibold border-l border-[var(--outline-variant)] ${
+                            noteAdjustSign === "-"
+                              ? "bg-[var(--primary-light)] text-[var(--primary)]"
+                              : "text-[var(--outline)] active:bg-gray-50"
+                          }`}
+                          aria-pressed={noteAdjustSign === "-"}
+                          aria-label="Decrease price"
+                        >
+                          −
+                        </button>
+                      </div>
+                      <input
+                        type="number"
+                        inputMode="decimal"
+                        pattern="[0-9]*"
+                        min="0"
+                        step="0.01"
+                        value={noteAdjustInput}
+                        onChange={(e) => {
+                          const sanitized = e.target.value
+                            .replace(/[^\d.]/g, "")
+                            .replace(/(\..*)\./g, "$1")
+                            .replace(/^(\d+\.\d{0,2}).*$/, "$1");
+                          setNoteAdjustInput(sanitized);
+                        }}
+                        placeholder="0.00"
+                        className="w-16 h-11 rounded-xl border border-[var(--outline-variant)] px-2 text-[13px] outline-none focus:border-[var(--primary)]"
+                      />
+                    </div>
+                  </div>
                 </div>
 
                 <div className="flex gap-2 mt-3">
@@ -755,7 +775,14 @@ export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMul
                       const group = menuItem.modifierGroups.find((g) => g.id === groupId)!;
                       return { groupId, groupName: group.name, modifiers: mods };
                     });
-                  updateItemModifiers(cartItem.id, modifiers);
+                  // If the item has qty > 1, split off one unit with the new modifiers
+                  // so the previously-modified units stay intact (e.g. medium rare stays
+                  // when the new unit is changed to well done).
+                  if (cartItem.quantity > 1) {
+                    splitOneAndUpdateModifiers(cartItem.id, modifiers);
+                  } else {
+                    updateItemModifiers(cartItem.id, modifiers);
+                  }
                   handleClose();
                 }}
                 className="w-full h-11 rounded-xl bg-[var(--primary)] text-white flex items-center justify-center text-sm font-semibold active:opacity-80 disabled:opacity-40 transition-opacity"
@@ -770,13 +797,15 @@ export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMul
         {showModifySheet && menuItem && isCombo && (
           <ComboConfigSheet
             item={menuItem}
-            existingCartItems={[cartItem]}
-            onClose={() => setShowModifySheet(false)}
-            onAdd={() => setShowModifySheet(false)}
+            existingCartItems={(modifyComboCartItemIds.length > 0
+              ? modifyComboCartItemIds
+                  .map((id) => cartItems.find((i) => i.id === id))
+                  .filter((i): i is NonNullable<typeof i> => !!i)
+              : [cartItem])}
+            onClose={() => { setShowModifySheet(false); setModifyComboCartItemIds([]); consolidateCart(); handleClose(); }}
+            onAdd={() => { setShowModifySheet(false); setModifyComboCartItemIds([]); consolidateCart(); }}
             onUpdateExisting={(cartItemId, comboSelections) => {
               updateComboSelections(cartItemId, comboSelections);
-              setShowModifySheet(false);
-              handleClose();
             }}
           />
         )}
@@ -799,16 +828,18 @@ export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMul
         {/* Header */}
         <div className="px-4 pb-3 border-b border-gray-100 shrink-0">
           <div className="flex items-center justify-between">
-            <span className="text-[15px] font-semibold text-[#1D1B20] leading-tight truncate">
-              {showDiscountPanel ? "Apply Discount" : showTipPanel ? "Add Tip" : showVoidConfirm ? "Void Order" : "Actions"}
-            </span>
+            <div className="flex items-baseline gap-2 min-w-0">
+              <span className="text-[15px] font-semibold text-[#1D1B20] leading-tight truncate">
+                {showDiscountPanel ? "Apply Discount" : showTipPanel ? "Add Tip" : showVoidConfirm ? "Void Order" : "Actions"}
+              </span>
+              {!showDiscountPanel && !showTipPanel && !showVoidConfirm && (
+                <span className="text-[11px] text-[var(--outline)] truncate">Apply to full check</span>
+              )}
+            </div>
             <button onClick={handleClose} className="w-8 h-8 flex items-center justify-center rounded-full active:bg-gray-100 shrink-0">
               <X size={18} />
             </button>
           </div>
-          {!showDiscountPanel && !showTipPanel && !showVoidConfirm && (
-            <span className="block text-[11px] text-[var(--outline)] mt-0.5 truncate">Actions apply to the whole check</span>
-          )}
         </div>
 
         {/* Main actions grid */}
@@ -1289,7 +1320,7 @@ function ActionItemDescription({ item }: { item: import("@/lib/types").CartItem 
             return (
               <span key={`${s.groupId}-${s.component.id}-${ci}`}>
                 {ci > 0 && " · "}
-                {s.groupName}: {s.component.name}
+                {s.component.name}
                 {compDelta ? (
                   <span className="ml-1 text-[var(--primary)] font-medium">
                     {formatSignedCurrency(compDelta)}

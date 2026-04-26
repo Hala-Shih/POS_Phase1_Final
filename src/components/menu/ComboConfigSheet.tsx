@@ -66,7 +66,11 @@ export default function ComboConfigSheet({
 }: ComboConfigSheetProps) {
   const comboGroups = item.comboGroups || [];
 
-  const [orders, setOrders] = useState<ComboState[]>([buildEmptyState()]);
+  const [orders, setOrders] = useState<ComboState[]>(() =>
+    existingCartItems.length > 0
+      ? existingCartItems.map((ci) => buildStateFromCartItem(ci, comboGroups))
+      : [buildEmptyState()]
+  );
   const [activeOrderIndex, setActiveOrderIndex] = useState(0);
   // Track whether user has made any change to existing orders
   const [changedOrderIds, setChangedOrderIds] = useState<Set<string>>(new Set());
@@ -354,7 +358,13 @@ export default function ComboConfigSheet({
     orders.forEach((order) => {
       const selections = buildSelections(order);
       if (order.cartItemId && onUpdateExisting) {
-        onUpdateExisting(order.cartItemId, selections);
+        // Only push updates for orders the user actually changed. Touching
+        // unchanged existing orders would re-trigger the cart's merge logic
+        // and could collapse them back into a single line, causing edits
+        // made on later orders to be applied to all of them.
+        if (changedOrderIds.has(order.cartItemId)) {
+          onUpdateExisting(order.cartItemId, selections);
+        }
       } else {
         onAdd(selections);
       }

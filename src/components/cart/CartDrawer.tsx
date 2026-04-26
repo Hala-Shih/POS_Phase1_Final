@@ -106,7 +106,7 @@ function CartItemDescription({ item, dim }: { item: CartItem; dim?: boolean }) {
             return (
               <span key={`${s.groupId}-${s.component.id}-${ci}`}>
                 {ci > 0 && " · "}
-                {s.groupName}: {s.component.name}
+                {s.component.name}
                 {compDelta ? (
                   <span className="ml-1 text-[var(--primary)] font-medium">
                     {formatSignedCurrency(compDelta)}
@@ -352,7 +352,12 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
                         </div>
                       )}
                       {unsentItems.map((item) => (
-                        <div key={item.id} data-item-id={item.id} className={item.breaklineAbove || item.breaklineBelow ? "" : "border-b border-gray-50"}>
+                        <div
+                          key={item.id}
+                          data-item-id={item.id}
+                          className={item.breaklineAbove ? "" : "border-b border-gray-50"}
+                          style={item.breaklineBelow ? { boxShadow: "inset 0 -1px 0 0 #000" } : undefined}
+                        >
                           <div
                             className="flex items-start gap-2 px-4 py-2.5"
                             onClick={() => {
@@ -765,11 +770,6 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
                               </button>
                             </div>
                           )}
-
-                          {/* Breakline separator */}
-                          {item.breaklineBelow && (
-                            <div className="mx-4 mt-1 mb-0" style={{ height: 3, borderRadius: 2, background: "var(--foreground)" }} />
-                          )}
                         </div>
                       ))}
                     </div>
@@ -784,7 +784,12 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
                         </div>
                       )}
                       {sentItems.map((item) => (
-                        <div key={item.id} data-item-id={item.id} className={item.breaklineAbove || item.breaklineBelow ? "" : "border-b border-gray-50"}>
+                        <div
+                          key={item.id}
+                          data-item-id={item.id}
+                          className={item.breaklineAbove ? "" : "border-b border-gray-50"}
+                          style={item.breaklineBelow ? { boxShadow: "inset 0 -1px 0 0 #000" } : undefined}
+                        >
                         <div
                           className="flex items-start gap-2 px-4 py-2.5"
                           onClick={() => {
@@ -1073,10 +1078,6 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
                             >Save</button>
                           </div>
                         )}
-
-                          {item.breaklineBelow && (
-                            <div className="mx-4 mt-1 mb-0" style={{ height: 3, borderRadius: 2, background: "var(--foreground)" }} />
-                          )}
                         </div>
                       ))}
                     </div>

@@ -43,6 +43,95 @@ function computeItemTotal(
   return Math.round(total * 100) / 100; // avoid floating-point drift
 }
 
+// ── Cart line merge / split rule (System Rule 18) ────────────────────────
+// A line is "stackable" only when it has no per-line customizations that
+// would be lost or mis-applied if it were merged with another line.
+function isStackableLine(item: CartItem): boolean {
+  return (
+    !item.sent &&
+    !item.comped &&
+    item.priceOverride == null &&
+    !item.discount &&
+    !item.note &&
+    !item.priceAdjustment &&
+    !item.breaklineAbove &&
+    !item.breaklineBelow
+  );
+}
+
+function modifiersSignature(mods: CartItemModifier[]): string {
+  // Order-independent signature so { Rare, No salt } === { No salt, Rare }
+  return mods
+    .map((g) => ({
+      g: g.groupId,
+      m: g.modifiers.map((m) => m.id).sort().join(","),
+    }))
+    .sort((a, b) => a.g.localeCompare(b.g))
+    .map((x) => `${x.g}:${x.m}`)
+    .join("|");
+}
+
+function comboSelectionsSignature(sels: CartComboSelection[] | undefined): string {
+  if (!sels || sels.length === 0) return "";
+  return sels
+    .map((s) => `${s.groupId}:${s.component.id}:${modifiersSignature(s.modifiers)}`)
+    .sort()
+    .join("||");
+}
+
+// Find an existing cart line that should be merged with `target`.
+function findMergeTarget(items: CartItem[], target: CartItem): CartItem | undefined {
+  if (!isStackableLine(target)) return undefined;
+  const targetModSig = modifiersSignature(target.modifiers);
+  const targetComboSig = comboSelectionsSignature(target.comboSelections);
+  return items.find(
+    (i) =>
+      i.id !== target.id &&
+      i.menuItemId === target.menuItemId &&
+      isStackableLine(i) &&
+      modifiersSignature(i.modifiers) === targetModSig &&
+      comboSelectionsSignature(i.comboSelections) === targetComboSig
+  );
+}
+
+// Merge `source` into `dest` (dest absorbs source's quantity; source is removed).
+function mergeLines(items: CartItem[], destId: string, sourceId: string): CartItem[] {
+  const dest = items.find((i) => i.id === destId);
+  const source = items.find((i) => i.id === sourceId);
+  if (!dest || !source) return items;
+  const newQty = dest.quantity + source.quantity;
+  return items
+    .filter((i) => i.id !== sourceId)
+    .map((i) =>
+      i.id === destId
+        ? {
+            ...i,
+            quantity: newQty,
+            totalPrice: computeItemTotal(
+              i.basePrice,
+              newQty,
+              i.modifiers,
+              i.comboSelections,
+              i.priceAdjustment,
+              i.comped,
+              i.priceOverride,
+              i.discount,
+            ),
+          }
+        : i
+    );
+}
+
+// Re-evaluate the cart and merge `targetId` into any sibling line that
+// matches the System Rule 18 merge criteria. Returns the surviving id.
+function consolidateMatchingLine(items: CartItem[], targetId: string): { items: CartItem[]; survivorId: string } {
+  const target = items.find((i) => i.id === targetId);
+  if (!target) return { items, survivorId: targetId };
+  const dest = findMergeTarget(items, target);
+  if (!dest) return { items, survivorId: targetId };
+  return { items: mergeLines(items, dest.id, target.id), survivorId: dest.id };
+}
+
 export type Screen = "login" | "home" | "tables" | "guest-count" | "check" | "order" | "payment" | "orders";
 export type Language = "en" | "zh";
 
@@ -85,7 +174,9 @@ interface OrderState {
   setItemPriceOverride: (cartItemId: string, price: number | null) => void;
   toggleBreakline: (cartItemId: string, position: "above" | "below") => void;
   updateItemModifiers: (cartItemId: string, modifiers: CartItemModifier[]) => void;
+  splitOneAndUpdateModifiers: (cartItemId: string, modifiers: CartItemModifier[]) => string;
   updateComboSelections: (cartItemId: string, comboSelections: CartComboSelection[]) => void;
+  consolidateCart: () => void;
   splitCartItemToSingleItems: (cartItemId: string) => string[];
   splitAndUpdateNotes: (cartItemId: string, notesPerTabIndex: Record<number, string>) => void;
   clearCart: () => void;
@@ -144,46 +235,30 @@ export const useOrderStore = create<OrderState>((set, get) => ({
 
   addItem: ({ menuItemId, name, basePrice, modifiers, comboSelections }) => {
     const { cartItems } = get();
-    // Combo items are always unique (never merge)
-    if (comboSelections && comboSelections.length > 0) {
-      const newItem: CartItem = {
-        id: generateId(),
-        menuItemId,
-        name,
-        basePrice,
-        quantity: 1,
-        modifiers,
-        comboSelections,
-        sent: false,
-        totalPrice: computeItemTotal(basePrice, 1, modifiers, comboSelections),
-      };
-      set({ cartItems: [newItem, ...get().cartItems] });
-      return;
-    }
-
-    const existing = cartItems.find(
-      (item) =>
-        item.menuItemId === menuItemId &&
-        !item.sent &&
-        JSON.stringify(item.modifiers) === JSON.stringify(modifiers) &&
-        // Only stack with items in fully default status
-        !item.comped &&
-        item.priceOverride == null &&
-        !item.discount &&
-        !item.note &&
-        !item.priceAdjustment
-    );
-
+    const candidate: CartItem = {
+      id: generateId(),
+      menuItemId,
+      name,
+      basePrice,
+      quantity: 1,
+      modifiers,
+      comboSelections,
+      sent: false,
+      totalPrice: computeItemTotal(basePrice, 1, modifiers, comboSelections),
+    };
+    // System Rule 18: merge into an existing matching stackable line, otherwise insert.
+    const existing = findMergeTarget(cartItems, candidate);
     if (existing) {
+      const newQty = existing.quantity + 1;
       set({
-        cartItems: get().cartItems.map((item) =>
+        cartItems: cartItems.map((item) =>
           item.id === existing.id
             ? {
                 ...item,
-                quantity: item.quantity + 1,
+                quantity: newQty,
                 totalPrice: computeItemTotal(
                   item.basePrice,
-                  item.quantity + 1,
+                  newQty,
                   item.modifiers,
                   item.comboSelections,
                   item.priceAdjustment,
@@ -196,17 +271,7 @@ export const useOrderStore = create<OrderState>((set, get) => ({
         ),
       });
     } else {
-      const newItem: CartItem = {
-        id: generateId(),
-        menuItemId,
-        name,
-        basePrice,
-        quantity: 1,
-        modifiers,
-        sent: false,
-        totalPrice: computeItemTotal(basePrice, 1, modifiers),
-      };
-      set({ cartItems: [newItem, ...get().cartItems] });
+      set({ cartItems: [candidate, ...cartItems] });
     }
   },
 
@@ -343,25 +408,86 @@ export const useOrderStore = create<OrderState>((set, get) => ({
   updateItemModifiers: (cartItemId, modifiers) => {
     const item = get().cartItems.find((i) => i.id === cartItemId);
     if (!item) return;
-    set({
-      cartItems: get().cartItems.map((i) =>
+    const updated = get().cartItems.map((i) =>
+      i.id === cartItemId
+        ? { ...i, modifiers, totalPrice: computeItemTotal(i.basePrice, i.quantity, modifiers, i.comboSelections, i.priceAdjustment, i.comped, i.priceOverride, i.discount) }
+        : i
+    );
+    // System Rule 18: re-evaluate merge after a modifier change.
+    const { items } = consolidateMatchingLine(updated, cartItemId);
+    set({ cartItems: items });
+  },
+
+  splitOneAndUpdateModifiers: (cartItemId, modifiers) => {
+    const { cartItems } = get();
+    const item = cartItems.find((i) => i.id === cartItemId);
+    if (!item) return cartItemId;
+    // If qty is 1, just update in place; then re-evaluate merge.
+    if (item.quantity <= 1) {
+      const updatedSingle = cartItems.map((i) =>
         i.id === cartItemId
           ? { ...i, modifiers, totalPrice: computeItemTotal(i.basePrice, i.quantity, modifiers, i.comboSelections, i.priceAdjustment, i.comped, i.priceOverride, i.discount) }
           : i
-      ),
-    });
+      );
+      const { items: merged, survivorId } = consolidateMatchingLine(updatedSingle, cartItemId);
+      set({ cartItems: merged });
+      return survivorId;
+    }
+    // Otherwise split one unit off as a new line with the new modifiers,
+    // and reduce the original line by one.
+    const remainder: CartItem = {
+      ...item,
+      quantity: item.quantity - 1,
+      totalPrice: computeItemTotal(item.basePrice, item.quantity - 1, item.modifiers, item.comboSelections, item.priceAdjustment, item.comped, item.priceOverride, item.discount),
+    };
+    const newLine: CartItem = {
+      ...item,
+      id: generateId(),
+      quantity: 1,
+      modifiers,
+      totalPrice: computeItemTotal(item.basePrice, 1, modifiers, item.comboSelections, item.priceAdjustment, item.comped, item.priceOverride, item.discount),
+    };
+    const idx = cartItems.indexOf(item);
+    const updated = [...cartItems];
+    updated.splice(idx, 1, remainder, newLine);
+    // System Rule 18: try to merge the new split line into a matching sibling.
+    const { items, survivorId } = consolidateMatchingLine(updated, newLine.id);
+    set({ cartItems: items });
+    return survivorId;
   },
 
   updateComboSelections: (cartItemId, comboSelections) => {
     const item = get().cartItems.find((i) => i.id === cartItemId);
     if (!item) return;
-    set({
-      cartItems: get().cartItems.map((i) =>
-        i.id === cartItemId
-          ? { ...i, comboSelections, totalPrice: computeItemTotal(i.basePrice, i.quantity, i.modifiers, comboSelections, i.priceAdjustment, i.comped, i.priceOverride, i.discount) }
-          : i
-      ),
-    });
+    const updated = get().cartItems.map((i) =>
+      i.id === cartItemId
+        ? { ...i, comboSelections, totalPrice: computeItemTotal(i.basePrice, i.quantity, i.modifiers, comboSelections, i.priceAdjustment, i.comped, i.priceOverride, i.discount) }
+        : i
+    );
+    // System Rule 18: re-evaluate merge after a combo selection change.
+    const { items } = consolidateMatchingLine(updated, cartItemId);
+    set({ cartItems: items });
+  },
+
+  // System Rule 18: walk the entire cart and merge any pair of stackable
+  // lines that share menu item, modifiers, and combo selections. Used after
+  // bulk operations like the combo modify session that may leave several
+  // newly-split lines that should re-collapse.
+  consolidateCart: () => {
+    let items = get().cartItems;
+    let didMerge = true;
+    while (didMerge) {
+      didMerge = false;
+      for (const item of items) {
+        const target = findMergeTarget(items, item);
+        if (target) {
+          items = mergeLines(items, target.id, item.id);
+          didMerge = true;
+          break;
+        }
+      }
+    }
+    set({ cartItems: items });
   },
 
   splitCartItemToSingleItems: (cartItemId) => {

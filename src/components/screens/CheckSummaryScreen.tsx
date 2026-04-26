@@ -218,9 +218,6 @@ export default function CheckSummaryScreen({ menuOpen: externalMenuOpen, setMenu
               />
               <div className="h-1.5" />
               <TotalsRow label="Total" value={`$${grandTotal.toFixed(2)}`} bold large />
-              <div className="flex items-center justify-between mt-2 text-[11px] text-[var(--outline)]">
-                <span>{count} {count === 1 ? "item" : "items"} · {sentItems.length} sent</span>
-              </div>
             </div>
           </>
         )}
@@ -280,12 +277,15 @@ function CheckItem({
 
   return (
     <>
-      {item.breaklineAbove && (
-        <div className="px-4 py-1.5">
-          <div className="h-px bg-gray-300" />
-        </div>
-      )}
-      <div className={`border-b border-gray-50 transition-colors ${selected ? "bg-[var(--primary-light)]" : ""}`}>
+      <div
+        className={`border-b border-gray-50 transition-colors ${selected ? "bg-[var(--primary-light)]" : ""}`}
+        style={{
+          boxShadow: [
+            item.breaklineAbove ? "inset 0 1px 0 0 #000" : "",
+            item.breaklineBelow ? "inset 0 -1px 0 0 #000" : "",
+          ].filter(Boolean).join(", ") || undefined,
+        }}
+      >
         <button
           onClick={() => {
             onInteract?.();
@@ -363,11 +363,6 @@ function CheckItem({
           </div>
         )}
       </div>
-      {item.breaklineBelow && (
-        <div className="px-4 py-1.5">
-          <div className="h-px bg-gray-300" />
-        </div>
-      )}
     </>
   );
 }
@@ -454,7 +449,7 @@ function ItemDescription({
             return (
               <span key={`${s.groupId}-${s.component.id}-${ci}`}>
                 {ci > 0 && " · "}
-                {s.groupName}: {s.component.name}
+                {s.component.name}
                 {compDelta ? (
                   <span className="ml-1 text-[var(--primary)] font-medium">
                     {formatSignedCurrency(compDelta)}

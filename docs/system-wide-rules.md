@@ -212,6 +212,59 @@ Exception: purely decorative or non-interactive elements (badges, status pills, 
 
 ---
 
+## 17. Occupied Table Tap Opens Order Summary
+
+Tapping an **occupied** table on the Tables screen **must** always navigate directly to that table's order summary (Check Summary).
+
+- "Occupied" means the table has at least one open check / active order attached. State synonyms (`In Progress`, `Sent`, `Editing`, `Open`) all qualify.
+- The tap target is the entire table tile, not just an action button or chevron.
+- The handler **must not** branch on cart state, sent/unsent state, guest count, or the user's previously selected table. It always opens the existing order summary for that table.
+- Long-press, secondary menus, or quick-action overlays may offer additional flows (e.g. transfer, merge), but a plain tap is reserved for "open the summary."
+- Available (empty) tables follow their own flow (guest count → new order); this rule applies only to occupied tables.
+
+This guarantees a single, predictable entry point into any in-progress check and prevents accidental order creation on top of an existing order.
+
+---
+
+## 18. Cart Line Merge & Split by Modifier Identity
+
+The cart **must** automatically decide whether two ordered units belong on the same line (with summed quantity) or on separate lines, based on whether their content is truly identical.
+
+### When two lines must auto-merge
+
+Two cart lines for the same menu item **must** combine into a single line with summed quantity when, and only when, **all** of the following are true:
+
+- Same `menuItemId`.
+- Identical modifier selections, compared **order-independently** (e.g. `{Rare, No salt}` equals `{No salt, Rare}`).
+- Identical combo selections, compared **order-independently** (same components per group, with identical nested modifiers).
+- **Both** lines are in fully default state: not sent, not comped, no price override, no discount, no note, no per-item price adjustment, no breakline marker.
+
+### When lines must stay separate
+
+Two units **must** remain on separate lines when any of the following is true:
+
+- Different modifier selections (e.g. one filet medium rare, one filet well done).
+- Different combo selections.
+- Either line has any per-line customization (note, discount, price override, price adjustment, breakline, comp). Once such a customization is applied, that line is **non-stackable** and must never auto-merge with any other line, even if the modifier sets later become identical.
+- Either line is already sent to kitchen.
+
+### Modify must not silently overwrite siblings
+
+When the user modifies an item that has quantity > 1, the new modifier set **must not** silently replace the modifier set of all stacked units. The system **must** split one unit off as a new line carrying the new modifiers, leaving the remaining units on the original line untouched. The new line is then immediately re-evaluated for merge eligibility (see below).
+
+### Re-evaluation triggers
+
+After **any** of the following actions, the cart **must** re-run the merge evaluation and consolidate matching lines automatically:
+
+- Adding an item from any surface (Menu, Search, quick re-order, programmatic add).
+- Updating modifiers on an existing line.
+- Updating combo selections on an existing line.
+- Splitting one unit off a line via a modify-with-new-modifiers action.
+
+Re-evaluation must use the same merge criteria above and must be the responsibility of the cart store, not individual UI surfaces.
+
+---
+
 ## Implementation Checklist (for new drawers / screens)
 
 - [ ] Drawer state owned by the orchestration layer, not the component.
@@ -228,6 +281,8 @@ Exception: purely decorative or non-interactive elements (badges, status pills, 
 - [ ] No visible scrollbars on any scrollable container in this screen/drawer (Rule 14).
 - [ ] Per-item price displays follow Rule 15: right-column shows the original price struck through above the final unit price (accent color); each price-changing cause (modifier, combo selection, note) shows its delta inline next to its own text; discount renders as its own inline description line; override replaces all inline deltas with a single `Override` label.
 - [ ] Every interactive control has a tap target of at least 44 × 44 px with at least 8 px of spacing from adjacent controls (Rule 16). Visually smaller icons are wrapped in a 44 px hit area.
+- [ ] Tapping an occupied table tile always opens that table's order summary, regardless of cart/local state (Rule 17).
+- [ ] Adding or modifying items goes through the cart store's centralized merge logic so identical default-state lines auto-combine and differing modifiers split into separate lines (Rule 18). Per-line customizations (note, discount, override, adjustment, breakline, comp) make a line non-stackable.
 
 ---
 
@@ -248,3 +303,5 @@ Use these scenarios to verify compliance after any change to drawer or navigatio
 11. Inspect every screen and drawer with scrollable content → No visible scrollbar must appear, but vertical and horizontal scrolling must still work.
 12. Add an item with a modifier upcharge → Modifier name shows `+$X.XX` inline; right-column shows original price struck through above the new final price in accent color. Attach a note-based adjustment → Note text shows `+$X.XX` (or `−$X.XX`) inline; right-column updates. Apply a discount → A `N% off  −$X.XX` line appears in the description; right-column updates. Apply a price override → All inline deltas disappear and the description shows a single `Override` label; right-column shows original price struck through above the override price. Remove the override → Inline deltas reappear and the right-column reflects the recomputed final price.
 13. Inspect every interactive control across all screens and drawers (buttons, icon buttons, chips, tabs, list rows, toggles, checkboxes, close affordances) → Each must measure at least 44 × 44 px in its tap area, even when the visible icon or label is smaller. Adjacent controls must have at least 8 px of spacing. Disabled state must preserve the same height.
+14. From the Tables screen, tap any occupied table (any of `In Progress`, `Sent`, `Editing`, `Open`) → The app must navigate directly to that table's order summary. Repeat from a state where another table is currently selected, where the cart contains items, and where no items are in the cart → behavior must be identical in all cases. Tap an available (empty) table → must follow the new-order flow, not the summary.
+15. Add a Filet Mignon (Medium Rare, no sauce) → one line, qty 1. Add another Filet Mignon with the exact same modifiers from any surface → must merge into qty 2 on the same line. Increment that line to qty 2 from the cart, then Modify and switch one to Well Done → the original line must remain at qty 1 with Medium Rare, and a new line at qty 1 with Well Done must appear. Add a third Filet Mignon as Well Done from the menu → must merge with the Well Done line (qty 2). Apply a note to the Well Done line, then add a fourth Well Done from the menu → must NOT merge with the noted line; a new default-state line must appear. Repeat with combos that have identical selections → same merge rules apply (Rule 18).
