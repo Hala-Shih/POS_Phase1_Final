@@ -83,10 +83,13 @@ interface OrderState {
   setItemDiscount: (cartItemId: string, discount: CartItemDiscount | null) => void;
   setItemComped: (cartItemId: string, comped: boolean) => void;
   setItemPriceOverride: (cartItemId: string, price: number | null) => void;
-  toggleBreakline: (cartItemId: string) => void;
+  toggleBreakline: (cartItemId: string, position: "above" | "below") => void;
   updateItemModifiers: (cartItemId: string, modifiers: CartItemModifier[]) => void;
   updateComboSelections: (cartItemId: string, comboSelections: CartComboSelection[]) => void;
+  splitCartItemToSingleItems: (cartItemId: string) => string[];
+  splitAndUpdateNotes: (cartItemId: string, notesPerTabIndex: Record<number, string>) => void;
   clearCart: () => void;
+  markItemSent: (cartItemId: string) => void;
   markAllSent: () => void;
 
   // Computed
@@ -320,10 +323,12 @@ export const useOrderStore = create<OrderState>((set, get) => ({
     });
   },
 
-  toggleBreakline: (cartItemId) => {
+  toggleBreakline: (cartItemId, position) => {
+    const key: "breaklineAbove" | "breaklineBelow" =
+      position === "above" ? "breaklineAbove" : "breaklineBelow";
     set({
       cartItems: get().cartItems.map((i) =>
-        i.id === cartItemId ? { ...i, breakline: !i.breakline } : i
+        i.id === cartItemId ? { ...i, [key]: !i[key] } : i
       ),
     });
   },
@@ -352,7 +357,150 @@ export const useOrderStore = create<OrderState>((set, get) => ({
     });
   },
 
+  splitCartItemToSingleItems: (cartItemId) => {
+    const { cartItems } = get();
+    const item = cartItems.find((i) => i.id === cartItemId);
+    if (!item) return [];
+    if (item.quantity <= 1) return [item.id];
+
+    const index = cartItems.findIndex((i) => i.id === cartItemId);
+    if (index < 0) return [];
+
+    const singleItems: CartItem[] = Array.from({ length: item.quantity }, (_, idx) => ({
+      ...item,
+      id: idx === 0 ? item.id : generateId(),
+      quantity: 1,
+      totalPrice: computeItemTotal(
+        item.basePrice,
+        1,
+        item.modifiers,
+        item.comboSelections,
+        item.priceAdjustment,
+        item.comped,
+        item.priceOverride,
+        item.discount,
+      ),
+    }));
+
+    const updated = [...cartItems];
+    updated.splice(index, 1, ...singleItems);
+    set({ cartItems: updated });
+
+    return singleItems.map((i) => i.id);
+  },
+
+  splitAndUpdateNotes: (cartItemId, notesPerTabIndex) => {
+    const { cartItems } = get();
+    const item = cartItems.find((i) => i.id === cartItemId);
+    if (!item) return;
+
+    if (item.quantity <= 1) {
+      const firstNote = Object.values(notesPerTabIndex)[0] ?? "";
+      set({
+        cartItems: cartItems.map((i) =>
+          i.id === cartItemId ? { ...i, note: firstNote } : i
+        ),
+      });
+      return;
+    }
+
+    const originalNote = item.note || "";
+    const differentNotes: number[] = [];
+    const notesMap: Record<number, string> = {};
+
+    Object.entries(notesPerTabIndex).forEach(([idxStr, note]) => {
+      const idx = parseInt(idxStr, 10);
+      const trimmedNote = (note ?? "").trim();
+      notesMap[idx] = trimmedNote;
+      if (trimmedNote !== originalNote) {
+        differentNotes.push(idx);
+      }
+    });
+
+    if (differentNotes.length === 0) return; // No changes
+
+    const index = cartItems.findIndex((i) => i.id === cartItemId);
+    if (index < 0) return;
+
+    const newItems: CartItem[] = [];
+
+    if (differentNotes.length === item.quantity) {
+      // All items need different notes - split them all
+      Array.from({ length: item.quantity }, (_, idx) => {
+        newItems.push({
+          ...item,
+          id: idx === 0 ? item.id : generateId(),
+          quantity: 1,
+          note: notesMap[idx] ?? "",
+          totalPrice: computeItemTotal(
+            item.basePrice,
+            1,
+            item.modifiers,
+            item.comboSelections,
+            item.priceAdjustment,
+            item.comped,
+            item.priceOverride,
+            item.discount,
+          ),
+        });
+      });
+    } else {
+      // Only some items need different notes
+      const keptIndices = new Set<number>();
+      for (let i = 0; i < item.quantity; i++) {
+        if (!differentNotes.includes(i)) {
+          keptIndices.add(i);
+        }
+      }
+
+      if (keptIndices.size > 0) {
+        newItems.push({
+          ...item,
+          quantity: keptIndices.size,
+          totalPrice: computeItemTotal(
+            item.basePrice,
+            keptIndices.size,
+            item.modifiers,
+            item.comboSelections,
+            item.priceAdjustment,
+            item.comped,
+            item.priceOverride,
+            item.discount,
+          ),
+        });
+      }
+
+      differentNotes.forEach((idx) => {
+        newItems.push({
+          ...item,
+          id: generateId(),
+          quantity: 1,
+          note: notesMap[idx] ?? "",
+          totalPrice: computeItemTotal(
+            item.basePrice,
+            1,
+            item.modifiers,
+            item.comboSelections,
+            item.priceAdjustment,
+            item.comped,
+            item.priceOverride,
+            item.discount,
+          ),
+        });
+      });
+    }
+
+    const updated = [...cartItems];
+    updated.splice(index, 1, ...newItems);
+    set({ cartItems: updated });
+  },
+
   clearCart: () => set({ cartItems: [] }),
+
+  markItemSent: (cartItemId) =>
+    set({
+      cartItems: get().cartItems.map((i) => i.id === cartItemId ? { ...i, sent: true } : i),
+    }),
 
   markAllSent: () =>
     set({

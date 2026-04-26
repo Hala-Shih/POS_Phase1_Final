@@ -36,7 +36,6 @@ export default function SearchDrawer({ open, onClose }: SearchDrawerProps) {
   const allItems = categories.flatMap((b) =>
     b.categories.flatMap((c) => c.items)
   );
-  const popularItems = allItems.filter((i) => !i.soldOut).slice(0, 5);
   const searchResults = searchQuery.trim()
     ? allItems.filter((i) =>
         i.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -90,16 +89,13 @@ export default function SearchDrawer({ open, onClose }: SearchDrawerProps) {
           item.soldOut ? "opacity-40" : ""
         } ${addedItemId === item.id ? "bg-[var(--primary-light)]" : ""}`}
       >
-        <div className="flex justify-between items-start gap-2">
+        <div className="flex items-center gap-2">
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium leading-snug">{item.name}</p>
+            <p className="text-sm font-normal leading-snug">{item.name}</p>
           </div>
-          <span className="text-sm font-medium shrink-0">${item.price.toFixed(2)}</span>
-        </div>
 
-        {inCart && (
-          <div className="flex items-center justify-end mt-1">
-            <div className="flex items-center gap-2">
+          {inCart && (
+            <div className="flex items-center gap-2 shrink-0">
               <span
                 role="button"
                 onClick={(e) => {
@@ -129,8 +125,8 @@ export default function SearchDrawer({ open, onClose }: SearchDrawerProps) {
                 <Plus size={12} className="text-[var(--primary)]" />
               </span>
             </div>
-          </div>
-        )}
+          )}
+        </div>
 
         {needsConfig && modItemCount > 0 && (
           <div className="flex items-center justify-end mt-1">
@@ -188,10 +184,7 @@ export default function SearchDrawer({ open, onClose }: SearchDrawerProps) {
               <p className="text-sm text-[var(--outline)] text-center mt-8">No items found</p>
             )
           ) : (
-            <div className="px-3">
-              <h3 className="text-sm font-semibold mb-2">Popular Items</h3>
-              {popularItems.map(renderItem)}
-            </div>
+            <p className="text-sm text-[var(--outline)] text-center mt-8">Search for an item</p>
           )}
         </div>
       </div>

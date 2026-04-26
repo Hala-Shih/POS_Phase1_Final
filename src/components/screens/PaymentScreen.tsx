@@ -41,7 +41,8 @@ interface ItemizedUnit {
   modifiers: string[];
   comboSelections: string[];
   note?: string;
-  breakline?: boolean;
+  breaklineAbove?: boolean;
+  breaklineBelow?: boolean;
 }
 
 function roundCurrency(value: number) {
@@ -61,9 +62,10 @@ function buildItemizedUnits(items: CartItem[]): ItemizedUnit[] {
         group.modifiers.map((modifier) => modifier.name)
       );
 
+      const base = `${selection.groupName}: ${selection.component.name}`;
       return modifierNames.length > 0
-        ? `${selection.component.name} (${modifierNames.join(", ")})`
-        : selection.component.name;
+        ? `${base} (${modifierNames.join(", ")})`
+        : base;
     });
 
     return Array.from({ length: item.quantity }, (_, unitIndex) => ({
@@ -76,12 +78,13 @@ function buildItemizedUnits(items: CartItem[]): ItemizedUnit[] {
       modifiers,
       comboSelections,
       note: item.note,
-      breakline: item.breakline,
+      breaklineAbove: unitIndex === 0 ? item.breaklineAbove : false,
+      breaklineBelow: unitIndex === item.quantity - 1 ? item.breaklineBelow : false,
     }));
   });
 }
 
-export default function PaymentScreen() {
+export default function PaymentScreen({ autoOpenSplit }: { autoOpenSplit?: boolean } = {}) {
   const { cartItems, cartTotal, cartCount, guestCount, selectedTable, currentStaff, setScreen, resetOrder, setStaff, setTable } =
     useOrderStore();
 
@@ -171,6 +174,11 @@ export default function PaymentScreen() {
   const [orderPriceOverrideInput, setOrderPriceOverrideInput] = useState("");
 
   // Auto-scroll to show action buttons or numpad panel when they open
+  useEffect(() => {
+    if (autoOpenSplit) setShowSplitDrawer(true);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   useEffect(() => {
     if (showOrderDiscountPanel || showOrderPriceOverridePanel) {
       setTimeout(() => {
@@ -487,34 +495,43 @@ export default function PaymentScreen() {
             {confirmedSplit?.type === "item" ? (
               selectedItemUnits.length > 0 ? (
                 selectedItemUnits.map((unit) => (
-                  <div key={unit.unitId} className={unit.breakline ? "" : "border-b border-gray-100"}>
-                    <div className="flex justify-between px-4 py-2">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-sm">1x</span>
-                          <span className="text-sm">{unit.name}</span>
-                          {unit.unitCount > 1 && (
-                            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-white border border-gray-200 text-[var(--outline)]">
-                              {unit.unitIndex + 1}/{unit.unitCount}
-                            </span>
-                          )}
+                    <div key={unit.unitId}>
+                      {unit.breaklineAbove && (
+                        <div className="px-4 py-1.5">
+                          <div className="h-px bg-gray-300" />
                         </div>
-                        {unit.modifiers.length > 0 && (
-                          <p className="text-xs text-[var(--outline)] ml-5">{unit.modifiers.join(", ")}</p>
-                        )}
-                        {unit.comboSelections.length > 0 && (
-                          <p className="text-xs text-[var(--outline)] ml-5">{unit.comboSelections.join(" · ")}</p>
-                        )}
-                        {unit.note && (
-                          <p className="text-xs text-[var(--primary)] italic ml-5">Note: {unit.note}</p>
-                        )}
+                      )}
+                      <div className="border-b border-gray-100">
+                        <div className="flex justify-between px-4 py-2">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-sm">1x</span>
+                              <span className="text-sm">{unit.name}</span>
+                              {unit.unitCount > 1 && (
+                                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-white border border-gray-200 text-[var(--outline)]">
+                                  {unit.unitIndex + 1}/{unit.unitCount}
+                                </span>
+                              )}
+                            </div>
+                            {unit.modifiers.length > 0 && (
+                              <p className="text-xs text-[var(--outline)] ml-5">{unit.modifiers.join(", ")}</p>
+                            )}
+                            {unit.comboSelections.length > 0 && (
+                              <p className="text-xs text-[var(--outline)] ml-5">{unit.comboSelections.join(" · ")}</p>
+                            )}
+                            {unit.note && (
+                              <p className="text-xs text-[var(--primary)] italic ml-5">Note: {unit.note}</p>
+                            )}
+                          </div>
+                          <span className="text-sm font-medium shrink-0 ml-2">${unit.unitTotal.toFixed(2)}</span>
+                        </div>
                       </div>
-                      <span className="text-sm font-medium shrink-0 ml-2">${unit.unitTotal.toFixed(2)}</span>
+                      {unit.breaklineBelow && (
+                        <div className="px-4 py-1.5">
+                          <div className="h-px bg-gray-300" />
+                        </div>
+                      )}
                     </div>
-                    {unit.breakline && (
-                      <div className="mx-4 mt-0.5 mb-0" style={{ height: 3, borderRadius: 2, background: "var(--foreground)" }} />
-                    )}
-                  </div>
                 ))
               ) : (
                 <div className="px-4 py-3 text-sm text-[var(--outline)]">
@@ -523,60 +540,69 @@ export default function PaymentScreen() {
               )
             ) : (
               cartItems.map((item) => (
-                <div key={item.id} className={item.breakline ? "" : "border-b border-gray-100"}>
-                  <div className="flex justify-between px-4 py-2">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-sm">{item.quantity}x</span>
-                        <span className="text-sm">{item.name}</span>
-                      </div>
-                      {item.modifiers.length > 0 && (
-                        <p className="text-xs text-[var(--outline)] ml-5">
-                          {item.modifiers
-                            .flatMap((g) => g.modifiers.map((m) => m.name))
-                            .join(", ")}
-                        </p>
-                      )}
-                      {item.comboSelections && item.comboSelections.length > 0 && (
-                        <p className="text-xs text-[var(--outline)] ml-5">
-                          {item.comboSelections
-                            .map((s) => {
-                              const modNames = s.modifiers
-                                .flatMap((g) => g.modifiers.map((m) => m.name));
-                              return modNames.length > 0
-                                ? `${s.component.name} (${modNames.join(", ")})`
-                                : s.component.name;
-                            })
-                            .join(" · ")}
-                        </p>
-                      )}
-                      {item.note && (
-                        <p className="text-xs text-[var(--primary)] italic ml-5">
-                          Note: {item.note}
-                        </p>
-                      )}
+                <div key={item.id}>
+                  {item.breaklineAbove && (
+                    <div className="px-4 py-1.5">
+                      <div className="h-px bg-gray-300" />
                     </div>
-                    <div className="flex flex-col items-end shrink-0 ml-2">
-                      {(item.comped || item.discount || item.priceOverride != null) && (
-                        <span className="text-[10px] line-through text-[var(--outline)]">
-                          ${((item.basePrice + item.modifiers.reduce((s, g) => s + g.modifiers.reduce((s2, m) => s2 + m.price, 0), 0)) * item.quantity).toFixed(2)}
-                        </span>
-                      )}
-                      {item.comped ? (
-                        <span className="text-xs font-semibold px-1.5 py-0.5 rounded-full bg-[#E8DEF8] text-[#6750A4]">COMP</span>
-                      ) : item.discount ? (
-                        <span className="text-sm font-medium text-[#6750A4]">
-                          ${item.totalPrice.toFixed(2)}
-                        </span>
-                      ) : (
-                        <span className="text-sm font-medium">
-                          ${item.totalPrice.toFixed(2)}
-                        </span>
-                      )}
+                  )}
+                  <div className="border-b border-gray-100">
+                    <div className="flex justify-between px-4 py-2">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-sm">{item.quantity}x</span>
+                          <span className="text-sm">{item.name}</span>
+                        </div>
+                        {item.modifiers.length > 0 && (
+                          <p className="text-xs text-[var(--outline)] ml-5">
+                            {item.modifiers
+                              .flatMap((g) => g.modifiers.map((m) => m.name))
+                              .join(", ")}
+                          </p>
+                        )}
+                        {item.comboSelections && item.comboSelections.length > 0 && (
+                          <p className="text-xs text-[var(--outline)] ml-5">
+                            {item.comboSelections
+                              .map((s) => {
+                                const modNames = s.modifiers
+                                  .flatMap((g) => g.modifiers.map((m) => m.name));
+                                return modNames.length > 0
+                                  ? `${s.component.name} (${modNames.join(", ")})`
+                                  : s.component.name;
+                              })
+                              .join(" · ")}
+                          </p>
+                        )}
+                        {item.note && (
+                          <p className="text-xs text-[var(--primary)] italic ml-5">
+                            Note: {item.note}
+                          </p>
+                        )}
+                      </div>
+                      <div className="flex flex-col items-end shrink-0 ml-2">
+                        {(item.comped || item.discount || item.priceOverride != null) && (
+                          <span className="text-[10px] line-through text-[var(--outline)]">
+                            ${((item.basePrice + item.modifiers.reduce((s, g) => s + g.modifiers.reduce((s2, m) => s2 + m.price, 0), 0)) * item.quantity).toFixed(2)}
+                          </span>
+                        )}
+                        {item.comped ? (
+                          <span className="text-xs font-semibold px-1.5 py-0.5 rounded-full bg-[#E8DEF8] text-[#6750A4]">COMP</span>
+                        ) : item.discount ? (
+                          <span className="text-sm font-medium text-[#6750A4]">
+                            ${item.totalPrice.toFixed(2)}
+                          </span>
+                        ) : (
+                          <span className="text-sm font-medium">
+                            ${item.totalPrice.toFixed(2)}
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
-                  {item.breakline && (
-                    <div className="mx-4 mt-0.5 mb-0" style={{ height: 3, borderRadius: 2, background: "var(--foreground)" }} />
+                  {item.breaklineBelow && (
+                    <div className="px-4 py-1.5">
+                      <div className="h-px bg-gray-300" />
+                    </div>
                   )}
                 </div>
               ))

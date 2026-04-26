@@ -192,7 +192,7 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
                         </div>
                       )}
                       {unsentItems.map((item) => (
-                        <div key={item.id} data-item-id={item.id} className={item.breakline ? "" : "border-b border-gray-50"}>
+                        <div key={item.id} data-item-id={item.id} className={item.breaklineAbove || item.breaklineBelow ? "" : "border-b border-gray-50"}>
                           <div
                             className="flex items-start gap-2 px-4 py-2.5"
                             onClick={() => {
@@ -226,9 +226,10 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
                                     .map((s) => {
                                       const modNames = s.modifiers
                                         .flatMap((g) => g.modifiers.map((m) => m.name));
+                                      const base = `${s.groupName}: ${s.component.name}`;
                                       return modNames.length > 0
-                                        ? `${s.component.name} (${modNames.join(", ")})`
-                                        : s.component.name;
+                                        ? `${base} (${modNames.join(", ")})`
+                                        : base;
                                     })
                                     .join(" · ")}
                                 </p>
@@ -270,12 +271,12 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
                                 <button
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    toggleBreakline(item.id);
+                                    toggleBreakline(item.id, "below");
                                   }}
                                   className="active:opacity-50"
                                   title="Breakline"
                                 >
-                                  <BreaklineIcon size={20} color={item.breakline ? "var(--primary)" : "var(--foreground)"} />
+                                  <BreaklineIcon size={20} color={item.breaklineBelow ? "var(--primary)" : "var(--foreground)"} />
                                 </button>
                                 <button
                                   onClick={(e) => {
@@ -687,7 +688,7 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
                           )}
 
                           {/* Breakline separator */}
-                          {item.breakline && (
+                          {item.breaklineBelow && (
                             <div className="mx-4 mt-1 mb-0" style={{ height: 3, borderRadius: 2, background: "var(--foreground)" }} />
                           )}
                         </div>
@@ -704,7 +705,7 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
                         </div>
                       )}
                       {sentItems.map((item) => (
-                        <div key={item.id} data-item-id={item.id} className={item.breakline ? "" : "border-b border-gray-50"}>
+                        <div key={item.id} data-item-id={item.id} className={item.breaklineAbove || item.breaklineBelow ? "" : "border-b border-gray-50"}>
                         <div
                           className="flex items-start gap-2 px-4 py-2.5"
                           onClick={() => {
@@ -739,9 +740,10 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
                                   .map((s) => {
                                     const modNames = s.modifiers
                                       .flatMap((g) => g.modifiers.map((m) => m.name));
+                                    const base = `${s.groupName}: ${s.component.name}`;
                                     return modNames.length > 0
-                                      ? `${s.component.name} (${modNames.join(", ")})`
-                                      : s.component.name;
+                                      ? `${base} (${modNames.join(", ")})`
+                                      : base;
                                   })
                                   .join(" · ")}
                               </p>
@@ -779,12 +781,12 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  toggleBreakline(item.id);
+                                  toggleBreakline(item.id, "below");
                                 }}
                                 className="active:opacity-50"
                                 title="Breakline"
                               >
-                                <BreaklineIcon size={20} color={item.breakline ? "var(--primary)" : "var(--foreground)"} />
+                                <BreaklineIcon size={20} color={item.breaklineBelow ? "var(--primary)" : "var(--foreground)"} />
                               </button>
                               <button
                                 onClick={(e) => {
@@ -1058,7 +1060,7 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
                           </div>
                         )}
 
-                          {item.breakline && (
+                          {item.breaklineBelow && (
                             <div className="mx-4 mt-1 mb-0" style={{ height: 3, borderRadius: 2, background: "var(--foreground)" }} />
                           )}
                         </div>

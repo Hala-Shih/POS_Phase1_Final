@@ -19,6 +19,10 @@ interface OrderConfig {
   selections: Record<string, Modifier[]>;
 }
 
+function formatUpcharge(price: number) {
+  return Number.isInteger(price) ? price.toString() : price.toFixed(2);
+}
+
 export default function MenuSheet({ open, onClose }: MenuSheetProps) {
   const { addItem, updateItemModifiers, updateComboSelections, cartItems } = useOrderStore();
 
@@ -74,6 +78,7 @@ export default function MenuSheet({ open, onClose }: MenuSheetProps) {
 
   // Refs for auto-scroll in modifier config (Level 3)
   const modGroupRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const modScrollRef = useRef<HTMLDivElement | null>(null);
   const prevModCompleteRef = useRef<Record<string, boolean>>({});
 
   const updateSelection = (groupId: string, modifier: Modifier, maxSelect: number) => {
@@ -128,13 +133,16 @@ export default function MenuSheet({ open, onClose }: MenuSheetProps) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeOrder.selections]);
 
-  const allOrdersComplete = configItem
-    ? orders.every((order) =>
-        configItem.modifierGroups
+  const isOrderComplete = (order: OrderConfig) =>
+    configItem
+      ? configItem.modifierGroups
           .filter((g) => g.required)
           .every((g) => (order.selections[g.id] || []).length >= g.minSelect)
-      )
-    : false;
+      : false;
+
+  const allOrdersComplete = orders.every(isOrderComplete);
+
+  const showNextOrder = orders.length > 1 && isOrderComplete(orders[activeOrderIndex]) && !allOrdersComplete;
 
   const hasNewOrChangedOrders = orders.some((order) =>
     !order.cartItemId ? true : changedOrderIds.has(order.cartItemId)
@@ -148,7 +156,10 @@ export default function MenuSheet({ open, onClose }: MenuSheetProps) {
     });
     const next = [...orders, { selections: auto }];
     setOrders(next);
-    setActiveOrderIndex(next.length - 1);
+    const firstIncomplete = next.findIndex((o) =>
+      !configItem.modifierGroups.filter((g) => g.required).every((g) => (o.selections[g.id] || []).length >= g.minSelect)
+    );
+    setActiveOrderIndex(firstIncomplete >= 0 ? firstIncomplete : next.length - 1);
   };
 
   const removeOrder = () => {
@@ -203,8 +214,6 @@ export default function MenuSheet({ open, onClose }: MenuSheetProps) {
   };
 
   const handleClose = () => {
-    setActiveBookId(null);
-    setActiveCatId(null);
     setConfigItem(null);
     onClose();
   };
@@ -277,7 +286,6 @@ export default function MenuSheet({ open, onClose }: MenuSheetProps) {
                           style={{ minHeight: 80 }}
                         >
                           <span className="text-[15px] font-semibold text-[#1D1B20] leading-snug">{book.name}</span>
-                          <span className="text-[11px] text-[var(--outline)] mt-0.5">{book.categories.length} categories</span>
                         </button>
                       ))}
                     </div>
@@ -328,7 +336,7 @@ export default function MenuSheet({ open, onClose }: MenuSheetProps) {
                                   opacity: item.soldOut ? 0.5 : 1,
                                 }}
                               >
-                                <span className="flex-1 text-[13px] font-semibold text-[#1D1B20] leading-snug text-left truncate">
+                                <span className="flex-1 text-[13px] font-normal text-[#1D1B20] leading-snug text-left truncate">
                                   {item.name}
                                 </span>
                                 {item.soldOut && (
@@ -362,26 +370,33 @@ export default function MenuSheet({ open, onClose }: MenuSheetProps) {
               {/* Level 3 — Modifier drill-in, instant (no animation) */}
               {configItem && (
                   <div className="absolute inset-0 bg-white flex flex-col" style={{ zIndex: 10 }}>
-                    {/* Quantity + order tabs */}
-                    <div className="flex items-center justify-between px-4 py-2 shrink-0">
-                      <div className="flex items-center gap-3">
-                        <button
-                          onClick={removeOrder}
-                          disabled={orders.length <= 1}
-                          className="w-7 h-7 rounded-full border border-[var(--outline-variant)] flex items-center justify-center disabled:opacity-30 active:bg-gray-100"
-                        >
-                          <Minus size={14} />
-                        </button>
-                        <span className="text-sm font-semibold min-w-[16px] text-center">{quantity}</span>
-                        <button
-                          onClick={addAnotherOrder}
-                          className="w-7 h-7 rounded-full border border-[var(--outline-variant)] flex items-center justify-center active:bg-gray-100"
-                        >
-                          <Plus size={14} />
-                        </button>
+                    {/* Header: item name + qty, then order tabs on own row */}
+                    <div className="shrink-0">
+                      {/* Title row + qty editor */}
+                      <div className="flex items-center gap-2 px-4 pb-2">
+                        <div className="flex-1 min-w-0">
+                          <h2 className="text-base font-semibold truncate">{configItem.name}</h2>
+                        </div>
+                        <div className="flex items-center gap-3 shrink-0">
+                          <button
+                            onClick={removeOrder}
+                            disabled={orders.length <= 1}
+                            className="w-7 h-7 rounded-full border border-[var(--outline-variant)] flex items-center justify-center disabled:opacity-30 active:bg-gray-100"
+                          >
+                            <Minus size={14} />
+                          </button>
+                          <span className="text-sm font-semibold min-w-[16px] text-center">{quantity}</span>
+                          <button
+                            onClick={addAnotherOrder}
+                            className="w-7 h-7 rounded-full border border-[var(--outline-variant)] flex items-center justify-center active:bg-gray-100"
+                          >
+                            <Plus size={14} />
+                          </button>
+                        </div>
                       </div>
+                      {/* Order tabs row — own row, shown when >1 orders */}
                       {orders.length > 1 && (
-                        <div className="flex gap-1.5 overflow-x-auto no-scrollbar">
+                        <div className="flex gap-2 px-4 pb-2 overflow-x-auto no-scrollbar">
                           {orders.map((order, i) => {
                             const complete = configItem.modifierGroups
                               .filter((g) => g.required)
@@ -390,14 +405,14 @@ export default function MenuSheet({ open, onClose }: MenuSheetProps) {
                               <button
                                 key={i}
                                 onClick={() => setActiveOrderIndex(i)}
-                                className={`flex items-center gap-1 px-2.5 py-1 rounded-full border text-xs font-medium shrink-0 transition-colors ${
+                                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-medium shrink-0 transition-colors ${
                                   i === activeOrderIndex
                                     ? "border-[var(--primary)] bg-[var(--primary-light)]"
                                     : "border-[var(--outline-variant)]"
                                 }`}
                               >
-                                {complete && <Check size={10} className="text-[var(--primary)]" />}
-                                #{i + 1}
+                                {complete && <Check size={12} className="text-[var(--primary)]" />}
+                                Order {i + 1}
                               </button>
                             );
                           })}
@@ -406,7 +421,7 @@ export default function MenuSheet({ open, onClose }: MenuSheetProps) {
                     </div>
 
                     {/* Modifier groups */}
-                    <div className="flex-1 overflow-y-auto thin-scrollbar px-4 pb-2">
+                    <div ref={modScrollRef} className="flex-1 overflow-y-auto thin-scrollbar px-4 pb-2">
                       {configItem.modifierGroups.map((group) => {
                         return (
                           <div key={group.id} ref={(el) => { modGroupRefs.current[group.id] = el; }} className="mb-3">
@@ -431,7 +446,7 @@ export default function MenuSheet({ open, onClose }: MenuSheetProps) {
                                     <span className="text-xs leading-snug">{option.name}</span>
                                     <div className="flex items-center gap-1 shrink-0 ml-1">
                                       {option.price > 0 && (
-                                        <span className="text-[10px] text-[var(--outline)]">+${option.price.toFixed(2)}</span>
+                                        <span className="text-[10px] text-[var(--outline)]">+${formatUpcharge(option.price)}</span>
                                       )}
                                       {selected && <Check size={14} className="text-[var(--primary)]" />}
                                     </div>
@@ -447,11 +462,20 @@ export default function MenuSheet({ open, onClose }: MenuSheetProps) {
                     {/* Add to order */}
                     <div className="border-t border-[var(--outline-variant)] px-4 py-3 shrink-0">
                       <button
-                        onClick={handleAddModifiers}
-                        disabled={!allOrdersComplete || !hasNewOrChangedOrders}
+                        onClick={() => {
+                          if (showNextOrder) {
+                            const nextIncomplete = orders.findIndex((o, i) => i !== activeOrderIndex && !isOrderComplete(o));
+                            const nextIdx = nextIncomplete >= 0 ? nextIncomplete : orders.findIndex((_, i) => i !== activeOrderIndex);
+                            setActiveOrderIndex(nextIdx >= 0 ? nextIdx : activeOrderIndex);
+                            modScrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+                            return;
+                          }
+                          handleAddModifiers();
+                        }}
+                        disabled={showNextOrder ? false : (!allOrdersComplete || !hasNewOrChangedOrders)}
                         className="w-full h-10 rounded-xl bg-[var(--primary)] text-white flex items-center justify-center gap-2 text-sm font-semibold disabled:opacity-40 active:opacity-80 transition-opacity"
                       >
-                        {activeOrder?.cartItemId ? "Save changes" : "Add to order"}
+                        {showNextOrder ? "Next Order" : (activeOrder?.cartItemId ? "Save changes" : "Add to order")}
                       </button>
                     </div>
                   </div>

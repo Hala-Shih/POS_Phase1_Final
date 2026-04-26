@@ -852,6 +852,311 @@
             ]
           },
           {
+            "id": "item-lunch-legendary-combo",
+            "name": "Lunch Special Legendary Combo",
+            "price": 26,
+            "description": "Choose one entree, one side, and one drink with optional customizations",
+            "isCombo": true,
+            "modifierGroups": [],
+            "comboGroups": [
+              {
+                "id": "cg-legendary-entree",
+                "name": "Entree",
+                "required": true,
+                "minSelect": 1,
+                "maxSelect": 1,
+                "components": [
+                  {
+                    "id": "cc-legendary-beef-noodle",
+                    "name": "Beef Noodle",
+                    "price": 0,
+                    "modifierGroups": [
+                      {
+                        "id": "mg-legendary-bn-spice",
+                        "name": "Spice Level",
+                        "required": true,
+                        "minSelect": 1,
+                        "maxSelect": 1,
+                        "options": [
+                          { "id": "mod-legendary-bn-mild", "name": "Mild", "price": 0 },
+                          { "id": "mod-legendary-bn-medium", "name": "Medium Spicy", "price": 0 },
+                          { "id": "mod-legendary-bn-hot", "name": "Hot", "price": 0 }
+                        ]
+                      },
+                      {
+                        "id": "mg-legendary-bn-customize",
+                        "name": "Customize",
+                        "required": false,
+                        "minSelect": 0,
+                        "maxSelect": 3,
+                        "options": [
+                          { "id": "mod-legendary-bn-no-scallions", "name": "No Scallions", "price": 0 },
+                          { "id": "mod-legendary-bn-extra-broth", "name": "Extra Broth", "price": 0 },
+                          { "id": "mod-legendary-bn-add-beef", "name": "Extra Beef", "price": 2 }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "id": "cc-legendary-fried-rice",
+                    "name": "Taiwanese Fried Rice",
+                    "price": 0,
+                    "modifierGroups": [
+                      {
+                        "id": "mg-legendary-fr-addons",
+                        "name": "Add-ons",
+                        "required": false,
+                        "minSelect": 0,
+                        "maxSelect": 2,
+                        "options": [
+                          { "id": "mod-legendary-fr-shrimp", "name": "+Shrimp", "price": 3 },
+                          { "id": "mod-legendary-fr-egg", "name": "Extra Egg", "price": 1 },
+                          { "id": "mod-legendary-fr-pork", "name": "Extra Pork", "price": 2 }
+                        ]
+                      },
+                      {
+                        "id": "mg-legendary-fr-spice",
+                        "name": "Spice Level",
+                        "required": true,
+                        "minSelect": 1,
+                        "maxSelect": 1,
+                        "options": [
+                          { "id": "mod-legendary-fr-no-spice", "name": "No Spicy", "price": 0 },
+                          { "id": "mod-legendary-fr-medium", "name": "Medium Spicy", "price": 0 },
+                          { "id": "mod-legendary-fr-hot", "name": "Hot", "price": 0 }
+                        ]
+                      },
+                      {
+                        "id": "mg-legendary-fr-customize",
+                        "name": "Customize",
+                        "required": false,
+                        "minSelect": 0,
+                        "maxSelect": 2,
+                        "options": [
+                          { "id": "mod-legendary-fr-no-scallions", "name": "No Scallions", "price": 0 },
+                          { "id": "mod-legendary-fr-less-oil", "name": "Less Oil", "price": 0 }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "id": "cc-legendary-fried-noodle",
+                    "name": "Taiwanese Fried Noodles",
+                    "price": 0,
+                    "modifierGroups": [
+                      {
+                        "id": "mg-legendary-fn-protein",
+                        "name": "Protein",
+                        "required": true,
+                        "minSelect": 1,
+                        "maxSelect": 1,
+                        "options": [
+                          { "id": "mod-legendary-fn-chicken", "name": "Chicken", "price": 0 },
+                          { "id": "mod-legendary-fn-beef", "name": "Beef", "price": 1 },
+                          { "id": "mod-legendary-fn-shrimp", "name": "Shrimp", "price": 2 }
+                        ]
+                      },
+                      {
+                        "id": "mg-legendary-fn-spice",
+                        "name": "Spice Level",
+                        "required": false,
+                        "minSelect": 0,
+                        "maxSelect": 1,
+                        "options": [
+                          { "id": "mod-legendary-fn-mild", "name": "Mild", "price": 0 },
+                          { "id": "mod-legendary-fn-medium", "name": "Medium Spicy", "price": 0 },
+                          { "id": "mod-legendary-fn-hot", "name": "Hot", "price": 0 }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "id": "cg-legendary-side",
+                "name": "Side",
+                "required": true,
+                "minSelect": 1,
+                "maxSelect": 1,
+                "components": [
+                  {
+                    "id": "cc-legendary-side-fried-chicken",
+                    "name": "Fried Chicken",
+                    "price": 0,
+                    "modifierGroups": [
+                      {
+                        "id": "mg-legendary-side-fc-cut",
+                        "name": "Cut Style",
+                        "required": false,
+                        "minSelect": 0,
+                        "maxSelect": 1,
+                        "options": [
+                          { "id": "mod-legendary-side-fc-bite", "name": "Bite-size", "price": 0 },
+                          { "id": "mod-legendary-side-fc-on-bone", "name": "On Bone", "price": 0 }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "id": "cc-legendary-side-pork-chop",
+                    "name": "Fried Pork Chop",
+                    "price": 0,
+                    "modifierGroups": [
+                      {
+                        "id": "mg-legendary-side-pc-style",
+                        "name": "Style",
+                        "required": false,
+                        "minSelect": 0,
+                        "maxSelect": 1,
+                        "options": [
+                          { "id": "mod-legendary-side-pc-crispy", "name": "Extra Crispy", "price": 0 },
+                          { "id": "mod-legendary-side-pc-tender", "name": "Tender", "price": 0 }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "id": "cc-legendary-side-cucumber",
+                    "name": "Cucumber",
+                    "price": 0,
+                    "modifierGroups": [
+                      {
+                        "id": "mg-legendary-side-cb-spice",
+                        "name": "Spice",
+                        "required": false,
+                        "minSelect": 0,
+                        "maxSelect": 1,
+                        "options": [
+                          { "id": "mod-legendary-side-cb-regular", "name": "Regular", "price": 0 },
+                          { "id": "mod-legendary-side-cb-more-spicy", "name": "More Spicy", "price": 0 }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "id": "cg-legendary-drink",
+                "name": "Drink",
+                "required": true,
+                "minSelect": 1,
+                "maxSelect": 1,
+                "components": [
+                  {
+                    "id": "cc-legendary-drink-bubble-tea",
+                    "name": "Bubble Tea",
+                    "price": 0,
+                    "modifierGroups": [
+                      {
+                        "id": "mg-legendary-drink-bt-size",
+                        "name": "Size",
+                        "required": true,
+                        "minSelect": 1,
+                        "maxSelect": 1,
+                        "options": [
+                          { "id": "mod-legendary-drink-bt-medium", "name": "Size Medium", "price": 0 },
+                          { "id": "mod-legendary-drink-bt-large", "name": "Size Large", "price": 1 }
+                        ]
+                      },
+                      {
+                        "id": "mg-legendary-drink-bt-ice",
+                        "name": "Ice",
+                        "required": false,
+                        "minSelect": 0,
+                        "maxSelect": 1,
+                        "options": [
+                          { "id": "mod-legendary-drink-bt-less-ice", "name": "Less Ice", "price": 0 },
+                          { "id": "mod-legendary-drink-bt-extra-ice", "name": "Extra Ice", "price": 0 }
+                        ]
+                      },
+                      {
+                        "id": "mg-legendary-drink-bt-toppings",
+                        "name": "Toppings",
+                        "required": false,
+                        "minSelect": 0,
+                        "maxSelect": 2,
+                        "options": [
+                          { "id": "mod-legendary-drink-bt-coconut-jelly", "name": "+ Coconut Jelly", "price": 1 },
+                          { "id": "mod-legendary-drink-bt-taro-balls", "name": "+Taro Balls", "price": 1 },
+                          { "id": "mod-legendary-drink-bt-boba", "name": "Extra Boba", "price": 1 }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "id": "cc-legendary-drink-jasmine",
+                    "name": "Jasmine Green Tea",
+                    "price": 0,
+                    "modifierGroups": [
+                      {
+                        "id": "mg-legendary-drink-jg-size",
+                        "name": "Size",
+                        "required": true,
+                        "minSelect": 1,
+                        "maxSelect": 1,
+                        "options": [
+                          { "id": "mod-legendary-drink-jg-medium", "name": "Size Medium", "price": 0 },
+                          { "id": "mod-legendary-drink-jg-large", "name": "Size Large", "price": 1 }
+                        ]
+                      },
+                      {
+                        "id": "mg-legendary-drink-jg-ice",
+                        "name": "Ice",
+                        "required": false,
+                        "minSelect": 0,
+                        "maxSelect": 1,
+                        "options": [
+                          { "id": "mod-legendary-drink-jg-less-ice", "name": "Less Ice", "price": 0 },
+                          { "id": "mod-legendary-drink-jg-extra-ice", "name": "Extra Ice", "price": 0 }
+                        ]
+                      },
+                      {
+                        "id": "mg-legendary-drink-jg-toppings",
+                        "name": "Toppings",
+                        "required": false,
+                        "minSelect": 0,
+                        "maxSelect": 2,
+                        "options": [
+                          { "id": "mod-legendary-drink-jg-coconut-jelly", "name": "+ Coconut Jelly", "price": 1 },
+                          { "id": "mod-legendary-drink-jg-taro-balls", "name": "+Taro Balls", "price": 1 }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "id": "cc-legendary-drink-black-tea",
+                    "name": "Black Tea",
+                    "price": 0,
+                    "modifierGroups": [
+                      {
+                        "id": "mg-legendary-drink-blk-size",
+                        "name": "Size",
+                        "required": true,
+                        "minSelect": 1,
+                        "maxSelect": 1,
+                        "options": [
+                          { "id": "mod-legendary-drink-blk-medium", "name": "Size Medium", "price": 0 },
+                          { "id": "mod-legendary-drink-blk-large", "name": "Size Large", "price": 1 }
+                        ]
+                      },
+                      {
+                        "id": "mg-legendary-drink-blk-ice",
+                        "name": "Ice",
+                        "required": false,
+                        "minSelect": 0,
+                        "maxSelect": 1,
+                        "options": [
+                          { "id": "mod-legendary-drink-blk-less-ice", "name": "Less Ice", "price": 0 },
+                          { "id": "mod-legendary-drink-blk-extra-ice", "name": "Extra Ice", "price": 0 }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
             "id": "item-deluxe-combo-2",
             "name": "Deluxe Combo for 2",
             "price": 120,

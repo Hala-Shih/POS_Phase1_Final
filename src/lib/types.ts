@@ -113,7 +113,8 @@ export interface CartItem {
   discount?: CartItemDiscount | null;
   comped?: boolean;
   priceOverride?: number | null;
-  breakline?: boolean;
+  breaklineAbove?: boolean;
+  breaklineBelow?: boolean;
   sent: boolean;
   totalPrice: number;
 }

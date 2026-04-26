@@ -27,6 +27,10 @@ interface ComboState {
   componentModifiers: Record<string, Record<string, Record<string, Modifier[]>>>;
 }
 
+function formatUpcharge(price: number) {
+  return Number.isInteger(price) ? price.toString() : price.toFixed(2);
+}
+
 function buildEmptyState(): ComboState {
   return { selectedComponent: {}, componentModifiers: {} };
 }
@@ -106,6 +110,9 @@ export default function ComboConfigSheet({
   };
 
   const selectComponent = (group: ComboGroup, component: ComboComponent) => {
+    const firstRequiredModGroup =
+      component.modifierGroups.find((mg) => mg.required) || component.modifierGroups[0];
+
     updateActiveOrder((prev) => {
       const current = prev.selectedComponent[group.id] || [];
       const idx = current.findIndex((c) => c.id === component.id);
@@ -128,7 +135,16 @@ export default function ComboConfigSheet({
       };
     });
 
-    // Auto-advance: if component has no modifiers, no action needed
+    // When a selected component has required modifiers, anchor to that section first.
+    if (firstRequiredModGroup) {
+      const sectionKey = `${group.id}:${component.id}:${firstRequiredModGroup.id}`;
+      setTimeout(() => {
+        const target = sectionRefs.current[sectionKey];
+        if (target) {
+          target.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+      }, 0);
+    }
   };
 
   const selectModifier = (
@@ -206,13 +222,33 @@ export default function ComboConfigSheet({
   const isOrderComplete = (order: ComboState) =>
     comboGroups.every((g) => isGroupCompleteForOrder(order, g));
 
+  const comboDrawerHeight = "75%";
+
+  const shortGroupName = (name: string) =>
+    name
+      .replace(/^choose\s+your\s+/i, "")
+      .replace(/^choose\s+/i, "")
+      .replace(/^select\s+/i, "")
+      .trim();
+
+  const getComponentModifierNames = (order: ComboState, groupId: string, componentId: string) => {
+    const compMods = order.componentModifiers[groupId]?.[componentId] || {};
+    return Object.values(compMods).flatMap((mods) => mods.map((m) => m.name));
+  };
+
+  const formatSelectionLine = (groupName: string, component: ComboComponent, modifierNames: string[]) => {
+    const left = `${shortGroupName(groupName)}: ${component.name}`;
+    return modifierNames.length > 0 ? `${left} (${modifierNames.join(", ")})` : left;
+  };
+
   // Auto-scroll to next incomplete section (group or modifier) when a section becomes complete
   useEffect(() => {
     // Build flat list of sections: each combo group component selection + each modifier group
     const sections: { key: string; complete: boolean }[] = [];
     comboGroups.forEach((g) => {
       const selected = activeOrder.selectedComponent[g.id] || [];
-      const componentsDone = selected.length >= g.minSelect;
+      const componentsDone =
+        selected.length >= g.minSelect && selected.every((comp) => isComponentComplete(activeOrder, g.id, comp));
       sections.push({ key: g.id, complete: componentsDone });
 
       // For each selected component, add its required modifier groups
@@ -277,7 +313,8 @@ export default function ComboConfigSheet({
   const addAnotherOrder = () => {
     const newOrders = [...orders, buildEmptyState()];
     setOrders(newOrders);
-    setActiveOrderIndex(newOrders.length - 1);
+    const firstIncompleteIndex = newOrders.findIndex((order) => !isOrderComplete(order));
+    setActiveOrderIndex(firstIncompleteIndex >= 0 ? firstIncompleteIndex : newOrders.length - 1);
   };
 
   // Remove an order
@@ -325,12 +362,65 @@ export default function ComboConfigSheet({
     onClose();
   };
 
+  const showNextAction = orders.length > 1 && !allOrdersComplete;
+  const primaryDisabled = showNextAction
+    ? !isOrderComplete(activeOrder)
+    : !allOrdersComplete || !hasNewOrChangedOrders;
+
+  const getFirstMissingSectionKey = (order: ComboState) => {
+    for (const group of comboGroups) {
+      if (!group.required) continue;
+
+      const selected = order.selectedComponent[group.id] || [];
+      if (selected.length < group.minSelect) {
+        return group.id;
+      }
+
+      for (const comp of selected) {
+        for (const mg of comp.modifierGroups) {
+          if (!mg.required) continue;
+          const mods = order.componentModifiers[group.id]?.[comp.id]?.[mg.id] || [];
+          if (mods.length < mg.minSelect) {
+            return `${group.id}:${comp.id}:${mg.id}`;
+          }
+        }
+      }
+    }
+
+    return null;
+  };
+
+  const anchorToFirstMissingForOrder = (order: ComboState) => {
+    const missingKey = getFirstMissingSectionKey(order);
+    if (!missingKey) return;
+
+    setTimeout(() => {
+      const target = sectionRefs.current[missingKey];
+      if (target) {
+        target.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    }, 0);
+  };
+
+  const handlePrimaryAction = () => {
+    if (showNextAction) {
+      const firstIncompleteIndex = orders.findIndex((order) => !isOrderComplete(order));
+      if (firstIncompleteIndex >= 0) {
+        setActiveOrderIndex(firstIncompleteIndex);
+        anchorToFirstMissingForOrder(orders[firstIncompleteIndex]);
+      }
+      return;
+    }
+
+    handleAdd();
+  };
+
   return (
     <>
       {/* Sheet */}
       <div
         className="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl z-50 flex flex-col overflow-hidden"
-        style={{ height: "60%", boxShadow: "0 -8px 32px -4px rgba(0,0,0,0.18)" }}
+        style={{ height: comboDrawerHeight, boxShadow: "0 -8px 32px -4px rgba(0,0,0,0.18)" }}
       >
         {/* Drag handle */}
         <div className="flex justify-center pt-2.5 pb-1 cursor-pointer shrink-0" onClick={onClose}>
@@ -397,6 +487,7 @@ export default function ComboConfigSheet({
             const selectedList = activeOrder.selectedComponent[group.id] || [];
             const complete = isGroupCompleteForOrder(activeOrder, group);
             const isMulti = group.maxSelect > 1;
+            const remainingRequired = Math.max(0, group.minSelect - selectedList.length);
 
             return (
               <div key={group.id} ref={(el) => { sectionRefs.current[group.id] = el; }} className="mb-3">
@@ -415,6 +506,11 @@ export default function ComboConfigSheet({
                     {isMulti && (
                       <span className="text-[10px] text-[var(--outline)]">
                         {selectedList.length}/{group.maxSelect}
+                      </span>
+                    )}
+                    {!isMulti && group.required && (
+                      <span className="text-[10px] text-[var(--outline)]">
+                        {remainingRequired > 0 ? `Choose ${remainingRequired} more` : "Ready"}
                       </span>
                     )}
                   </div>
@@ -439,7 +535,7 @@ export default function ComboConfigSheet({
                         <div className="flex items-center gap-1 shrink-0 ml-1">
                           {comp.price > 0 && (
                             <span className="text-[10px] text-[var(--outline)]">
-                              +${comp.price.toFixed(2)}
+                              +${formatUpcharge(comp.price)}
                             </span>
                           )}
                           {isSelected && (
@@ -457,12 +553,12 @@ export default function ComboConfigSheet({
                     {comp.modifierGroups.map((mg) => (
                       <div key={mg.id} ref={(el) => { sectionRefs.current[`${group.id}:${comp.id}:${mg.id}`] = el; }} className="mb-2">
                         <p className="text-xs font-semibold text-[var(--outline)] mb-1.5">
-                          {comp.name} — {mg.name}
+                          {shortGroupName(group.name)}: {comp.name} - {mg.name}
                           {mg.required && (
                             <span className="font-normal"> (Required)</span>
                           )}
                         </p>
-                        <div className="flex gap-2 flex-wrap">
+                        <div className="grid grid-cols-3 gap-1.5">
                           {mg.options.map((opt) => {
                             const modSelected = isModSelected(
                               group.id, comp.id, mg.id, opt.id
@@ -473,7 +569,7 @@ export default function ComboConfigSheet({
                                 onClick={() =>
                                   selectModifier(group.id, comp.id, mg.id, opt, mg.maxSelect)
                                 }
-                                className={`px-3 py-1.5 rounded-lg border text-xs font-medium transition-colors ${
+                                className={`min-h-[44px] px-3 py-1.5 rounded-lg border text-xs font-medium transition-colors text-left ${
                                   modSelected
                                     ? "border-[var(--primary)] bg-[var(--primary-light)]"
                                     : "border-[var(--outline-variant)]"
@@ -500,12 +596,27 @@ export default function ComboConfigSheet({
 
         {/* Add to cart / Save changes button */}
         <div className="border-t border-[var(--outline-variant)] px-4 py-3">
+          <div className="mb-2 space-y-0.5">
+            {comboGroups.map((group) => {
+              const selectedList = activeOrder.selectedComponent[group.id] || [];
+              if (selectedList.length === 0) return null;
+
+              return selectedList.map((comp) => {
+                const modNames = getComponentModifierNames(activeOrder, group.id, comp.id);
+                return (
+                  <p key={`${group.id}:${comp.id}`} className="text-[11px] text-[var(--outline)] leading-snug truncate">
+                    {formatSelectionLine(group.name, comp, modNames)}
+                  </p>
+                );
+              });
+            })}
+          </div>
           <button
-            onClick={handleAdd}
-            disabled={!allOrdersComplete || !hasNewOrChangedOrders}
+            onClick={handlePrimaryAction}
+            disabled={primaryDisabled}
             className="w-full h-11 rounded-xl bg-[var(--primary)] text-white flex items-center justify-center gap-2 text-sm font-semibold disabled:opacity-40 active:opacity-80 transition-opacity"
           >
-            {activeOrder.cartItemId ? "Save changes" : "Add to cart"}
+            {showNextAction ? "Next Order" : (activeOrder.cartItemId ? "Save changes" : "Add to cart")}
           </button>
         </div>
       </div>

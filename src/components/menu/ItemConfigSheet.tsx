@@ -18,6 +18,10 @@ interface OrderConfig {
   selections: Record<string, Modifier[]>;
 }
 
+function formatUpcharge(price: number) {
+  return Number.isInteger(price) ? price.toString() : price.toFixed(2);
+}
+
 export default function ItemConfigSheet({
   item,
   existingCartItems = [],
@@ -108,6 +112,11 @@ export default function ItemConfigSheet({
   const isSelected = (groupId: string, modifierId: string) =>
     (activeOrder.selections[groupId] || []).some((m) => m.id === modifierId);
 
+  const isOrderComplete = (order: OrderConfig) =>
+    item.modifierGroups
+      .filter((g) => g.required)
+      .every((g) => (order.selections[g.id] || []).length >= g.minSelect);
+
   // Auto-scroll to next incomplete modifier group when a selection completes one
   useEffect(() => {
     const currentComplete: Record<string, boolean> = {};
@@ -138,11 +147,7 @@ export default function ItemConfigSheet({
 
   // Check if current order has all required modifiers
   // Check if ALL orders are complete
-  const allOrdersComplete = orders.every((order) =>
-    item.modifierGroups
-      .filter((g) => g.required)
-      .every((g) => (order.selections[g.id] || []).length >= g.minSelect)
-  );
+  const allOrdersComplete = orders.every((order) => isOrderComplete(order));
 
   // Check if any order has been modified from its original state or is new
   const hasNewOrChangedOrders = orders.some((order) => {
@@ -160,7 +165,8 @@ export default function ItemConfigSheet({
     });
     const newOrders = [...orders, { selections: autoSelections }];
     setOrders(newOrders);
-    setActiveOrderIndex(newOrders.length - 1);
+    const firstIncompleteIndex = newOrders.findIndex((order) => !isOrderComplete(order));
+    setActiveOrderIndex(firstIncompleteIndex >= 0 ? firstIncompleteIndex : newOrders.length - 1);
   };
 
   // Remove an order (only new ones, not existing)
@@ -210,6 +216,41 @@ export default function ItemConfigSheet({
     });
 
     onClose();
+  };
+
+  const showNextAction = orders.length > 1 && !allOrdersComplete;
+  const primaryDisabled = showNextAction
+    ? !isOrderComplete(activeOrder)
+    : !allOrdersComplete || !hasNewOrChangedOrders;
+
+  const getFirstMissingGroupId = (order: OrderConfig) =>
+    item.modifierGroups
+      .filter((g) => g.required)
+      .find((g) => (order.selections[g.id] || []).length < g.minSelect)?.id;
+
+  const anchorToFirstMissingForOrder = (order: OrderConfig) => {
+    const missingGroupId = getFirstMissingGroupId(order);
+    if (!missingGroupId) return;
+
+    setTimeout(() => {
+      const target = sectionRefs.current[missingGroupId];
+      if (target) {
+        target.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    }, 0);
+  };
+
+  const handlePrimaryAction = () => {
+    if (showNextAction) {
+      const firstIncompleteIndex = orders.findIndex((order) => !isOrderComplete(order));
+      if (firstIncompleteIndex >= 0) {
+        setActiveOrderIndex(firstIncompleteIndex);
+        anchorToFirstMissingForOrder(orders[firstIncompleteIndex]);
+      }
+      return;
+    }
+
+    handleAdd();
   };
 
   return (
@@ -311,14 +352,14 @@ export default function ItemConfigSheet({
                   )}
                 </h3>
 
-                <div className="grid grid-cols-2 gap-1.5">
+                <div className="grid grid-cols-3 gap-1.5">
                   {group.options.map((option) => {
                     const selected = isSelected(group.id, option.id);
                     return (
                       <button
                         key={option.id}
                         onClick={() => updateSelection(group.id, option, group.maxSelect)}
-                        className={`flex items-center justify-between px-3 py-2.5 rounded-xl border transition-colors text-left ${
+                        className={`flex min-h-[44px] items-center justify-between px-3 py-2.5 rounded-xl border transition-colors text-left ${
                           selected
                             ? "border-[var(--primary)] bg-[var(--primary-light)]"
                             : "border-[var(--outline-variant)]"
@@ -328,7 +369,7 @@ export default function ItemConfigSheet({
                         <div className="flex items-center gap-1 shrink-0 ml-1">
                           {option.price > 0 && (
                             <span className="text-[10px] text-[var(--outline)]">
-                              +${option.price.toFixed(2)}
+                              +${formatUpcharge(option.price)}
                             </span>
                           )}
                           {selected && (
@@ -347,11 +388,11 @@ export default function ItemConfigSheet({
         {/* Add to cart / Save changes button */}
         <div className="border-t border-[var(--outline-variant)] px-4 py-3">
           <button
-            onClick={handleAdd}
-            disabled={!allOrdersComplete || !hasNewOrChangedOrders}
+            onClick={handlePrimaryAction}
+            disabled={primaryDisabled}
             className="w-full h-11 rounded-xl bg-[var(--primary)] text-white flex items-center justify-center gap-2 text-sm font-semibold disabled:opacity-40 active:opacity-80 transition-opacity"
           >
-            {activeOrder.cartItemId ? "Save changes" : "Add to cart"}
+            {showNextAction ? "Next Order" : (activeOrder.cartItemId ? "Save changes" : "Add to cart")}
           </button>
         </div>
       </motion.div>

@@ -45,7 +45,7 @@ export default function TablesScreen() {
       resetOrder();
       setTable(table);
       setOpenMenuOnArrival(true);
-      setScreen("check");
+      setScreen("guest-count");
     }
   };
 
