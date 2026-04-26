@@ -12,6 +12,10 @@ export interface ModifierGroup {
   minSelect: number;
   maxSelect: number;
   options: Modifier[];
+  // Optional conditional visibility: this group is only shown (and only
+  // counts toward required completion) when ANY of `modifierIds` is
+  // currently selected in the group identified by `groupId`.
+  showIf?: { groupId: string; modifierIds: string[] };
 }
 
 export interface ComboComponent {

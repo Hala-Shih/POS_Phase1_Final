@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useOrderStore } from "@/store/order-store";
 import LoginScreen from "@/components/screens/LoginScreen";
 import HomeScreen from "@/components/screens/HomeScreen";
@@ -14,89 +14,98 @@ import FooterNav, { type FooterTab } from "@/components/ui/FooterNav";
 import ActionDrawer from "@/components/action/ActionDrawer";
 import PaymentDrawer from "@/components/payment/PaymentDrawer";
 
-const screensWithFooter = ["check", "order", "payment", "orders"];
+const screensWithFooter = ["check", "order", "payment"];
+
+// Rule 1 (System-Wide Rules): only one drawer may be open at a time.
+// All drawer state is centralized here as a single `activeDrawer` value so
+// opening one drawer mechanically closes any other.
+type ActiveDrawer = "none" | "menu" | "search" | "action" | "payment";
+
+const DRAWER_TO_TAB: Record<Exclude<ActiveDrawer, "none">, FooterTab> = {
+  menu: "menu",
+  search: "search",
+  action: "action",
+  payment: "payment",
+};
 
 export default function App() {
   const currentScreen = useOrderStore((s) => s.currentScreen);
   const setScreen = useOrderStore((s) => s.setScreen);
   const resetOrder = useOrderStore((s) => s.resetOrder);
-  const [footerTab, setFooterTab] = useState<FooterTab>("check");
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [searchOpen, setSearchOpen] = useState(false);
-  const [actionOpen, setActionOpen] = useState(false);
+
+  const [activeDrawer, setActiveDrawer] = useState<ActiveDrawer>("none");
   const [actionItem, setActionItem] = useState<{ id: string; name: string } | null>(null);
-  const [paymentDrawerOpen, setPaymentDrawerOpen] = useState(false);
   const [splitCheckOnOpen, setSplitCheckOnOpen] = useState(false);
+
+  // Derived drawer flags (kept for prop compatibility with child screens).
+  const menuOpen = activeDrawer === "menu";
+  const searchOpen = activeDrawer === "search";
+  const actionOpen = activeDrawer === "action";
+  const paymentDrawerOpen = activeDrawer === "payment";
+
+  // Footer tab is derived from active drawer to satisfy Rule 3 (tab/drawer sync).
+  const footerTab: FooterTab =
+    activeDrawer === "none" ? "check" : DRAWER_TO_TAB[activeDrawer];
 
   const showFooter = screensWithFooter.includes(currentScreen);
 
-  // Sync footer tab and split trigger with payment screen
+  // Rule 1 enforcement: a single entry point for opening drawers.
+  // Switching drawers is a handoff — the previous drawer is replaced atomically.
+  const openDrawer = useCallback((next: ActiveDrawer) => {
+    setActiveDrawer((prev) => {
+      if (prev === next) return next;
+      if (next !== "action") setActionItem(null);
+      return next;
+    });
+  }, []);
+
+  const closeDrawers = useCallback(() => {
+    setActiveDrawer("none");
+    setActionItem(null);
+  }, []);
+
+  // Rule 4: screen transitions must clean up incompatible drawer state.
   useEffect(() => {
     if (currentScreen === "payment") {
-      setFooterTab("payment");
-      setPaymentDrawerOpen(false);
+      // Payment screen owns its own UI; no app-shell drawer should remain open.
+      if (activeDrawer !== "none") closeDrawers();
     } else {
-      if (footerTab === "payment") setFooterTab("check");
       setSplitCheckOnOpen(false);
+      // App-shell drawers are only meaningful on `check`. Close on any other screen.
+      if (currentScreen !== "check" && activeDrawer !== "none") {
+        closeDrawers();
+      }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentScreen]);
 
   const handleSetMenuOpen = (open: boolean) => {
-    setMenuOpen(open);
-    if (open) setPaymentDrawerOpen(false);
-    if (open) {
-      setFooterTab("menu");
-    } else {
-      setFooterTab("check");
-    }
+    if (open) openDrawer("menu");
+    else if (menuOpen) closeDrawers();
   };
 
   const handleSetSearchOpen = (open: boolean) => {
-    setSearchOpen(open);
-    if (open) setPaymentDrawerOpen(false);
-    if (!open) {
-      setFooterTab("check");
-    }
+    if (open) openDrawer("search");
+    else if (searchOpen) closeDrawers();
   };
 
   const handleFooterSelect = (tab: FooterTab) => {
-    setFooterTab(tab);
-    if (tab === "menu") {
+    // Rule 3: tapping the active drawer's tab toggles it closed.
+    if (tab === "check") {
       if (currentScreen === "payment") setScreen("check");
-      setMenuOpen(true);
-      setSearchOpen(false);
-      setActionOpen(false);
-      setActionItem(null);
-      setPaymentDrawerOpen(false);
-    } else if (tab === "search") {
-      if (currentScreen === "payment") setScreen("check");
-      setSearchOpen(true);
-      setMenuOpen(false);
-      setActionOpen(false);
-      setActionItem(null);
-      setPaymentDrawerOpen(false);
-    } else if (tab === "action") {
-      setActionOpen(true);
-      setActionItem(null);
-      setMenuOpen(false);
-      setSearchOpen(false);
-      setPaymentDrawerOpen(false);
-    } else if (tab === "payment") {
-      if (currentScreen === "payment") setScreen("check");
-      setMenuOpen(false);
-      setSearchOpen(false);
-      setActionOpen(false);
-      setActionItem(null);
-      setPaymentDrawerOpen(true);
+      closeDrawers();
+      return;
+    }
+
+    if (currentScreen === "payment" && tab !== "payment") {
+      setScreen("check");
+    }
+
+    const target: ActiveDrawer = tab;
+    if (activeDrawer === target) {
+      closeDrawers();
     } else {
-      setMenuOpen(false);
-      setSearchOpen(false);
-      setActionOpen(false);
-      setActionItem(null);
-      setPaymentDrawerOpen(false);
-      if (currentScreen === "payment") {
-        setScreen("check");
-      }
+      openDrawer(target);
     }
   };
 
@@ -121,19 +130,10 @@ export default function App() {
             externalDrawerType={actionOpen ? "action" : paymentDrawerOpen ? "payment" : "none"}
             onOpenItemActions={(item) => {
               setActionItem(item);
-              setActionOpen(true);
-              setFooterTab("action");
-              setMenuOpen(false);
-              setSearchOpen(false);
-              setPaymentDrawerOpen(false);
+              openDrawer("action");
             }}
             onOpenPaymentDrawer={() => {
-              setActionOpen(false);
-              setActionItem(null);
-              setMenuOpen(false);
-              setSearchOpen(false);
-              setPaymentDrawerOpen(true);
-              setFooterTab("payment");
+              openDrawer("payment");
             }}
           />
         );
@@ -156,19 +156,10 @@ export default function App() {
         {renderScreen()}
         <ActionDrawer
           open={actionOpen}
-          onClose={() => {
-            setActionOpen(false);
-            setActionItem(null);
-            setFooterTab("check");
-          }}
+          onClose={closeDrawers}
           onPay={() => {
             if (currentScreen === "payment") setScreen("check");
-            setActionOpen(false);
-            setActionItem(null);
-            setMenuOpen(false);
-            setSearchOpen(false);
-            setPaymentDrawerOpen(true);
-            setFooterTab("payment");
+            openDrawer("payment");
           }}
           onSplitCheck={() => {
             setSplitCheckOnOpen(true);
@@ -182,28 +173,21 @@ export default function App() {
         />
         <PaymentDrawer
           open={paymentDrawerOpen}
-          onClose={() => {
-            setPaymentDrawerOpen(false);
-            setFooterTab("check");
-          }}
+          onClose={closeDrawers}
           onSplit={() => {
-            setPaymentDrawerOpen(false);
+            closeDrawers();
             setSplitCheckOnOpen(true);
             setScreen("payment");
           }}
           onMultiplePayment={() => {
-            setPaymentDrawerOpen(false);
+            closeDrawers();
             setSplitCheckOnOpen(false);
             setScreen("payment");
           }}
-          onPrint={() => {
-            setPaymentDrawerOpen(false);
-            setFooterTab("check");
-          }}
+          onPrint={closeDrawers}
           onPaymentComplete={() => {
             resetOrder();
-            setPaymentDrawerOpen(false);
-            setFooterTab("check");
+            closeDrawers();
             setScreen("login");
           }}
         />

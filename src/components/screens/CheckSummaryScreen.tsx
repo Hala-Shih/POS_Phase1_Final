@@ -12,6 +12,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { useOrderStore } from "@/store/order-store";
+import { getPriceBreakdown, formatCurrency, formatSignedCurrency } from "@/lib/pricing";
 import staffData from "@/data/staff.json";
 import tablesData from "@/data/tables.json";
 import { Staff, Table } from "@/lib/types";
@@ -30,6 +31,7 @@ export default function CheckSummaryScreen({ menuOpen: externalMenuOpen, setMenu
     cartItems,
     cartTotal,
     cartCount,
+    checkTip,
     markAllSent,
     setScreen,
     resetOrder,
@@ -90,20 +92,19 @@ export default function CheckSummaryScreen({ menuOpen: externalMenuOpen, setMenu
   const subtotal = total;
   const discountTotal = Math.max(0, preDiscountSubtotal - subtotal);
   const tax = subtotal * 0.0875;
-  const tip = 0;
-  const grandTotal = subtotal + tax;
+  const tip = checkTip;
+  const grandTotal = subtotal + tax + tip;
   const fullHeightDrawerOpen = menuOpen || searchOpen || cartOpen;
   const actionDrawerOpen = itemActionOpen || externalDrawerType === "action";
   const paymentDrawerOpen = externalDrawerType === "payment";
   const anyDrawerOpen = fullHeightDrawerOpen || actionDrawerOpen || paymentDrawerOpen;
 
-  const drawerPaddingBottom = fullHeightDrawerOpen
+  // All app-shell drawers open at the standard 60% height (Rule 12).
+  // We constrain the check body's scroll viewport to the area above the
+  // drawer so list items can never scroll behind it.
+  const drawerReservedHeight = anyDrawerOpen
     ? "calc(var(--device-height) * 0.6)"
-    : actionDrawerOpen
-      ? "calc(var(--device-height) * 0.68)"
-      : paymentDrawerOpen
-        ? "calc(var(--device-height) * 0.44)"
-        : undefined;
+    : undefined;
 
   const handlePay = () => {
     if (anyUnsent) markAllSent();
@@ -114,7 +115,6 @@ export default function CheckSummaryScreen({ menuOpen: externalMenuOpen, setMenu
     setScreen("payment");
   };
 
-  const handleLogout = () => { resetOrder(); setScreen("login"); };
   const handleTransfer = (staff: Staff) => setStaff(staff);
   const handleTransferTable = (table: Table) => setTable(table);
   const handleVoidOrder = () => { resetOrder(); setScreen("tables"); };
@@ -129,7 +129,6 @@ export default function CheckSummaryScreen({ menuOpen: externalMenuOpen, setMenu
         guestCount={guestCount}
         onGuestCountTap={() => setScreen("guest-count")}
         onTableTap={() => setScreen("tables")}
-        onLogout={handleLogout}
         onTransfer={handleTransfer}
         staffList={staffData as Staff[]}
         currentStaffId={currentStaff?.id}
@@ -139,14 +138,13 @@ export default function CheckSummaryScreen({ menuOpen: externalMenuOpen, setMenu
         currentTableId={selectedTable?.id}
       />
 
-      {/* Scrollable check body — scrolls independently; menu drawer overlaps the bottom 60% */}
+      {/* Scrollable check body — viewport is reduced when a drawer is open
+          so items never scroll behind the drawer surface. */}
       <div
-        className="flex-1 overflow-y-auto thin-scrollbar"
+        className="flex-1 overflow-y-auto thin-scrollbar min-h-0"
         style={
-          !isEmpty && anyDrawerOpen
-            ? {
-                paddingBottom: drawerPaddingBottom,
-              }
+          anyDrawerOpen
+            ? { maxHeight: `calc(100% - ${drawerReservedHeight})` }
             : undefined
         }
       >
@@ -154,11 +152,6 @@ export default function CheckSummaryScreen({ menuOpen: externalMenuOpen, setMenu
           /* Empty state */
           <div
             className="flex flex-col items-center justify-center h-full gap-4 px-8 text-center cursor-pointer active:opacity-70 transition-opacity"
-            style={
-              anyDrawerOpen
-                ? { height: `calc(100% - ${drawerPaddingBottom ?? "0px"})` }
-                : undefined
-            }
             onClick={() => setMenuOpen(true)}
           >
             <div
@@ -218,7 +211,11 @@ export default function CheckSummaryScreen({ menuOpen: externalMenuOpen, setMenu
                 <TotalsRow label="Discount" value={`-$${discountTotal.toFixed(2)}`} muted />
               )}
               <TotalsRow label="Tax (8.75%)" value={`$${tax.toFixed(2)}`} muted />
-              <TotalsRow label="Tip" value={`$${tip.toFixed(2)}`} muted />
+              <TotalsRow
+                label={tip > 0 && subtotal > 0 ? `Tip (${(tip / subtotal * 100).toFixed(tip / subtotal * 100 >= 10 ? 0 : 1)}%)` : "Tip"}
+                value={`$${tip.toFixed(2)}`}
+                muted
+              />
               <div className="h-1.5" />
               <TotalsRow label="Total" value={`$${grandTotal.toFixed(2)}`} bold large />
               <div className="flex items-center justify-between mt-2 text-[11px] text-[var(--outline)]">
@@ -310,34 +307,14 @@ function CheckItem({
             <p className={`text-[13px] font-medium leading-snug ${muted ? "text-[var(--outline)]" : ""}`}>
               {item.name}
             </p>
-            {item.modifiers.length > 0 && (
-              <p className="text-[11px] text-[var(--outline)] mt-0.5">
-                {item.modifiers.flatMap((g) => g.modifiers.map((m) => m.name)).join(", ")}
-              </p>
-            )}
-            {item.comboSelections && item.comboSelections.length > 0 && (
-              <p className="text-[11px] text-[var(--outline)] mt-0.5">
-                {item.comboSelections
-                  .map((s) => {
-                    const mods = s.modifiers.flatMap((g) => g.modifiers.map((m) => m.name));
-                    const base = `${s.groupName}: ${s.component.name}`;
-                    return mods.length > 0 ? `${base} (${mods.join(", ")})` : base;
-                  })
-                  .join(" · ")}
-              </p>
-            )}
-            {item.note && (
-              <p className="text-[11px] text-[var(--primary)] italic mt-0.5">Note: {item.note}</p>
-            )}
-            {item.discount && (
-              <p className="text-[11px] text-green-700 mt-0.5 font-medium">
-                Discount: {item.discount.type === "percent" ? `${item.discount.value}%` : `$${item.discount.value.toFixed(2)}`}
-              </p>
-            )}
+            {/* Rule 15: inline deltas next to each cause. When override is
+                active, modifier/combo/note/discount inline deltas are
+                suppressed and a single "Override" label is shown instead. */}
+            <ItemDescription item={item} />
           </div>
-          <span className={`text-[13px] font-medium shrink-0 mt-0.5 ${muted ? "text-[var(--outline)]" : ""}`}>
-            ${item.totalPrice.toFixed(2)}
-          </span>
+          {/* Rule 15: compact two-line price display — original price on top,
+              net adjustment / override line below. Per-unit prices. */}
+          <PriceColumn item={item} muted={muted} />
         </button>
 
         {/* Inline actions + quantity editor when selected */}
@@ -416,6 +393,162 @@ function TotalsRow({
     >
       <span>{label}</span>
       <span>{value}</span>
+    </div>
+  );
+}
+
+/**
+ * Rule 15 inline-delta description region.
+ * Each price-changing cause shows its `+$X` / `−$X` token next to its own
+ * text. When override is active, deltas are suppressed and a single
+ * `Override` label is rendered instead.
+ */
+function ItemDescription({
+  item,
+}: {
+  item: ReturnType<typeof useOrderStore.getState>["cartItems"][number];
+}) {
+  const breakdown = getPriceBreakdown(item);
+  const overrideActive = breakdown.hasOverride;
+
+  // Lookup tables for inline modifier deltas.
+  const modDelta = new Map<string, number>();
+  if (!overrideActive) {
+    item.modifiers.forEach((g) =>
+      g.modifiers.forEach((m) => {
+        if (m.price) modDelta.set(`${g.groupId}:${m.id}`, m.price);
+      }),
+    );
+  }
+
+  const modifierLine =
+    item.modifiers.length > 0 &&
+    item.modifiers.flatMap((g) => g.modifiers.map((m) => ({ g, m })));
+
+  return (
+    <>
+      {modifierLine && modifierLine.length > 0 && (
+        <p className="text-[11px] text-[var(--outline)] mt-0.5">
+          {modifierLine.map(({ g, m }, i) => {
+            const d = modDelta.get(`${g.groupId}:${m.id}`);
+            return (
+              <span key={`${g.groupId}-${m.id}`}>
+                {i > 0 && ", "}
+                {m.name}
+                {d ? (
+                  <span className="ml-1 text-[var(--primary)] font-medium">
+                    {formatSignedCurrency(d)}
+                  </span>
+                ) : null}
+              </span>
+            );
+          })}
+        </p>
+      )}
+
+      {item.comboSelections && item.comboSelections.length > 0 && (
+        <p className="text-[11px] text-[var(--outline)] mt-0.5">
+          {item.comboSelections.map((s, ci) => {
+            const compDelta = !overrideActive && s.component.price ? s.component.price : 0;
+            const innerMods = s.modifiers.flatMap((g) => g.modifiers.map((m) => ({ g, m })));
+            return (
+              <span key={`${s.groupId}-${s.component.id}-${ci}`}>
+                {ci > 0 && " · "}
+                {s.groupName}: {s.component.name}
+                {compDelta ? (
+                  <span className="ml-1 text-[var(--primary)] font-medium">
+                    {formatSignedCurrency(compDelta)}
+                  </span>
+                ) : null}
+                {innerMods.length > 0 && (
+                  <>
+                    {" ("}
+                    {innerMods.map(({ g, m }, mi) => {
+                      const d = !overrideActive && m.price ? m.price : 0;
+                      return (
+                        <span key={`${g.groupId}-${m.id}`}>
+                          {mi > 0 && ", "}
+                          {m.name}
+                          {d ? (
+                            <span className="ml-1 text-[var(--primary)] font-medium">
+                              {formatSignedCurrency(d)}
+                            </span>
+                          ) : null}
+                        </span>
+                      );
+                    })}
+                    {")"}
+                  </>
+                )}
+              </span>
+            );
+          })}
+        </p>
+      )}
+
+      {item.note && (
+        <p className="text-[11px] text-[var(--primary)] italic mt-0.5">
+          Note: {item.note}
+          {!overrideActive && breakdown.noteAdjustment ? (
+            <span className="ml-1 not-italic font-medium">
+              {formatSignedCurrency(breakdown.noteAdjustment.amount)}
+            </span>
+          ) : null}
+        </p>
+      )}
+
+      {!overrideActive && breakdown.discount && (
+        <p className="text-[11px] text-[var(--primary)] italic mt-0.5">
+          {breakdown.discount.label}
+          <span className="ml-1 not-italic font-medium">
+            {formatSignedCurrency(breakdown.discount.amount)}
+          </span>
+        </p>
+      )}
+
+      {overrideActive && (
+        <p className="text-[11px] text-[var(--primary)] italic mt-0.5">Override</p>
+      )}
+
+      {breakdown.isComped && (
+        <p className="text-[11px] text-[var(--primary)] italic mt-0.5">Comped</p>
+      )}
+    </>
+  );
+}
+
+/**
+ * Rule 15 right-column price stack.
+ * - No adjustment & no override: single neutral price.
+ * - Otherwise: original price strikethrough on top (muted), final unit
+ *   price below in accent color. No literal `Adjustment:` / `→` text.
+ */
+function PriceColumn({
+  item,
+  muted,
+}: {
+  item: ReturnType<typeof useOrderStore.getState>["cartItems"][number];
+  muted: boolean;
+}) {
+  const breakdown = getPriceBreakdown(item);
+  const baseTone = muted ? "text-[var(--outline)]" : "text-[var(--foreground)]";
+
+  if (!breakdown.hasOverride && breakdown.netAdjustment === 0 && !breakdown.isComped) {
+    return (
+      <span className={`text-[13px] font-medium shrink-0 mt-0.5 ${baseTone}`}>
+        {formatCurrency(breakdown.basePrice)}
+      </span>
+    );
+  }
+
+  return (
+    <div className="shrink-0 mt-0.5 text-right leading-tight">
+      <div className="text-[12px] text-[var(--outline)] line-through">
+        {formatCurrency(breakdown.basePrice)}
+      </div>
+      <div className="text-[14px] font-semibold text-[var(--primary)]">
+        {formatCurrency(breakdown.effectiveUnitPrice)}
+      </div>
     </div>
   );
 }

@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { useOrderStore } from "@/store/order-store";
 import type { CartItem } from "@/lib/types";
+import { getPriceBreakdown, formatCurrency, formatSignedCurrency } from "@/lib/pricing";
 
 /* ── helpers (mirror PaymentScreen) ── */
 const TAX_RATE = 0.0875;
@@ -14,7 +15,7 @@ function roundCurrency(v: number) { return Math.round(v * 100) / 100; }
 
 interface ItemizedUnit {
   unitId: string; name: string; unitIndex: number; unitCount: number;
-  unitTotal: number; modifiers: string[]; comboSelections: string[]; note?: string;
+  unitTotal: number; source: CartItem;
 }
 
 function buildItemizedUnits(items: CartItem[]): ItemizedUnit[] {
@@ -22,18 +23,137 @@ function buildItemizedUnits(items: CartItem[]): ItemizedUnit[] {
     const totalCents = Math.round(item.totalPrice * 100);
     const baseCents = Math.floor(totalCents / item.quantity);
     const remainderCents = totalCents - baseCents * item.quantity;
-    const modifiers = item.modifiers.flatMap((g) => g.modifiers.map((m) => m.name));
-    const comboSelections = (item.comboSelections || []).map((s) => {
-      const mods = s.modifiers.flatMap((g) => g.modifiers.map((m) => m.name));
-      const base = `${s.groupName}: ${s.component.name}`;
-      return mods.length > 0 ? `${base} (${mods.join(", ")})` : base;
-    });
     return Array.from({ length: item.quantity }, (_, i) => ({
       unitId: `${item.id}:${i}`, name: item.name, unitIndex: i, unitCount: item.quantity,
       unitTotal: (baseCents + (i < remainderCents ? 1 : 0)) / 100,
-      modifiers, comboSelections, note: item.note,
+      source: item,
     }));
   });
+}
+
+/**
+ * Rule 15 inline-delta description for a payment-drawer unit row.
+ */
+function UnitDescription({ item }: { item: CartItem }) {
+  const breakdown = getPriceBreakdown(item);
+  const overrideActive = breakdown.hasOverride;
+
+  const modifierEntries = item.modifiers.flatMap((g) =>
+    g.modifiers.map((m) => ({ g, m })),
+  );
+
+  return (
+    <>
+      {modifierEntries.length > 0 && (
+        <p className="text-xs text-gray-500 mt-0.5">
+          {modifierEntries.map(({ g, m }, i) => {
+            const d = !overrideActive && m.price ? m.price : 0;
+            return (
+              <span key={`${g.groupId}-${m.id}`}>
+                {i > 0 && ", "}
+                {m.name}
+                {d ? (
+                  <span className="ml-1 font-medium" style={{ color: "#6750A4" }}>
+                    {formatSignedCurrency(d)}
+                  </span>
+                ) : null}
+              </span>
+            );
+          })}
+        </p>
+      )}
+
+      {item.comboSelections && item.comboSelections.length > 0 && (
+        <p className="text-xs text-gray-500 mt-0.5">
+          {item.comboSelections.map((s, ci) => {
+            const compDelta = !overrideActive && s.component.price ? s.component.price : 0;
+            const innerMods = s.modifiers.flatMap((g) => g.modifiers.map((m) => ({ g, m })));
+            return (
+              <span key={`${s.groupId}-${s.component.id}-${ci}`}>
+                {ci > 0 && " · "}
+                {s.groupName}: {s.component.name}
+                {compDelta ? (
+                  <span className="ml-1 font-medium" style={{ color: "#6750A4" }}>
+                    {formatSignedCurrency(compDelta)}
+                  </span>
+                ) : null}
+                {innerMods.length > 0 && (
+                  <>
+                    {" ("}
+                    {innerMods.map(({ g, m }, mi) => {
+                      const d = !overrideActive && m.price ? m.price : 0;
+                      return (
+                        <span key={`${g.groupId}-${m.id}`}>
+                          {mi > 0 && ", "}
+                          {m.name}
+                          {d ? (
+                            <span className="ml-1 font-medium" style={{ color: "#6750A4" }}>
+                              {formatSignedCurrency(d)}
+                            </span>
+                          ) : null}
+                        </span>
+                      );
+                    })}
+                    {")"}
+                  </>
+                )}
+              </span>
+            );
+          })}
+        </p>
+      )}
+
+      {item.note && (
+        <p className="text-xs italic mt-0.5" style={{ color: "#6750A4" }}>
+          Note: {item.note}
+          {!overrideActive && breakdown.noteAdjustment ? (
+            <span className="ml-1 not-italic font-medium">
+              {formatSignedCurrency(breakdown.noteAdjustment.amount)}
+            </span>
+          ) : null}
+        </p>
+      )}
+
+      {!overrideActive && breakdown.discount && (
+        <p className="text-xs italic mt-0.5" style={{ color: "#6750A4" }}>
+          {breakdown.discount.label}
+          <span className="ml-1 not-italic font-medium">
+            {formatSignedCurrency(breakdown.discount.amount)}
+          </span>
+        </p>
+      )}
+
+      {overrideActive && (
+        <p className="text-xs italic mt-0.5" style={{ color: "#6750A4" }}>Override</p>
+      )}
+    </>
+  );
+}
+
+/**
+ * Rule 15 right-column price stack for a payment-drawer unit row.
+ */
+function UnitPriceColumn({ item }: { item: CartItem }) {
+  const breakdown = getPriceBreakdown(item);
+
+  if (!breakdown.hasOverride && breakdown.netAdjustment === 0 && !breakdown.isComped) {
+    return (
+      <span className="text-sm font-medium text-gray-900 shrink-0">
+        {formatCurrency(breakdown.basePrice)}
+      </span>
+    );
+  }
+
+  return (
+    <div className="flex flex-col items-end shrink-0 leading-tight">
+      <span className="text-[12px] text-gray-500 line-through">
+        {formatCurrency(breakdown.basePrice)}
+      </span>
+      <span className="text-sm font-semibold" style={{ color: "#6750A4" }}>
+        {formatCurrency(breakdown.effectiveUnitPrice)}
+      </span>
+    </div>
+  );
 }
 
 /* ── constants ── */
@@ -67,7 +187,7 @@ const mainButtons = [
   { id: "cash",     label: "Cash",             icon: DollarSign },
   { id: "split",    label: "Split",            icon: Split      },
   { id: "credit",   label: "Credit Card",      icon: CreditCard },
-  { id: "multiple", label: "Multiple payment", icon: WalletCards},
+  { id: "multiple", label: "Multi-pay", icon: WalletCards},
   { id: "gift",     label: "Gift Card",        icon: Gift       },
   { id: "print",    label: "Print",            icon: Printer    },
 ] as const;
@@ -193,26 +313,43 @@ export default function PaymentDrawer({
     })()) ||
     (splitType === "item" && selectedItemUnits.length === 0);
 
-  /* ── shared panel wrapper ── */
-  const Panel = ({ children, maxH = "auto" }: { children: React.ReactNode; maxH?: string }) => (
-    <div className="absolute inset-0 z-50 flex items-end pointer-events-none">
-      <div className="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-black/20 to-transparent" />
-      <section
-        className="relative w-full rounded-t-2xl bg-white border-t border-gray-200 pointer-events-auto flex flex-col overflow-hidden"
-        style={{ maxHeight: maxH }}
-      >
-        {children}
-      </section>
+  /* ── shared panel wrapper — Rules 11/12: standard drawer container */
+  // Note: maxH is accepted for backwards compatibility but ignored; all views
+  // open at the same standard height (Rule 12). Internal scroll handles overflow.
+  const Panel = ({ children }: { children: React.ReactNode; maxH?: string }) => (
+    <div
+      className="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl z-50 flex flex-col overflow-hidden"
+      style={{ height: "60%", boxShadow: "0 -8px 32px -4px rgba(0,0,0,0.18)" }}
+    >
+      {/* Drag handle */}
+      <div className="pt-2.5 pb-1 flex justify-center cursor-pointer shrink-0" onClick={onClose}>
+        <div className="w-9 h-1 rounded-full bg-[#CAC4D0]" />
+      </div>
+      {children}
     </div>
   );
 
   /* ── shared back header ── */
   const BackHeader = ({ title }: { title: string }) => (
-    <div className="flex items-center gap-1 px-3 pt-3 pb-2 shrink-0">
-      <button type="button" onClick={() => setView("main")} className="rounded-full p-1 text-gray-500 hover:bg-gray-100">
-        <ChevronLeft size={20} />
+    <div className="flex items-center justify-between px-4 pb-3 border-b border-gray-100 shrink-0">
+      <div className="flex items-center gap-2 min-w-0">
+        <button
+          type="button"
+          onClick={() => setView("main")}
+          className="w-8 h-8 flex items-center justify-center rounded-full active:bg-gray-100 shrink-0 -ml-2"
+        >
+          <ChevronLeft size={20} />
+        </button>
+        <h2 className="text-[15px] font-semibold text-[#1D1B20] leading-tight truncate">{title}</h2>
+      </div>
+      <button
+        type="button"
+        aria-label="Close"
+        onClick={onClose}
+        className="w-8 h-8 flex items-center justify-center rounded-full active:bg-gray-100 shrink-0"
+      >
+        <X size={18} />
       </button>
-      <h2 className="text-base font-semibold text-gray-900 flex-1 text-center pr-7">{title}</h2>
     </div>
   );
 
@@ -222,14 +359,14 @@ export default function PaymentDrawer({
   if (view === "main") {
     return (
       <Panel>
+        <div className="flex items-center justify-between px-4 pb-3 border-b border-gray-100 shrink-0">
+          <h2 className="text-[15px] font-semibold text-[#1D1B20] leading-tight truncate">Payment</h2>
+          <button type="button" aria-label="Close" onClick={onClose}
+            className="w-8 h-8 flex items-center justify-center rounded-full active:bg-gray-100 shrink-0">
+            <X size={18} />
+          </button>
+        </div>
         <div className="p-4 pb-5">
-          <div className="mb-3 flex items-center justify-between">
-            <h2 className="text-base font-semibold text-gray-900">Payment</h2>
-            <button type="button" aria-label="Close" onClick={onClose}
-              className="rounded-full p-1 text-gray-500 hover:bg-gray-100 hover:text-gray-700">
-              <X size={18} />
-            </button>
-          </div>
           <div className="grid grid-cols-2 gap-2.5">
             {mainButtons.map(({ id, label, icon: Icon }) => (
               <button key={id} type="button"
@@ -241,11 +378,11 @@ export default function PaymentDrawer({
                   if (id === "multiple") { onMultiplePayment(); return; }
                   if (id === "print")    { onPrint(); return; }
                 }}
-                className="flex items-center gap-2 rounded-xl border border-gray-200 bg-gray-50 px-3 py-3 text-left text-sm font-medium text-gray-800 transition hover:bg-gray-100">
-                <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-white border border-gray-200 text-gray-600">
+                className="flex items-center gap-2 rounded-xl border border-gray-200 bg-gray-50 h-11 px-3 text-left text-[13px] font-medium text-gray-800 transition hover:bg-gray-100">
+                <span className="inline-flex h-7 w-7 items-center justify-center text-gray-600 shrink-0">
                   <Icon size={16} />
                 </span>
-                <span>{label}</span>
+                <span className="truncate">{label}</span>
               </button>
             ))}
           </div>
@@ -342,11 +479,9 @@ export default function PaymentDrawer({
                             <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-white border border-gray-200 text-gray-500">{unit.unitIndex + 1}/{unit.unitCount}</span>
                           )}
                         </div>
-                        {unit.modifiers.length > 0 && <p className="text-xs text-gray-500 mt-0.5">{unit.modifiers.join(", ")}</p>}
-                        {unit.comboSelections.length > 0 && <p className="text-xs text-gray-500 mt-0.5">{unit.comboSelections.join(" · ")}</p>}
-                        {unit.note && <p className="text-xs italic mt-0.5" style={{ color: "#6750A4" }}>Note: {unit.note}</p>}
+                        <UnitDescription item={unit.source} />
                       </div>
-                      <span className="text-sm font-medium text-gray-900 shrink-0">${unit.unitTotal.toFixed(2)}</span>
+                      <UnitPriceColumn item={unit.source} />
                     </div>
                   </button>
                 );

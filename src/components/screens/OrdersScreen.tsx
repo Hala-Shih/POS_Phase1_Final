@@ -9,21 +9,35 @@ import type { Order, OrderStatus } from "@/lib/types";
 
 const mockOrders = ordersData as Order[];
 
-type FilterKey = "all" | "mine" | "open" | "closed" | "voided";
+type CanonicalOrderStatus = "open" | "close" | "void" | "combined";
+type FilterKey = "all" | CanonicalOrderStatus;
+
+const toCanonicalStatus = (status: OrderStatus): CanonicalOrderStatus => {
+  switch (status) {
+    case "editing":
+      return "open";
+    case "sent":
+      return "combined";
+    case "closed":
+      return "close";
+    case "voided":
+      return "void";
+  }
+};
 
 const FILTERS: { key: FilterKey; label: string }[] = [
   { key: "all", label: "All" },
-  { key: "mine", label: "Created by me" },
   { key: "open", label: "Open" },
-  { key: "closed", label: "Closed" },
-  { key: "voided", label: "Voided" },
+  { key: "close", label: "Close" },
+  { key: "void", label: "Void" },
+  { key: "combined", label: "Combined" },
 ];
 
-const STATUS_CONFIG: Record<OrderStatus, { label: string; dot: string; bg: string; text: string; border: string }> = {
-  editing: { label: "Editing", dot: "#F5A623", bg: "#FFF8E1", text: "#F5A623", border: "#F5D87E" },
-  sent:    { label: "Sent",    dot: "#00B618", bg: "#FFFFFF", text: "#00B618", border: "#00B618" },
-  closed:  { label: "Closed",  dot: "",        bg: "transparent", text: "#79747E", border: "transparent" },
-  voided:  { label: "Voided",  dot: "",        bg: "#FFEBEE", text: "#B71C1C", border: "#FFCDD2" },
+const STATUS_CONFIG: Record<CanonicalOrderStatus, { label: string; dot: string; bg: string; text: string; border: string }> = {
+  open: { label: "Open", dot: "#F5A623", bg: "#FFF8E1", text: "#B5790D", border: "#F5D87E" },
+  combined: { label: "Combined", dot: "#00B618", bg: "#FFFFFF", text: "#00B618", border: "#00B618" },
+  close: { label: "Close", dot: "", bg: "transparent", text: "#79747E", border: "transparent" },
+  void: { label: "Void", dot: "", bg: "#FFEBEE", text: "#B71C1C", border: "#FFCDD2" },
 };
 
 function timeAgo(dateString: string): string {
@@ -43,15 +57,17 @@ export default function OrdersScreen() {
   const [activeFilter, setActiveFilter] = useState<FilterKey>("all");
 
   const filtered = mockOrders.filter((order) => {
+    const canonicalStatus = toCanonicalStatus(order.status);
+
     switch (activeFilter) {
-      case "mine":
-        return order.serverId === currentStaff?.id;
       case "open":
-        return order.status === "editing" || order.status === "sent";
-      case "closed":
-        return order.status === "closed";
-      case "voided":
-        return order.status === "voided";
+        return canonicalStatus === "open";
+      case "close":
+        return canonicalStatus === "close";
+      case "void":
+        return canonicalStatus === "void";
+      case "combined":
+        return canonicalStatus === "combined";
       default:
         return true;
     }
@@ -111,29 +127,30 @@ export default function OrdersScreen() {
       </div>
 
       {/* Order list */}
-      <div className="flex-1 overflow-y-auto px-4 pt-1 pb-3 flex flex-col gap-3">
+      <div className="flex-1 overflow-y-auto no-scrollbar px-4 pt-1 pb-3 flex flex-col gap-3">
         {filtered.length === 0 ? (
           <div className="flex-1 flex items-center justify-center">
             <span className="text-sm text-[var(--outline)]">No orders found</span>
           </div>
         ) : (
           filtered.map((order) => {
-            const cfg = STATUS_CONFIG[order.status];
-            const isClosed = order.status === "closed";
+            const canonicalStatus = toCanonicalStatus(order.status);
+            const cfg = STATUS_CONFIG[canonicalStatus];
+            const isClose = canonicalStatus === "close";
             return (
               <button
                 key={order.id}
                 onClick={() => handleOrderTap(order)}
                 className="w-full rounded-2xl border p-4 text-left active:scale-[0.98] transition-transform"
                 style={{
-                  background: isClosed ? "#F3F3F3" : "white",
+                  background: isClose ? "#F3F3F3" : "white",
                   borderColor: "var(--outline-variant)",
                 }}
               >
                 {/* Top row: order number + status */}
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-base font-bold text-black">{order.orderNumber}</span>
-                  {cfg.label !== "Closed" ? (
+                  {cfg.label !== "Close" ? (
                     <span
                       className="flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full"
                       style={{
@@ -151,7 +168,7 @@ export default function OrdersScreen() {
                       {cfg.label}
                     </span>
                   ) : (
-                    <span className="text-sm" style={{ color: "#79747E" }}>Closed</span>
+                    <span className="text-sm" style={{ color: "#79747E" }}>Close</span>
                   )}
                 </div>
 

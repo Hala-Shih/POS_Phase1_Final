@@ -96,6 +96,13 @@ interface OrderState {
   cartTotal: () => number;
   cartCount: () => number;
 
+  // Check-level tip applied before sending the order to payment.
+  // Stored as a flat dollar amount; the Action Drawer converts a chosen
+  // percent into dollars at the time of selection so the value is stable
+  // even if subtotal changes afterwards.
+  checkTip: number;
+  setCheckTip: (value: number) => void;
+
   // Menu navigation state
   activeMenuBook: string;
   setActiveMenuBook: (name: string) => void;
@@ -513,6 +520,9 @@ export const useOrderStore = create<OrderState>((set, get) => ({
   cartCount: () =>
     get().cartItems.reduce((sum, item) => sum + item.quantity, 0),
 
+  checkTip: 0,
+  setCheckTip: (value) => set({ checkTip: Math.max(0, Math.round(value * 100) / 100) }),
+
   activeMenuBook: "Lunch",
   setActiveMenuBook: (name) => set({ activeMenuBook: name }),
   activeBookId: null,
@@ -526,6 +536,7 @@ export const useOrderStore = create<OrderState>((set, get) => ({
       selectedTable: null,
       guestCount: 0,
       cartItems: [],
+      checkTip: 0,
       activeMenuBook: "Lunch",
       activeBookId: null,
       activeCategoryId: null,

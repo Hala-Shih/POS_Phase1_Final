@@ -456,7 +456,6 @@ export default function PaymentScreen({ autoOpenSplit }: { autoOpenSplit?: boole
         guestCount={guestCount}
         onGuestCountTap={() => setScreen("guest-count")}
         onTableTap={() => setScreen("tables")}
-        onLogout={() => { resetOrder(); setScreen("login"); }}
         onTransfer={(staff) => setStaff(staff)}
         staffList={staffData as Staff[]}
         currentStaffId={currentStaff?.id}

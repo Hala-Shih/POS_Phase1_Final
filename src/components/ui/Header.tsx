@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { ArrowLeft, Users, MapPin, LogOut, ArrowRightLeft, X, Ban, Check } from "lucide-react";
+import { ArrowLeft, Users, MapPin, ArrowRightLeft, X, Ban, Check } from "lucide-react";
 import { motion, AnimatePresence, useDragControls } from "framer-motion";
 import { Staff, Table } from "@/lib/types";
 
@@ -13,7 +13,6 @@ interface HeaderProps {
   title?: string;
   onGuestCountTap?: () => void;
   onTableTap?: () => void;
-  onLogout?: () => void;
   onTransfer?: (staff: Staff) => void;
   staffList?: Staff[];
   currentStaffId?: string;
@@ -31,7 +30,6 @@ export default function Header({
   title,
   onGuestCountTap,
   onTableTap,
-  onLogout,
   onTransfer,
   staffList,
   currentStaffId,
@@ -163,18 +161,6 @@ export default function Header({
                     >
                       <ArrowRightLeft size={16} className="text-[var(--outline)]" />
                       Transfer server
-                    </button>
-                  )}
-                  {onLogout && (
-                    <button
-                      onClick={() => {
-                        setShowMenu(false);
-                        onLogout();
-                      }}
-                      className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-red-600 hover:bg-gray-50 active:bg-gray-100"
-                    >
-                      <LogOut size={16} />
-                      Log out
                     </button>
                   )}
                 </div>

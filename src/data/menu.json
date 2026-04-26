@@ -1059,6 +1059,29 @@
                         ]
                       },
                       {
+                        "id": "mg-legendary-drink-bt-sugar",
+                        "name": "Sugar",
+                        "required": false,
+                        "minSelect": 0,
+                        "maxSelect": 1,
+                        "options": [
+                          { "id": "mod-legendary-drink-bt-less-sugar", "name": "Less Sugar", "price": 0 },
+                          { "id": "mod-legendary-drink-bt-no-sugar", "name": "No Sugar", "price": 0 }
+                        ]
+                      },
+                      {
+                        "id": "mg-legendary-drink-bt-milk",
+                        "name": "Milk",
+                        "required": true,
+                        "minSelect": 1,
+                        "maxSelect": 1,
+                        "options": [
+                          { "id": "mod-legendary-drink-bt-whole-milk", "name": "Whole Milk", "price": 0 },
+                          { "id": "mod-legendary-drink-bt-skim-milk", "name": "Skim Milk", "price": 0 },
+                          { "id": "mod-legendary-drink-bt-oat-milk", "name": "Oat Milk", "price": 1 }
+                        ]
+                      },
+                      {
                         "id": "mg-legendary-drink-bt-ice",
                         "name": "Ice",
                         "required": false,
@@ -1601,6 +1624,71 @@
                   { "id": "mod-coffee-cappuccino", "name": "Cappuccino", "price": 1 },
                   { "id": "mod-coffee-latte", "name": "Latte", "price": 1 },
                   { "id": "mod-coffee-drip", "name": "Drip Coffee", "price": 0 }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "item-bubble-tea",
+            "name": "Bubble Tea",
+            "price": 7,
+            "description": "Hand-shaken milk tea with chewy tapioca pearls",
+            "modifierGroups": [
+              {
+                "id": "mg-bubble-tea-size",
+                "name": "Size",
+                "required": true,
+                "minSelect": 1,
+                "maxSelect": 1,
+                "options": [
+                  { "id": "mod-bt-size-medium", "name": "Size Medium", "price": 0 },
+                  { "id": "mod-bt-size-large", "name": "Size Large", "price": 1 }
+                ]
+              },
+              {
+                "id": "mg-bubble-tea-sugar",
+                "name": "Sugar",
+                "required": false,
+                "minSelect": 0,
+                "maxSelect": 1,
+                "options": [
+                  { "id": "mod-bt-less-sugar", "name": "Less Sugar", "price": 0 },
+                  { "id": "mod-bt-no-sugar", "name": "No Sugar", "price": 0 }
+                ]
+              },
+              {
+                "id": "mg-bubble-tea-milk",
+                "name": "Milk",
+                "required": true,
+                "minSelect": 1,
+                "maxSelect": 1,
+                "options": [
+                  { "id": "mod-bt-whole-milk", "name": "Whole Milk", "price": 0 },
+                  { "id": "mod-bt-skim-milk", "name": "Skim Milk", "price": 0 },
+                  { "id": "mod-bt-oat-milk", "name": "Oat Milk", "price": 1 }
+                ]
+              },
+              {
+                "id": "mg-bubble-tea-ice",
+                "name": "Ice",
+                "required": false,
+                "minSelect": 0,
+                "maxSelect": 1,
+                "options": [
+                  { "id": "mod-bt-less-ice", "name": "Less Ice", "price": 0 },
+                  { "id": "mod-bt-extra-ice", "name": "Extra Ice", "price": 0 }
+                ]
+              },
+              {
+                "id": "mg-bubble-tea-toppings",
+                "name": "Toppings",
+                "required": false,
+                "minSelect": 0,
+                "maxSelect": 2,
+                "options": [
+                  { "id": "mod-bt-coconut-jelly", "name": "+ Coconut Jelly", "price": 1 },
+                  { "id": "mod-bt-taro-balls", "name": "+ Taro Balls", "price": 1 },
+                  { "id": "mod-bt-extra-boba", "name": "Extra Boba", "price": 1 }
                 ]
               }
             ]

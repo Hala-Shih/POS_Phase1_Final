@@ -1,11 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { X, Send, PauseCircle, Tag, Trash2, Users, CreditCard, AlertTriangle, Check, StickyNote, Minus, Plus, Pencil, DollarSign, ArrowDownToLine, ChevronLeft } from "lucide-react";
+import { X, Send, PauseCircle, Tag, Trash2, Users, CreditCard, AlertTriangle, Check, StickyNote, Minus, Plus, Pencil, DollarSign, ArrowDownToLine, ChevronLeft, Banknote, Printer } from "lucide-react";
 import { useOrderStore } from "@/store/order-store";
 import menuData from "@/data/menu.json";
 import { MenuBook, MenuItem, Modifier, CartItemModifier } from "@/lib/types";
 import ComboConfigSheet from "@/components/menu/ComboConfigSheet";
+import { getPriceBreakdown, formatCurrency, formatSignedCurrency } from "@/lib/pricing";
 
 const allMenuItems: MenuItem[] = (menuData as MenuBook[]).flatMap((b) =>
   b.categories.flatMap((c) => c.items)
@@ -27,7 +28,7 @@ interface ActionDrawerProps {
 }
 
 export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMultiplePayment, itemContext }: ActionDrawerProps) {
-  const { cartItems, cartTotal, markAllSent, resetOrder, setItemDiscount, removeItem, updateQuantity, updateNote, setItemPriceOverride, toggleBreakline, updateItemModifiers, updateComboSelections, splitAndUpdateNotes } = useOrderStore();
+  const { cartItems, cartTotal, checkTip, setCheckTip, markAllSent, resetOrder, setItemDiscount, removeItem, updateQuantity, updateNote, updatePriceAdjustment, setItemPriceOverride, toggleBreakline, updateItemModifiers, updateComboSelections, splitAndUpdateNotes } = useOrderStore();
 
   // Check-level states
   const [showVoidConfirm, setShowVoidConfirm] = useState(false);
@@ -37,11 +38,27 @@ export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMul
   const [discountInputType, setDiscountInputType] = useState<"percent" | "amount">("percent");
   const [sentFeedback, setSentFeedback] = useState(false);
 
+  // Check-level tip panel state. Tip is stored as a flat dollar amount in
+  // the order store; the panel converts a chosen percent of subtotal into
+  // dollars at apply-time.
+  const [showTipPanel, setShowTipPanel] = useState(false);
+  const [showCustomTipInput, setShowCustomTipInput] = useState(false);
+  const [customTipInput, setCustomTipInput] = useState("");
+  const [tipInputType, setTipInputType] = useState<"percent" | "amount">("percent");
+
+  // Check-level print feedback
+  const [printFeedback, setPrintFeedback] = useState(false);
+
   // Item-level states
   const [showNoteInput, setShowNoteInput] = useState(false);
   const [, setNoteText] = useState("");
   const [activeNoteOrderKey, setActiveNoteOrderKey] = useState<string | null>(null);
   const [noteDrafts, setNoteDrafts] = useState<Record<string, string>>({});
+  // Optional per-item price adjustment editable from the Notes panel.
+  // Sign and magnitude are tracked separately so the user can flip + / -
+  // without retyping. Magnitude is a free-form decimal string while editing.
+  const [noteAdjustSign, setNoteAdjustSign] = useState<"+" | "-">("+");
+  const [noteAdjustInput, setNoteAdjustInput] = useState("");
   const [showPriceOverride, setShowPriceOverride] = useState(false);
   const [priceInput, setPriceInput] = useState("");
   const [showModifySheet, setShowModifySheet] = useState(false);
@@ -52,7 +69,7 @@ export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMul
   const hasUnsentItems = unsentItems.length > 0;
   const hasItems = cartItems.length > 0;
   const paySubtotal = cartTotal();
-  const payTotal = roundCurrency(paySubtotal * (1 + TAX_RATE));
+  const payTotal = roundCurrency(paySubtotal * (1 + TAX_RATE) + checkTip);
 
   const cartItem = itemContext ? cartItems.find((i) => i.id === itemContext.id) : null;
   const menuItem = cartItem ? allMenuItems.find((m) => m.id === cartItem.menuItemId) : null;
@@ -93,10 +110,17 @@ export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMul
     setCustomDiscountInput("");
     setDiscountInputType("percent");
     setSentFeedback(false);
+    setShowTipPanel(false);
+    setShowCustomTipInput(false);
+    setCustomTipInput("");
+    setTipInputType("percent");
+    setPrintFeedback(false);
     setShowNoteInput(false);
     setNoteText("");
     setActiveNoteOrderKey(null);
     setNoteDrafts({});
+    setNoteAdjustSign("+");
+    setNoteAdjustInput("");
     setShowPriceOverride(false);
     setPriceInput("");
     setShowModifySheet(false);
@@ -154,12 +178,71 @@ export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMul
     setShowDiscountPanel(true);
   };
 
+  const openTipPanel = () => {
+    setTipInputType("percent");
+    setShowCustomTipInput(false);
+    setCustomTipInput("");
+    setShowTipPanel(true);
+  };
+
+  const handleApplyTip = (value: number, type: "percent" | "amount" = tipInputType) => {
+    if (type === "percent") {
+      const pct = Math.max(0, value) / 100;
+      setCheckTip(paySubtotal * pct);
+    } else {
+      setCheckTip(Math.max(0, value));
+    }
+    setShowTipPanel(false);
+    setShowCustomTipInput(false);
+    setCustomTipInput("");
+    handleClose();
+  };
+
+  const handleApplyCustomTip = () => {
+    const value = parseFloat(customTipInput);
+    if (!isNaN(value) && value > 0) {
+      handleApplyTip(value, tipInputType);
+    }
+  };
+
+  const handleCustomTipInputChange = (value: string) => {
+    const sanitized = tipInputType === "percent"
+      ? value.replace(/\D/g, "")
+      : value
+          .replace(/[^\d.]/g, "")
+          .replace(/(\..*)\./g, "$1")
+          .replace(/^(\d+\.\d{0,2}).*$/, "$1");
+    setCustomTipInput(sanitized);
+  };
+
+  const handleRemoveTip = () => {
+    setCheckTip(0);
+    setShowTipPanel(false);
+    handleClose();
+  };
+
+  const handlePrint = () => {
+    // Mock: in a real build this would dispatch a print job. Show brief
+    // feedback then close, mirroring "Send to kitchen".
+    setPrintFeedback(true);
+    setTimeout(() => {
+      setPrintFeedback(false);
+      handleClose();
+    }, 900);
+  };
+
   const handleVoidOrder = () => {
     resetOrder();
     handleClose();
   };
 
   const handleSaveNote = () => {
+    // Compute optional signed price adjustment from the Notes panel.
+    const adjMagnitude = parseFloat(noteAdjustInput);
+    const signedAdjustment = !isNaN(adjMagnitude) && adjMagnitude > 0
+      ? (noteAdjustSign === "-" ? -adjMagnitude : adjMagnitude)
+      : 0;
+
     if (hasQuantityBasedOrders && cartItem) {
       // Build notesPerTabIndex: tab index -> note text
       const notesPerTabIndex: Record<number, string> = {};
@@ -168,9 +251,13 @@ export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMul
         notesPerTabIndex[idx] = nextNote;
       });
       splitAndUpdateNotes(cartItem.id, notesPerTabIndex);
+      // Adjustment applies to the whole original cart line; preserved by split.
+      updatePriceAdjustment(cartItem.id, signedAdjustment);
       setShowNoteInput(false);
       setActiveNoteOrderKey(null);
       setNoteDrafts({});
+      setNoteAdjustSign("+");
+      setNoteAdjustInput("");
       handleClose();
       return;
     }
@@ -178,10 +265,13 @@ export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMul
     if (selectedNoteTab) {
       const nextNote = (noteDrafts[selectedNoteTab.key] ?? "").trim();
       updateNote(selectedNoteTab.cartItemId, nextNote);
+      updatePriceAdjustment(selectedNoteTab.cartItemId, signedAdjustment);
     }
     setShowNoteInput(false);
     setActiveNoteOrderKey(null);
     setNoteDrafts({});
+    setNoteAdjustSign("+");
+    setNoteAdjustInput("");
     handleClose();
   };
 
@@ -199,6 +289,8 @@ export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMul
     setShowNoteInput(false);
     setActiveNoteOrderKey(null);
     setNoteDrafts({});
+    setNoteAdjustSign("+");
+    setNoteAdjustInput("");
     setShowPriceOverride(false);
     setShowDiscountPanel(false);
     setShowCustomDiscountInput(false);
@@ -226,7 +318,7 @@ export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMul
       <>
         <div
           className="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl z-50 flex flex-col overflow-hidden"
-          style={{ height: "68%", boxShadow: "0 -8px 32px -4px rgba(0,0,0,0.18)" }}
+          style={{ height: "60%", boxShadow: "0 -8px 32px -4px rgba(0,0,0,0.18)" }}
         >
           {/* Drag handle */}
           <div className="pt-2.5 pb-1 flex justify-center cursor-pointer shrink-0" onClick={handleClose}>
@@ -249,6 +341,7 @@ export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMul
               <div className="flex-1 min-w-0">
                 <p className="text-[13px] font-medium leading-snug truncate">{cartItem.name}</p>
               </div>
+              <ActionPriceColumn item={cartItem} />
               <div className="flex items-center gap-3 shrink-0">
                 <button
                   onClick={() => {
@@ -305,26 +398,15 @@ export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMul
             )}
           </div>
 
-          {/* Modifier / combo details */}
-          {hasModifiers && (
+          {/* Modifier / combo / note / discount details with inline deltas
+              per Rule 15. Tap to drill into the modifier panel. */}
+          {(hasModifiers || cartItem.note || cartItem.discount || cartItem.priceOverride != null) && (
             <button
-              onClick={openModifyPanel}
-              className="w-full px-4 py-2 border-b border-gray-100 shrink-0 text-left active:bg-[var(--surface)] transition-colors"
+              onClick={hasModifiers ? openModifyPanel : undefined}
+              disabled={!hasModifiers}
+              className="w-full px-4 py-2 border-b border-gray-100 shrink-0 text-left active:bg-[var(--surface)] transition-colors disabled:active:bg-transparent"
             >
-              {cartItem.modifiers.length > 0 && (
-                <p className="text-[11px] text-[var(--outline)] leading-relaxed">
-                  {cartItem.modifiers.flatMap((g) => g.modifiers.map((m) => m.name)).join(", ")}
-                </p>
-              )}
-              {cartItem.comboSelections && cartItem.comboSelections.length > 0 && (
-                <p className="text-[11px] text-[var(--outline)] leading-relaxed">
-                  {cartItem.comboSelections.map((s) => {
-                    const mods = s.modifiers.flatMap((g) => g.modifiers.map((m) => m.name));
-                    const base = `${s.groupName}: ${s.component.name}`;
-                    return mods.length > 0 ? `${base} (${mods.join(", ")})` : base;
-                  }).join(" · ")}
-                </p>
-              )}
+              <ActionItemDescription item={cartItem} />
             </button>
           )}
 
@@ -348,6 +430,60 @@ export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMul
                   rows={3}
                   className="w-full rounded-xl border border-[var(--outline-variant)] px-3 py-2 text-[13px] outline-none resize-none focus:border-[var(--primary)]"
                 />
+
+                {/* Optional price adjustment for this item. Sign toggle + numeric
+                    input — `inputMode="decimal"` triggers the Android numeric
+                    keypad. Leave blank for no adjustment. */}
+                <p className="text-[12px] text-[var(--outline)] mt-3 mb-2">Price adjustment (optional)</p>
+                <div className="flex items-center gap-2">
+                  <div className="flex rounded-xl border border-[var(--outline-variant)] overflow-hidden shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => setNoteAdjustSign("+")}
+                      className={`w-10 h-10 flex items-center justify-center text-[15px] font-semibold ${
+                        noteAdjustSign === "+"
+                          ? "bg-[var(--primary-light)] text-[var(--primary)]"
+                          : "text-[var(--outline)] active:bg-gray-50"
+                      }`}
+                      aria-pressed={noteAdjustSign === "+"}
+                      aria-label="Increase price"
+                    >
+                      +
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setNoteAdjustSign("-")}
+                      className={`w-10 h-10 flex items-center justify-center text-[15px] font-semibold border-l border-[var(--outline-variant)] ${
+                        noteAdjustSign === "-"
+                          ? "bg-[var(--primary-light)] text-[var(--primary)]"
+                          : "text-[var(--outline)] active:bg-gray-50"
+                      }`}
+                      aria-pressed={noteAdjustSign === "-"}
+                      aria-label="Decrease price"
+                    >
+                      −
+                    </button>
+                  </div>
+                  <span className="text-[15px] font-semibold text-[var(--outline)]">$</span>
+                  <input
+                    type="number"
+                    inputMode="decimal"
+                    pattern="[0-9]*"
+                    min="0"
+                    step="0.01"
+                    value={noteAdjustInput}
+                    onChange={(e) => {
+                      const sanitized = e.target.value
+                        .replace(/[^\d.]/g, "")
+                        .replace(/(\..*)\./g, "$1")
+                        .replace(/^(\d+\.\d{0,2}).*$/, "$1");
+                      setNoteAdjustInput(sanitized);
+                    }}
+                    placeholder="0.00"
+                    className="flex-1 h-10 rounded-xl border border-[var(--outline-variant)] px-3 text-[15px] outline-none focus:border-[var(--primary)]"
+                  />
+                </div>
+
                 <div className="flex gap-2 mt-3">
                   <button
                     onClick={() => setShowNoteInput(false)}
@@ -358,7 +494,17 @@ export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMul
                   </button>
                   <button
                     onClick={handleSaveNote}
-                    disabled={!selectedNoteTab || (noteDrafts[selectedNoteTab.key] ?? selectedNoteTab.note ?? "").trim().length === 0}
+                    disabled={(() => {
+                      if (!selectedNoteTab) return true;
+                      const noteFilled = (noteDrafts[selectedNoteTab.key] ?? selectedNoteTab.note ?? "").trim().length > 0;
+                      const adjVal = parseFloat(noteAdjustInput);
+                      const adjFilled = !isNaN(adjVal) && adjVal > 0;
+                      const existingAdj = cartItem?.priceAdjustment || 0;
+                      const adjChanged = adjFilled
+                        ? (noteAdjustSign === "-" ? -adjVal : adjVal) !== existingAdj
+                        : existingAdj !== 0;
+                      return !(noteFilled || adjChanged);
+                    })()}
                     className="flex-1 h-10 rounded-xl text-[13px] font-semibold text-white active:opacity-80 disabled:opacity-40"
                     style={{ background: "#6750A4" }}
                   >
@@ -564,6 +710,9 @@ export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMul
                     setNoteDrafts(initialDrafts);
                     setActiveNoteOrderKey(noteOrderTabs[0]?.key || cartItem.id);
                     setNoteText(cartItem.note || "");
+                    const adj = cartItem.priceAdjustment || 0;
+                    setNoteAdjustSign(adj < 0 ? "-" : "+");
+                    setNoteAdjustInput(adj === 0 ? "" : Math.abs(adj).toFixed(2));
                     setShowNoteInput(true);
                   }}
                 />
@@ -648,26 +797,26 @@ export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMul
         </div>
 
         {/* Header */}
-        <div className="flex items-center justify-between px-4 pb-3 border-b border-gray-100 shrink-0">
-          <div className="flex flex-col">
-            <span className="text-[15px] font-semibold">
-              {showDiscountPanel ? "Apply Discount" : showVoidConfirm ? "Void Order" : "Actions"}
+        <div className="px-4 pb-3 border-b border-gray-100 shrink-0">
+          <div className="flex items-center justify-between">
+            <span className="text-[15px] font-semibold text-[#1D1B20] leading-tight truncate">
+              {showDiscountPanel ? "Apply Discount" : showTipPanel ? "Add Tip" : showVoidConfirm ? "Void Order" : "Actions"}
             </span>
-            {!showDiscountPanel && !showVoidConfirm && (
-              <span className="text-[11px] text-[var(--outline)] mt-0.5">Actions apply to the whole check</span>
-            )}
+            <button onClick={handleClose} className="w-8 h-8 flex items-center justify-center rounded-full active:bg-gray-100 shrink-0">
+              <X size={18} />
+            </button>
           </div>
-          <button onClick={handleClose} className="w-8 h-8 flex items-center justify-center rounded-full active:bg-gray-100">
-            <X size={18} />
-          </button>
+          {!showDiscountPanel && !showTipPanel && !showVoidConfirm && (
+            <span className="block text-[11px] text-[var(--outline)] mt-0.5 truncate">Actions apply to the whole check</span>
+          )}
         </div>
 
         {/* Main actions grid */}
-        {!showVoidConfirm && !showDiscountPanel && (
+        {!showVoidConfirm && !showDiscountPanel && !showTipPanel && (
           <div className="flex-1 overflow-y-auto thin-scrollbar p-3">
             <div className="grid grid-cols-2 gap-2.5">
               <ActionTile
-                icon={sentFeedback ? <Check size={20} /> : <Send size={20} />}
+                icon={sentFeedback ? <Check size={16} /> : <Send size={16} />}
                 iconBg="#DCFCE7"
                 iconColor="#16A34A"
                 title="Send to kitchen"
@@ -676,7 +825,7 @@ export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMul
                 onClick={handleSendToKitchen}
               />
               <ActionTile
-                icon={<PauseCircle size={20} />}
+                icon={<PauseCircle size={16} />}
                 iconBg="#FEF9C3"
                 iconColor="#CA8A04"
                 title="Hold"
@@ -685,7 +834,7 @@ export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMul
                 onClick={handleClose}
               />
               <ActionTile
-                icon={<Tag size={20} />}
+                icon={<Tag size={16} />}
                 iconBg="#EFF6FF"
                 iconColor="#2563EB"
                 title="Apply discount"
@@ -694,7 +843,7 @@ export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMul
                 onClick={openDiscountPanel}
               />
               <ActionTile
-                icon={<Users size={20} />}
+                icon={<Users size={16} />}
                 iconBg="#F3EDF7"
                 iconColor="#6750A4"
                 title="Split check"
@@ -703,16 +852,34 @@ export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMul
                 onClick={() => { onSplitCheck(); handleClose(); }}
               />
               <ActionTile
-                icon={<CreditCard size={20} />}
+                icon={<CreditCard size={16} />}
                 iconBg="#F3EDF7"
                 iconColor="#6750A4"
-                title="Multiple payment"
+                title="Multi-pay"
                 subtitle="Collect separately"
                 disabled={!hasItems}
                 onClick={() => { onMultiplePayment(); handleClose(); }}
               />
               <ActionTile
-                icon={<Trash2 size={20} />}
+                icon={<Banknote size={16} />}
+                iconBg="#FEF3C7"
+                iconColor="#B45309"
+                title="Add tip"
+                subtitle={checkTip > 0 ? `Tip $${checkTip.toFixed(2)}` : "Pre-payment gratuity"}
+                disabled={!hasItems}
+                onClick={openTipPanel}
+              />
+              <ActionTile
+                icon={printFeedback ? <Check size={16} /> : <Printer size={16} />}
+                iconBg="#E0F2FE"
+                iconColor="#0369A1"
+                title="Print"
+                subtitle={printFeedback ? "Sent to printer" : "Print check receipt"}
+                disabled={!hasItems || printFeedback}
+                onClick={handlePrint}
+              />
+              <ActionTile
+                icon={<Trash2 size={16} />}
                 iconBg="#FEE2E2"
                 iconColor="#DC2626"
                 title="Void order"
@@ -725,7 +892,7 @@ export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMul
           </div>
         )}
 
-        {!showVoidConfirm && !showDiscountPanel && (
+        {!showVoidConfirm && !showDiscountPanel && !showTipPanel && (
           <div className="px-3 pb-3 pt-2 border-t border-gray-100 shrink-0">
             <button
               onClick={() => {
@@ -829,6 +996,109 @@ export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMul
           </div>
         )}
 
+        {/* Tip panel — applies a check-level tip before payment.
+            Mirrors the discount panel pattern (% / $ toggle, presets,
+            custom input) plus a Remove tip option when a tip is set. */}
+        {showTipPanel && (
+          <div className="px-4 py-4">
+            <p className="text-[12px] text-[#79747E] mb-3">
+              Tip is added to the check total before sending to payment.
+              {checkTip > 0 ? ` Current tip: $${checkTip.toFixed(2)}` : ""}
+            </p>
+            <div className="grid grid-cols-2 gap-2 mb-3">
+              <button
+                onClick={() => {
+                  setTipInputType("percent");
+                  setShowCustomTipInput(false);
+                  setCustomTipInput("");
+                }}
+                className={`h-9 rounded-xl border text-[13px] font-semibold transition-colors ${
+                  tipInputType === "percent"
+                    ? "border-[var(--primary)] bg-[var(--primary-light)] text-[var(--primary)]"
+                    : "border-[#E7E0EC] text-[var(--outline)]"
+                }`}
+              >
+                %
+              </button>
+              <button
+                onClick={() => {
+                  setTipInputType("amount");
+                  setShowCustomTipInput(false);
+                  setCustomTipInput("");
+                }}
+                className={`h-9 rounded-xl border text-[13px] font-semibold transition-colors ${
+                  tipInputType === "amount"
+                    ? "border-[var(--primary)] bg-[var(--primary-light)] text-[var(--primary)]"
+                    : "border-[#E7E0EC] text-[var(--outline)]"
+                }`}
+              >
+                $
+              </button>
+            </div>
+            <div className="grid grid-cols-4 gap-2 mb-4">
+              {(tipInputType === "percent" ? [15, 18, 20] : [5, 10, 20]).map((value) => (
+                <button
+                  key={value}
+                  onClick={() => handleApplyTip(value, tipInputType)}
+                  className="h-12 rounded-xl border border-[#E7E0EC] text-[15px] font-semibold active:bg-[#F3EDF7] transition-colors"
+                  style={{ color: "#6750A4" }}
+                >
+                  {tipInputType === "percent" ? `${value}%` : `$${value}`}
+                </button>
+              ))}
+              <button
+                onClick={() => setShowCustomTipInput(true)}
+                className="h-12 rounded-xl border border-[#E7E0EC] text-[15px] font-semibold active:bg-[#F3EDF7] transition-colors"
+                style={{ color: "#6750A4" }}
+              >
+                Custom
+              </button>
+            </div>
+            {showCustomTipInput && (
+              <div className="flex items-center gap-2 mb-4">
+                <input
+                  autoFocus
+                  type="text"
+                  inputMode={tipInputType === "percent" ? "numeric" : "decimal"}
+                  pattern={tipInputType === "percent" ? "[0-9]*" : "[0-9]*[.]?[0-9]{0,2}"}
+                  value={customTipInput}
+                  onChange={(e) => handleCustomTipInputChange(e.target.value)}
+                  placeholder={tipInputType === "percent" ? "Custom %" : "Custom $"}
+                  className="flex-1 h-10 rounded-xl border border-[var(--outline-variant)] px-3 text-[14px] outline-none focus:border-[var(--primary)]"
+                />
+                <button
+                  onClick={handleApplyCustomTip}
+                  disabled={!customTipInput || Number(customTipInput) <= 0}
+                  className="h-10 px-3 rounded-xl text-[13px] font-semibold text-white disabled:opacity-40"
+                  style={{ background: "#6750A4" }}
+                >
+                  Apply
+                </button>
+              </div>
+            )}
+            {checkTip > 0 && (
+              <button
+                onClick={handleRemoveTip}
+                className="w-full h-10 rounded-xl text-sm font-medium mb-2 border border-[#E7E0EC] active:bg-gray-100"
+                style={{ color: "#B3261E" }}
+              >
+                Remove tip
+              </button>
+            )}
+            <button
+              onClick={() => {
+                setShowCustomTipInput(false);
+                setCustomTipInput("");
+                setShowTipPanel(false);
+              }}
+              className="w-full h-10 rounded-xl text-sm font-medium active:bg-gray-100"
+              style={{ color: "#49454F" }}
+            >
+              Back
+            </button>
+          </div>
+        )}
+
         {/* Void confirmation */}
         {showVoidConfirm && (
           <div className="px-4 py-4">
@@ -856,8 +1126,6 @@ export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMul
             </div>
           </div>
         )}
-
-        <div style={{ paddingBottom: "max(env(safe-area-inset-bottom), 8px)" }} />
       </div>
     </>
   );
@@ -913,6 +1181,7 @@ function ItemActionButton({
 }
 
 function ActionTile({
+  icon,
   title,
   disabled,
   onClick,
@@ -931,12 +1200,150 @@ function ActionTile({
     <button
       onClick={onClick}
       disabled={disabled}
-      className="flex items-center justify-center rounded-2xl border border-[#E7E0EC] bg-white active:bg-gray-50 transition-colors disabled:opacity-40"
-      style={{ height: 44 }}
+      className="flex items-center gap-2 rounded-xl border border-gray-200 bg-gray-50 h-11 px-3 text-left transition hover:bg-gray-100 disabled:opacity-40"
     >
-      <span className="text-[13px] font-semibold" style={{ color: destructive ? "#DC2626" : "#1D1B20" }}>
+      {icon && (
+        <span className="inline-flex h-7 w-7 items-center justify-center text-gray-600 shrink-0">
+          {icon}
+        </span>
+      )}
+      <span
+        className="truncate text-[13px] font-medium"
+        style={{ color: destructive ? "#DC2626" : "#1F2937" }}
+      >
         {title}
       </span>
     </button>
+  );
+}
+
+/**
+ * Rule 15 right-column price stack for the Action Drawer item header.
+ * Mirrors the row-level visual: original price strikethrough above the
+ * final unit price in accent color when adjusted/overridden; otherwise a
+ * single neutral price.
+ */
+function ActionPriceColumn({ item }: { item: import("@/lib/types").CartItem }) {
+  const breakdown = getPriceBreakdown(item);
+
+  if (!breakdown.hasOverride && breakdown.netAdjustment === 0 && !breakdown.isComped) {
+    return (
+      <span className="text-[13px] font-semibold text-[#1D1B20] shrink-0 tabular-nums">
+        {formatCurrency(breakdown.basePrice)}
+      </span>
+    );
+  }
+
+  return (
+    <div className="shrink-0 text-right leading-tight tabular-nums">
+      <div className="text-[11px] text-[var(--outline)] line-through">
+        {formatCurrency(breakdown.basePrice)}
+      </div>
+      <div className="text-[13px] font-semibold text-[#6750A4]">
+        {formatCurrency(breakdown.effectiveUnitPrice)}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Rule 15 inline-delta description for the Action Drawer item header.
+ * Modifiers, combo selections, notes show their `+$X`/`−$X` deltas inline.
+ * Discount renders as its own line. Override suppresses inline deltas and
+ * shows a single "Override" label.
+ */
+function ActionItemDescription({ item }: { item: import("@/lib/types").CartItem }) {
+  const breakdown = getPriceBreakdown(item);
+  const overrideActive = breakdown.hasOverride;
+
+  const modifierEntries = item.modifiers.flatMap((g) =>
+    g.modifiers.map((m) => ({ g, m })),
+  );
+
+  return (
+    <>
+      {modifierEntries.length > 0 && (
+        <p className="text-[11px] text-[var(--outline)] leading-relaxed">
+          {modifierEntries.map(({ g, m }, i) => {
+            const d = !overrideActive && m.price ? m.price : 0;
+            return (
+              <span key={`${g.groupId}-${m.id}`}>
+                {i > 0 && ", "}
+                {m.name}
+                {d ? (
+                  <span className="ml-1 text-[var(--primary)] font-medium">
+                    {formatSignedCurrency(d)}
+                  </span>
+                ) : null}
+              </span>
+            );
+          })}
+        </p>
+      )}
+
+      {item.comboSelections && item.comboSelections.length > 0 && (
+        <p className="text-[11px] text-[var(--outline)] leading-relaxed">
+          {item.comboSelections.map((s, ci) => {
+            const compDelta = !overrideActive && s.component.price ? s.component.price : 0;
+            const innerMods = s.modifiers.flatMap((g) => g.modifiers.map((m) => ({ g, m })));
+            return (
+              <span key={`${s.groupId}-${s.component.id}-${ci}`}>
+                {ci > 0 && " · "}
+                {s.groupName}: {s.component.name}
+                {compDelta ? (
+                  <span className="ml-1 text-[var(--primary)] font-medium">
+                    {formatSignedCurrency(compDelta)}
+                  </span>
+                ) : null}
+                {innerMods.length > 0 && (
+                  <>
+                    {" ("}
+                    {innerMods.map(({ g, m }, mi) => {
+                      const d = !overrideActive && m.price ? m.price : 0;
+                      return (
+                        <span key={`${g.groupId}-${m.id}`}>
+                          {mi > 0 && ", "}
+                          {m.name}
+                          {d ? (
+                            <span className="ml-1 text-[var(--primary)] font-medium">
+                              {formatSignedCurrency(d)}
+                            </span>
+                          ) : null}
+                        </span>
+                      );
+                    })}
+                    {")"}
+                  </>
+                )}
+              </span>
+            );
+          })}
+        </p>
+      )}
+
+      {item.note && (
+        <p className="text-[11px] text-[var(--primary)] italic leading-relaxed">
+          Note: {item.note}
+          {!overrideActive && breakdown.noteAdjustment ? (
+            <span className="ml-1 not-italic font-medium">
+              {formatSignedCurrency(breakdown.noteAdjustment.amount)}
+            </span>
+          ) : null}
+        </p>
+      )}
+
+      {!overrideActive && breakdown.discount && (
+        <p className="text-[11px] text-[var(--primary)] italic leading-relaxed">
+          {breakdown.discount.label}
+          <span className="ml-1 not-italic font-medium">
+            {formatSignedCurrency(breakdown.discount.amount)}
+          </span>
+        </p>
+      )}
+
+      {overrideActive && (
+        <p className="text-[11px] text-[var(--primary)] italic leading-relaxed">Override</p>
+      )}
+    </>
   );
 }

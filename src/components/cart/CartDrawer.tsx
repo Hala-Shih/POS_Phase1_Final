@@ -11,6 +11,160 @@ function BreaklineIcon({ size = 16, color = "currentColor" }: { size?: number; c
   );
 }
 
+/**
+ * Rule 15 right-column price stack for cart rows.
+ * - No adjustment & no override: single neutral price.
+ * - Otherwise: original price strikethrough above the final unit price
+ *   in accent color. Comped renders the base struck through with a COMP
+ *   badge.
+ */
+function CartPriceColumn({ item }: { item: CartItem }) {
+  const breakdown = getPriceBreakdown(item);
+
+  if (breakdown.isComped) {
+    return (
+      <div className="flex items-center gap-1.5">
+        <span className="text-xs line-through text-[var(--outline)]">
+          {formatCurrency(breakdown.basePrice)}
+        </span>
+        <span className="text-xs font-semibold px-1.5 py-0.5 rounded-full bg-[#E8DEF8] text-[#6750A4]">
+          COMP
+        </span>
+      </div>
+    );
+  }
+
+  if (!breakdown.hasOverride && breakdown.netAdjustment === 0) {
+    return (
+      <span className="text-sm font-medium">
+        {formatCurrency(breakdown.basePrice)}
+      </span>
+    );
+  }
+
+  return (
+    <div className="flex flex-col items-end leading-tight">
+      <span className="text-[12px] text-[var(--outline)] line-through">
+        {formatCurrency(breakdown.basePrice)}
+      </span>
+      <span className="text-sm font-semibold text-[#6750A4]">
+        {formatCurrency(breakdown.effectiveUnitPrice)}
+      </span>
+    </div>
+  );
+}
+
+/**
+ * Rule 15 inline-delta description region for cart rows.
+ * Each cause shows its `+$X` / `−$X` token next to its own text.
+ * Override suppresses inline deltas and shows a single "Override" label.
+ */
+function CartItemDescription({ item, dim }: { item: CartItem; dim?: boolean }) {
+  const breakdown = getPriceBreakdown(item);
+  const overrideActive = breakdown.hasOverride;
+  const dimClass = dim ? "opacity-60" : "";
+
+  const modDelta = new Map<string, number>();
+  if (!overrideActive) {
+    item.modifiers.forEach((g) =>
+      g.modifiers.forEach((m) => {
+        if (m.price) modDelta.set(`${g.groupId}:${m.id}`, m.price);
+      }),
+    );
+  }
+
+  const modifierEntries = item.modifiers.flatMap((g) =>
+    g.modifiers.map((m) => ({ g, m })),
+  );
+
+  return (
+    <>
+      {modifierEntries.length > 0 && (
+        <p className={`text-xs text-[var(--outline)] ${dimClass}`}>
+          {modifierEntries.map(({ g, m }, i) => {
+            const d = modDelta.get(`${g.groupId}:${m.id}`);
+            return (
+              <span key={`${g.groupId}-${m.id}`}>
+                {i > 0 && ", "}
+                {m.name}
+                {d ? (
+                  <span className="ml-1 text-[var(--primary)] font-medium">
+                    {formatSignedCurrency(d)}
+                  </span>
+                ) : null}
+              </span>
+            );
+          })}
+        </p>
+      )}
+
+      {item.comboSelections && item.comboSelections.length > 0 && (
+        <p className={`text-xs text-[var(--outline)] ${dimClass}`}>
+          {item.comboSelections.map((s, ci) => {
+            const compDelta = !overrideActive && s.component.price ? s.component.price : 0;
+            const innerMods = s.modifiers.flatMap((g) => g.modifiers.map((m) => ({ g, m })));
+            return (
+              <span key={`${s.groupId}-${s.component.id}-${ci}`}>
+                {ci > 0 && " · "}
+                {s.groupName}: {s.component.name}
+                {compDelta ? (
+                  <span className="ml-1 text-[var(--primary)] font-medium">
+                    {formatSignedCurrency(compDelta)}
+                  </span>
+                ) : null}
+                {innerMods.length > 0 && (
+                  <>
+                    {" ("}
+                    {innerMods.map(({ g, m }, mi) => {
+                      const d = !overrideActive && m.price ? m.price : 0;
+                      return (
+                        <span key={`${g.groupId}-${m.id}`}>
+                          {mi > 0 && ", "}
+                          {m.name}
+                          {d ? (
+                            <span className="ml-1 text-[var(--primary)] font-medium">
+                              {formatSignedCurrency(d)}
+                            </span>
+                          ) : null}
+                        </span>
+                      );
+                    })}
+                    {")"}
+                  </>
+                )}
+              </span>
+            );
+          })}
+        </p>
+      )}
+
+      {item.note && (
+        <p className={`text-xs text-[var(--primary)] italic ${dimClass}`}>
+          Note: {item.note}
+          {!overrideActive && breakdown.noteAdjustment ? (
+            <span className="ml-1 not-italic font-medium">
+              {formatSignedCurrency(breakdown.noteAdjustment.amount)}
+            </span>
+          ) : null}
+        </p>
+      )}
+
+      {!overrideActive && breakdown.discount && (
+        <p className={`text-xs text-[var(--primary)] italic ${dimClass}`}>
+          {breakdown.discount.label}
+          <span className="ml-1 not-italic font-medium">
+            {formatSignedCurrency(breakdown.discount.amount)}
+          </span>
+        </p>
+      )}
+
+      {overrideActive && (
+        <p className={`text-xs text-[var(--primary)] italic ${dimClass}`}>Override</p>
+      )}
+    </>
+  );
+}
+
 function NoteEditIcon({ size = 16, className = "" }: { size?: number; className?: string }) {
   return (
     <svg width={size} height={size} viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
@@ -19,6 +173,8 @@ function NoteEditIcon({ size = 16, className = "" }: { size?: number; className?
   );
 }
 import { useOrderStore } from "@/store/order-store";
+import { getPriceBreakdown, formatCurrency, formatSignedCurrency } from "@/lib/pricing";
+import type { CartItem } from "@/lib/types";
 import { useState, useRef, useEffect } from "react";
 
 interface CartDrawerProps {
@@ -150,17 +306,21 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
             <div
               onPointerDown={(e) => dragControls.start(e)}
               style={{ touchAction: "none" }}
-              className="px-4 pt-3 pb-2 border-b border-gray-100">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <h2 className="text-base font-semibold">Cart ({count})</h2>
+              className="shrink-0">
+              {/* Drag handle */}
+              <div className="pt-2.5 pb-1 flex justify-center">
+                <div className="w-9 h-1 rounded-full bg-[#CAC4D0]" />
+              </div>
+              <div className="flex items-center justify-between px-4 pb-3 border-b border-gray-100">
+                <div className="flex items-center gap-2 min-w-0">
+                  <h2 className="text-[15px] font-semibold text-[#1D1B20] leading-tight truncate">Cart ({count})</h2>
                   {unsentItems.length > 0 ? (
-                    <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-50 border border-amber-200">
+                    <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-50 border border-amber-200 shrink-0">
                       <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
                       <span className="text-[10px] font-medium text-amber-600 leading-none">Editing</span>
                     </span>
                   ) : sentItems.length > 0 ? (
-                    <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-green-50 border border-green-200">
+                    <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-green-50 border border-green-200 shrink-0">
                       <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
                       <span className="text-[10px] font-medium text-green-600 leading-none">Sent to Kitchen</span>
                     </span>
@@ -168,7 +328,7 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
                 </div>
                 <button
                   onClick={onClose}
-                  className="w-8 h-8 flex items-center justify-center rounded-full active:bg-gray-100"
+                  className="w-8 h-8 flex items-center justify-center rounded-full active:bg-gray-100 shrink-0"
                 >
                   <X size={18} />
                 </button>
@@ -211,40 +371,7 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
                               <p className="text-sm font-medium">
                                 {item.name}
                               </p>
-                              {item.modifiers.length > 0 && (
-                                <p className="text-xs text-[var(--outline)]">
-                                  {item.modifiers
-                                    .flatMap((g) =>
-                                      g.modifiers.map((m) => m.name)
-                                    )
-                                    .join(", ")}
-                                </p>
-                              )}
-                              {item.comboSelections && item.comboSelections.length > 0 && (
-                                <p className="text-xs text-[var(--outline)]">
-                                  {item.comboSelections
-                                    .map((s) => {
-                                      const modNames = s.modifiers
-                                        .flatMap((g) => g.modifiers.map((m) => m.name));
-                                      const base = `${s.groupName}: ${s.component.name}`;
-                                      return modNames.length > 0
-                                        ? `${base} (${modNames.join(", ")})`
-                                        : base;
-                                    })
-                                    .join(" · ")}
-                                </p>
-                              )}
-                              {(item.note || item.priceAdjustment) && (
-                                <p className="text-xs text-[var(--primary)] italic">
-                                  {item.note && `Note: ${item.note}`}
-                                  {item.note && item.priceAdjustment ? " " : ""}
-                                  {item.priceAdjustment ? (
-                                    <span className="font-medium">
-                                      {item.priceAdjustment > 0 ? "+" : ""}${item.priceAdjustment.toFixed(2)}
-                                    </span>
-                                  ) : null}
-                                </p>
-                              )}
+                              <CartItemDescription item={item} />
                               {/* Action icons */}
                               <div className="flex items-center gap-4 mt-2">
                                 <button
@@ -295,57 +422,9 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
                               </div>
                             </div>
 
-                            {/* Price + Qty controls */}
+                            {/* Price + Qty controls — Rule 15 compact display */}
                             <div className="flex flex-col items-end gap-1 shrink-0">
-                              {(() => {
-                                const originalPrice = ((item.basePrice + item.modifiers.reduce((sum, g) => sum + g.modifiers.reduce((s, m) => s + m.price, 0), 0)) * item.quantity);
-                                if (item.comped) {
-                                  return (
-                                    <div className="flex items-center gap-1.5">
-                                      <span className="text-xs line-through text-[var(--outline)]">
-                                        ${originalPrice.toFixed(2)}
-                                      </span>
-                                      <span className="text-xs font-semibold px-1.5 py-0.5 rounded-full bg-[#E8DEF8] text-[#6750A4]">
-                                        COMP
-                                      </span>
-                                    </div>
-                                  );
-                                }
-                                if (item.priceOverride != null) {
-                                  return (
-                                    <div className="flex flex-col items-end">
-                                      <span className="text-sm font-medium text-[#6750A4]">
-                                        ${item.totalPrice.toFixed(2)}
-                                      </span>
-                                      <span className="text-[10px] line-through text-[var(--outline)]">
-                                        ${originalPrice.toFixed(2)}
-                                      </span>
-                                    </div>
-                                  );
-                                }
-                                if (item.discount) {
-                                  return (
-                                    <div className="flex flex-col items-end">
-                                      <span className="text-sm font-medium text-[#6750A4]">
-                                        ${item.totalPrice.toFixed(2)}
-                                      </span>
-                                      <div className="flex items-center gap-1">
-                                        <span className="text-[10px] line-through text-[var(--outline)]">
-                                          ${originalPrice.toFixed(2)}
-                                        </span>
-                                        <span className="text-[10px] text-green-600 font-medium">
-                                          {item.discount.type === "percent" ? `-${item.discount.value}%` : `-$${item.discount.value.toFixed(2)}`}
-                                        </span>
-                                      </div>
-                                    </div>
-                                  );
-                                }
-                                return (
-                                  <span className="text-sm font-medium">
-                                    ${item.totalPrice.toFixed(2)}
-                                  </span>
-                                );
-                              })()}
+                              <CartPriceColumn item={item} />
                               <div className="flex items-center gap-1">
                                 <button
                                   onClick={(e) => {
@@ -725,40 +804,9 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
                                 Sent
                               </span>
                             </div>
-                            {item.modifiers.length > 0 && (
-                              <p className="text-xs text-[var(--outline)] opacity-60">
-                                {item.modifiers
-                                  .flatMap((g) =>
-                                    g.modifiers.map((m) => m.name)
-                                  )
-                                  .join(", ")}
-                              </p>
-                            )}
-                            {item.comboSelections && item.comboSelections.length > 0 && (
-                              <p className="text-xs text-[var(--outline)] opacity-60">
-                                {item.comboSelections
-                                  .map((s) => {
-                                    const modNames = s.modifiers
-                                      .flatMap((g) => g.modifiers.map((m) => m.name));
-                                    const base = `${s.groupName}: ${s.component.name}`;
-                                    return modNames.length > 0
-                                      ? `${base} (${modNames.join(", ")})`
-                                      : base;
-                                  })
-                                  .join(" · ")}
-                              </p>
-                            )}
-                            {(item.note || item.priceAdjustment) && (
-                              <p className="text-xs text-[var(--primary)] italic opacity-60">
-                                {item.note && `Note: ${item.note}`}
-                                {item.note && item.priceAdjustment ? " " : ""}
-                                {item.priceAdjustment ? (
-                                  <span className="font-medium">
-                                    {item.priceAdjustment > 0 ? "+" : ""}${item.priceAdjustment.toFixed(2)}
-                                  </span>
-                                ) : null}
-                              </p>
-                            )}
+                            {item.modifiers.length > 0 || (item.comboSelections && item.comboSelections.length > 0) || item.note || item.priceAdjustment ? (
+                              <CartItemDescription item={item} dim />
+                            ) : null}
                             {/* Action icons */}
                             <div className="flex items-center gap-4 mt-2">
                               <button
@@ -804,43 +852,9 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
                             </div>
                           </div>
 
-                          {/* Price + Qty */}
+                          {/* Price + Qty — Rule 15 compact display */}
                           <div className="flex flex-col items-end gap-1 shrink-0">
-                            {(() => {
-                              const originalPrice = ((item.basePrice + item.modifiers.reduce((sum, g) => sum + g.modifiers.reduce((s, m) => s + m.price, 0), 0)) * item.quantity);
-                              if (item.comped) {
-                                return (
-                                  <div className="flex items-center gap-1.5">
-                                    <span className="text-xs line-through text-[var(--outline)]">${originalPrice.toFixed(2)}</span>
-                                    <span className="text-xs font-semibold px-1.5 py-0.5 rounded-full bg-[#E8DEF8] text-[#6750A4]">COMP</span>
-                                  </div>
-                                );
-                              }
-                              if (item.priceOverride != null) {
-                                return (
-                                  <div className="flex flex-col items-end">
-                                    <span className="text-sm font-medium text-[#6750A4]">${item.totalPrice.toFixed(2)}</span>
-                                    <span className="text-[10px] line-through text-[var(--outline)]">${originalPrice.toFixed(2)}</span>
-                                  </div>
-                                );
-                              }
-                              if (item.discount) {
-                                return (
-                                  <div className="flex flex-col items-end">
-                                    <span className="text-sm font-medium text-[#6750A4]">${item.totalPrice.toFixed(2)}</span>
-                                    <div className="flex items-center gap-1">
-                                      <span className="text-[10px] line-through text-[var(--outline)]">${originalPrice.toFixed(2)}</span>
-                                      <span className="text-[10px] text-green-600 font-medium">
-                                        {item.discount.type === "percent" ? `-${item.discount.value}%` : `-$${item.discount.value.toFixed(2)}`}
-                                      </span>
-                                    </div>
-                                  </div>
-                                );
-                              }
-                              return (
-                                <span className="text-sm font-medium text-[var(--outline)]">${item.totalPrice.toFixed(2)}</span>
-                              );
-                            })()}
+                            <CartPriceColumn item={item} />
                             <span className="text-xs text-[var(--outline)]">×{item.quantity}</span>
                           </div>
                         </div>

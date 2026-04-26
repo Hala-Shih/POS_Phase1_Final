@@ -191,11 +191,6 @@ export default function OrderScreen() {
     setTimeout(() => searchInputRef.current?.focus(), 100);
   };
 
-  const handleLogout = () => {
-    resetOrder();
-    setScreen("login");
-  };
-
   const handleTransfer = (staff: Staff) => {
     setStaff(staff);
   };
@@ -218,7 +213,6 @@ export default function OrderScreen() {
         guestCount={guestCount}
         onGuestCountTap={() => setScreen("guest-count")}
         onTableTap={() => setScreen("tables")}
-        onLogout={handleLogout}
         onTransfer={handleTransfer}
         staffList={staffData as Staff[]}
         currentStaffId={currentStaff?.id}
@@ -441,7 +435,6 @@ export default function OrderScreen() {
               guestCount={guestCount}
               onGuestCountTap={() => setScreen("guest-count")}
               onTableTap={() => setScreen("tables")}
-              onLogout={handleLogout}
               onTransfer={handleTransfer}
               staffList={staffData as Staff[]}
               currentStaffId={currentStaff?.id}

@@ -55,25 +55,69 @@ body {
   box-shadow: 0 18px 60px rgba(15, 23, 42, 0.18);
 }
 
-/* Scrollbar styling for thin scrollbars on menu lists */
+/* Rule 14 — No visible scrollbars on any screen (mobile experience).
+   Scrolling still works; only the visual scrollbar is hidden. */
+*::-webkit-scrollbar {
+  display: none;
+}
+* {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Legacy utility kept for backwards compatibility — now a no-op visually,
+   since scrollbars are globally hidden by Rule 14. */
 .thin-scrollbar::-webkit-scrollbar {
-  width: 3px;
+  display: none;
 }
 .thin-scrollbar::-webkit-scrollbar-thumb {
-  background: var(--outline-variant);
-  border-radius: 3px;
+  background: transparent;
 }
 .thin-scrollbar::-webkit-scrollbar-track {
   background: transparent;
 }
 
-/* Hide scrollbar for horizontal tab scrolling */
+/* Hide scrollbar for horizontal tab scrolling (kept for explicit semantic use) */
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
 .no-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
+}
+
+/* Rule 16 — Minimum tap target size (44 × 44 px).
+   Every interactive control must be hittable with a thumb, even when
+   rendered visually smaller (e.g. 28 px icon buttons in dense rows).
+   Strategy: each <button> gets an invisible ::before pseudo-element that
+   extends the hit area to at least 44 × 44 px without affecting layout
+   or visual size. Buttons that are already ≥ 44 px are unaffected.
+   Opt out by adding `data-no-tap-target` (e.g. for non-interactive
+   button-styled elements or hit areas owned by a wrapper). */
+button {
+  position: relative;
+}
+button:not([data-no-tap-target])::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  min-width: 44px;
+  min-height: 44px;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+}
+button:disabled::before,
+button[aria-disabled="true"]::before {
+  pointer-events: none;
+}
+/* Ensure inline content sits above the hit-area pseudo-element so it
+   remains visible and still receives focus / hover styles. */
+button > * {
+  position: relative;
+  z-index: 1;
 }
 
 @keyframes slideDown {

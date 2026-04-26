@@ -112,22 +112,55 @@ export default function ItemConfigSheet({
   const isSelected = (groupId: string, modifierId: string) =>
     (activeOrder.selections[groupId] || []).some((m) => m.id === modifierId);
 
+  // Conditional modifier groups (showIf): a group with `showIf` is only
+  // visible when one of the listed modifier ids is selected in the source
+  // group. Hidden groups are treated as not required and are cleared.
+  const isGroupVisible = (
+    group: { showIf?: { groupId: string; modifierIds: string[] } },
+    selections: Record<string, Modifier[]>,
+  ) => {
+    if (!group.showIf) return true;
+    const src = selections[group.showIf.groupId] || [];
+    return src.some((m) => group.showIf!.modifierIds.includes(m.id));
+  };
+
+  // Auto-clear selections of groups that just became hidden so they don't
+  // persist into the cart or block completion.
+  useEffect(() => {
+    setOrders((prev) => {
+      let mutated = false;
+      const next = prev.map((order) => {
+        const cleaned: Record<string, Modifier[]> = { ...order.selections };
+        item.modifierGroups.forEach((g) => {
+          if (!isGroupVisible(g, order.selections) && cleaned[g.id]?.length) {
+            delete cleaned[g.id];
+            mutated = true;
+          }
+        });
+        return mutated ? { ...order, selections: cleaned } : order;
+      });
+      return mutated ? next : prev;
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [orders]);
+
   const isOrderComplete = (order: OrderConfig) =>
     item.modifierGroups
-      .filter((g) => g.required)
+      .filter((g) => g.required && isGroupVisible(g, order.selections))
       .every((g) => (order.selections[g.id] || []).length >= g.minSelect);
 
   // Auto-scroll to next incomplete modifier group when a selection completes one
   useEffect(() => {
+    const visibleGroups = item.modifierGroups.filter((g) => isGroupVisible(g, activeOrder.selections));
     const currentComplete: Record<string, boolean> = {};
-    item.modifierGroups.forEach((g) => {
+    visibleGroups.forEach((g) => {
       const mods = activeOrder.selections[g.id] || [];
       currentComplete[g.id] = !g.required || mods.length >= g.minSelect;
     });
 
     let justCompletedIdx = -1;
-    for (let i = 0; i < item.modifierGroups.length; i++) {
-      const gId = item.modifierGroups[i].id;
+    for (let i = 0; i < visibleGroups.length; i++) {
+      const gId = visibleGroups[i].id;
       if (currentComplete[gId] && !prevCompleteRef.current[gId]) {
         justCompletedIdx = i;
       }
@@ -135,8 +168,8 @@ export default function ItemConfigSheet({
 
     prevCompleteRef.current = currentComplete;
 
-    if (justCompletedIdx >= 0 && justCompletedIdx + 1 < item.modifierGroups.length) {
-      const nextGroup = item.modifierGroups[justCompletedIdx + 1];
+    if (justCompletedIdx >= 0 && justCompletedIdx + 1 < visibleGroups.length) {
+      const nextGroup = visibleGroups[justCompletedIdx + 1];
       const el = sectionRefs.current[nextGroup.id];
       if (el) {
         el.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -225,7 +258,7 @@ export default function ItemConfigSheet({
 
   const getFirstMissingGroupId = (order: OrderConfig) =>
     item.modifierGroups
-      .filter((g) => g.required)
+      .filter((g) => g.required && isGroupVisible(g, order.selections))
       .find((g) => (order.selections[g.id] || []).length < g.minSelect)?.id;
 
   const anchorToFirstMissingForOrder = (order: OrderConfig) => {
@@ -318,7 +351,7 @@ export default function ItemConfigSheet({
           <div className="flex gap-2 px-4 pb-2 overflow-x-auto no-scrollbar">
             {orders.map((order, i) => {
               const orderComplete = item.modifierGroups
-                .filter((g) => g.required)
+                .filter((g) => g.required && isGroupVisible(g, order.selections))
                 .every((g) => (order.selections[g.id] || []).length >= g.minSelect);
               return (
                 <button
@@ -340,7 +373,7 @@ export default function ItemConfigSheet({
 
         {/* Modifier Groups */}
         <div className="flex-1 overflow-y-auto thin-scrollbar px-4 py-2">
-          {item.modifierGroups.map((group) => {
+          {item.modifierGroups.filter((group) => isGroupVisible(group, activeOrder.selections)).map((group) => {
             return (
               <div key={group.id} ref={(el) => { sectionRefs.current[group.id] = el; }} className="mb-4">
                 <h3 className="text-sm font-semibold mb-2">

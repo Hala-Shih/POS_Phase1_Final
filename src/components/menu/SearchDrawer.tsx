@@ -152,9 +152,21 @@ export default function SearchDrawer({ open, onClose }: SearchDrawerProps) {
           <div className="w-9 h-1 rounded-full bg-[#CAC4D0]" />
         </div>
 
-        {/* Search input */}
-        <div className="px-3 pt-1 pb-2 flex items-center gap-2 shrink-0">
-          <div className="flex-1 flex items-center gap-2 bg-[var(--surface)] rounded-2xl px-4 py-2.5">
+        {/* Header */}
+        <div className="flex items-center justify-between px-4 pb-3 border-b border-gray-100 shrink-0">
+          <h2 className="text-[15px] font-semibold text-[#1D1B20] leading-tight truncate">Search</h2>
+          <button
+            onClick={onClose}
+            aria-label="Close"
+            className="w-8 h-8 flex items-center justify-center rounded-full active:bg-gray-100 shrink-0"
+          >
+            <X size={18} />
+          </button>
+        </div>
+
+        {/* Search input (Rule 11) */}
+        <div className="px-3 pt-2 pb-2 shrink-0">
+          <div className="flex items-center gap-2 bg-[var(--surface)] rounded-2xl px-4 py-2.5">
             <Search size={20} className="text-[var(--outline)] shrink-0" />
             <input
               ref={searchInputRef}
@@ -184,7 +196,7 @@ export default function SearchDrawer({ open, onClose }: SearchDrawerProps) {
               <p className="text-sm text-[var(--outline)] text-center mt-8">No items found</p>
             )
           ) : (
-            <p className="text-sm text-[var(--outline)] text-center mt-8">Search for an item</p>
+            <p className="text-sm text-[var(--outline)] text-center mt-8">No search result</p>
           )}
         </div>
       </div>

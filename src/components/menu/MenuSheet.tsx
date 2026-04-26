@@ -104,18 +104,51 @@ export default function MenuSheet({ open, onClose }: MenuSheetProps) {
   const isSelected = (groupId: string, modifierId: string) =>
     (activeOrder.selections[groupId] || []).some((m) => m.id === modifierId);
 
+  // Conditional modifier groups (showIf): a group with `showIf` is only
+  // visible when one of the listed modifier ids is selected in the source
+  // group. Hidden groups are treated as not required and are cleared.
+  const isGroupVisible = useCallback(
+    (group: { showIf?: { groupId: string; modifierIds: string[] } }, selections: Record<string, Modifier[]>) => {
+      if (!group.showIf) return true;
+      const src = selections[group.showIf.groupId] || [];
+      return src.some((m) => group.showIf!.modifierIds.includes(m.id));
+    },
+    [],
+  );
+
+  // Auto-clear selections of groups that just became hidden so they don't
+  // persist into the cart or block completion.
+  useEffect(() => {
+    if (!configItem) return;
+    setOrders((prev) => {
+      let mutated = false;
+      const next = prev.map((order) => {
+        const cleaned: Record<string, Modifier[]> = { ...order.selections };
+        configItem.modifierGroups.forEach((g) => {
+          if (!isGroupVisible(g, order.selections) && cleaned[g.id]?.length) {
+            delete cleaned[g.id];
+            mutated = true;
+          }
+        });
+        return mutated ? { ...order, selections: cleaned } : order;
+      });
+      return mutated ? next : prev;
+    });
+  }, [configItem, orders, isGroupVisible]);
+
   // Auto-scroll to next incomplete modifier group when a selection completes one
   useEffect(() => {
     if (!configItem) return;
+    const visibleGroups = configItem.modifierGroups.filter((g) => isGroupVisible(g, activeOrder.selections));
     const currentComplete: Record<string, boolean> = {};
-    configItem.modifierGroups.forEach((g) => {
+    visibleGroups.forEach((g) => {
       const mods = activeOrder.selections[g.id] || [];
       currentComplete[g.id] = !g.required || mods.length >= g.minSelect;
     });
 
     let justCompletedIdx = -1;
-    for (let i = 0; i < configItem.modifierGroups.length; i++) {
-      const gId = configItem.modifierGroups[i].id;
+    for (let i = 0; i < visibleGroups.length; i++) {
+      const gId = visibleGroups[i].id;
       if (currentComplete[gId] && !prevModCompleteRef.current[gId]) {
         justCompletedIdx = i;
       }
@@ -123,8 +156,8 @@ export default function MenuSheet({ open, onClose }: MenuSheetProps) {
 
     prevModCompleteRef.current = currentComplete;
 
-    if (justCompletedIdx >= 0 && justCompletedIdx + 1 < configItem.modifierGroups.length) {
-      const nextGroup = configItem.modifierGroups[justCompletedIdx + 1];
+    if (justCompletedIdx >= 0 && justCompletedIdx + 1 < visibleGroups.length) {
+      const nextGroup = visibleGroups[justCompletedIdx + 1];
       const el = modGroupRefs.current[nextGroup.id];
       if (el) {
         el.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -136,7 +169,7 @@ export default function MenuSheet({ open, onClose }: MenuSheetProps) {
   const isOrderComplete = (order: OrderConfig) =>
     configItem
       ? configItem.modifierGroups
-          .filter((g) => g.required)
+          .filter((g) => g.required && isGroupVisible(g, order.selections))
           .every((g) => (order.selections[g.id] || []).length >= g.minSelect)
       : false;
 
@@ -157,7 +190,7 @@ export default function MenuSheet({ open, onClose }: MenuSheetProps) {
     const next = [...orders, { selections: auto }];
     setOrders(next);
     const firstIncomplete = next.findIndex((o) =>
-      !configItem.modifierGroups.filter((g) => g.required).every((g) => (o.selections[g.id] || []).length >= g.minSelect)
+      !configItem.modifierGroups.filter((g) => g.required && isGroupVisible(g, o.selections)).every((g) => (o.selections[g.id] || []).length >= g.minSelect)
     );
     setActiveOrderIndex(firstIncomplete >= 0 ? firstIncomplete : next.length - 1);
   };
@@ -254,17 +287,14 @@ export default function MenuSheet({ open, onClose }: MenuSheetProps) {
             </div>
 
             {/* Header */}
-            <div className="flex items-center justify-between px-3 pb-2.5 border-b border-gray-100 shrink-0">
+            <div className="flex items-center justify-between px-4 pb-3 border-b border-gray-100 shrink-0">
               <div className="flex items-center gap-2 min-w-0">
                 {level > 1 && (
-                  <button onClick={goBack} className="w-8 h-8 flex items-center justify-center rounded-full active:bg-gray-100 shrink-0 -ml-1">
+                  <button onClick={goBack} className="w-8 h-8 flex items-center justify-center rounded-full active:bg-gray-100 shrink-0 -ml-2">
                     <ChevronLeft size={20} />
                   </button>
                 )}
-                <div className="flex items-center gap-2 min-w-0">
-                  {level === 1 && <UtensilsCrossed size={16} className="text-[var(--primary)] shrink-0" />}
-                  <span className="text-[15px] font-semibold leading-tight truncate">{headerTitle}</span>
-                </div>
+                <span className="text-[15px] font-semibold text-[#1D1B20] leading-tight truncate">{headerTitle}</span>
               </div>
               <button onClick={handleClose} className="w-8 h-8 flex items-center justify-center rounded-full active:bg-gray-100 shrink-0">
                 <X size={18} />
@@ -301,7 +331,14 @@ export default function MenuSheet({ open, onClose }: MenuSheetProps) {
                         return (
                           <button
                             key={cat.id}
-                            onClick={() => setActiveCatId(cat.id)}
+                            onClick={(e) => {
+                              setActiveCatId(cat.id);
+                              e.currentTarget.scrollIntoView({
+                                behavior: "smooth",
+                                inline: "center",
+                                block: "nearest",
+                              });
+                            }}
                             className="shrink-0 px-3.5 h-11 rounded-full text-[13px] font-medium border transition-colors"
                             style={
                               active
@@ -399,7 +436,7 @@ export default function MenuSheet({ open, onClose }: MenuSheetProps) {
                         <div className="flex gap-2 px-4 pb-2 overflow-x-auto no-scrollbar">
                           {orders.map((order, i) => {
                             const complete = configItem.modifierGroups
-                              .filter((g) => g.required)
+                              .filter((g) => g.required && isGroupVisible(g, order.selections))
                               .every((g) => (order.selections[g.id] || []).length >= g.minSelect);
                             return (
                               <button
@@ -422,7 +459,7 @@ export default function MenuSheet({ open, onClose }: MenuSheetProps) {
 
                     {/* Modifier groups */}
                     <div ref={modScrollRef} className="flex-1 overflow-y-auto thin-scrollbar px-4 pb-2">
-                      {configItem.modifierGroups.map((group) => {
+                      {configItem.modifierGroups.filter((g) => isGroupVisible(g, activeOrder.selections)).map((group) => {
                         return (
                           <div key={group.id} ref={(el) => { modGroupRefs.current[group.id] = el; }} className="mb-3">
                             <p className="text-xs font-semibold mb-1.5 text-[#1D1B20]">
