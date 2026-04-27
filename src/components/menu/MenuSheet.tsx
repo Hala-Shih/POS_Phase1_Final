@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect, useRef } from "react";
-import { X, ChevronLeft, ChevronRight, UtensilsCrossed, Minus, Plus, Check } from "lucide-react";
+import { X, ChevronLeft, ChevronRight, UtensilsCrossed, Minus, Plus, Check, Trash2 } from "lucide-react";
 import { useOrderStore } from "@/store/order-store";
 import menuData from "@/data/menu.json";
 import { MenuBook, MenuItem, CartItemModifier, Modifier } from "@/lib/types";
@@ -24,7 +24,7 @@ function formatUpcharge(price: number) {
 }
 
 export default function MenuSheet({ open, onClose }: MenuSheetProps) {
-  const { addItem, updateItemModifiers, updateComboSelections, cartItems } = useOrderStore();
+  const { addItem, updateItemModifiers, updateComboSelections, updateQuantity, cartItems } = useOrderStore();
 
   const [activeBookId, setActiveBookId] = useState<string | null>(null);
   const [activeCatId, setActiveCatId] = useState<string | null>(null);
@@ -197,13 +197,26 @@ export default function MenuSheet({ open, onClose }: MenuSheetProps) {
 
   const removeOrder = () => {
     if (!configItem || orders.length <= 1) return;
-    const minOrders = cartItems
-      .filter((ci) => ci.menuItemId === configItem.id)
-      .reduce((s, ci) => s + ci.quantity, 0);
-    if (orders.length <= minOrders) return;
-    const next = orders.filter((_, i) => i !== activeOrderIndex);
+    // Always pop the most recently added (last) order.
+    const removed = orders[orders.length - 1];
+    const next = orders.slice(0, -1);
     setOrders(next);
     setActiveOrderIndex(Math.min(activeOrderIndex, next.length - 1));
+    // If the popped order is backed by a cart line, decrement it so the
+    // cart/check summary reflects the removal immediately. If no other
+    // remaining order shares that cartItemId, fully remove that line.
+    if (removed?.cartItemId) {
+      // Decrement the underlying cart line; store removes line at qty 0.
+      updateQuantity(removed.cartItemId, -1);
+      const stillReferenced = next.some((o) => o.cartItemId === removed.cartItemId);
+      if (!stillReferenced) {
+        setChangedOrderIds((prev) => {
+          const s = new Set(prev);
+          s.delete(removed.cartItemId!);
+          return s;
+        });
+      }
+    }
   };
 
   const handleAddModifiers = () => {
@@ -279,7 +292,7 @@ export default function MenuSheet({ open, onClose }: MenuSheetProps) {
         <>
           <div
             className="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl z-50 flex flex-col overflow-hidden"
-            style={{ height: "60%", boxShadow: "0 -8px 32px -4px rgba(0,0,0,0.18)" }}
+            style={{ height: "calc(60% + 20px)", boxShadow: "0 -8px 32px -4px rgba(0,0,0,0.18)" }}
           >
             {/* Drag handle */}
             <div className="pt-2.5 pb-1 flex justify-center cursor-pointer shrink-0" onClick={handleClose}>
@@ -294,11 +307,45 @@ export default function MenuSheet({ open, onClose }: MenuSheetProps) {
                     <ChevronLeft size={20} />
                   </button>
                 )}
-                <span className="text-[15px] font-semibold text-[#1D1B20] leading-tight truncate">{headerTitle}</span>
+                <span className="text-[15px] font-semibold text-[#1D1B20] leading-tight break-words" style={{ display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{headerTitle}</span>
               </div>
-              <button onClick={handleClose} className="w-8 h-8 flex items-center justify-center rounded-full active:bg-gray-100 shrink-0">
-                <X size={18} />
-              </button>
+              <div className="flex items-center gap-2 shrink-0">
+                {level === 3 && configItem && (
+                  <div className="flex items-center gap-3">
+                    {orders.length <= 1 ? (
+                      <button
+                        onClick={handleClose}
+                        aria-label="Delete item"
+                        data-no-tap-target
+                        className="w-7 h-7 rounded-full border border-[var(--outline-variant)] flex items-center justify-center active:bg-gray-100"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    ) : (
+                      <button
+                        onClick={removeOrder}
+                        data-no-tap-target
+                        className="w-7 h-7 rounded-full border border-[var(--outline-variant)] flex items-center justify-center active:bg-gray-100"
+                      >
+                        <Minus size={14} />
+                      </button>
+                    )}
+                    <span className="text-sm font-semibold min-w-[16px] text-center">{quantity}</span>
+                    <button
+                      onClick={addAnotherOrder}
+                      data-no-tap-target
+                      className="w-7 h-7 rounded-full border border-[var(--outline-variant)] flex items-center justify-center active:bg-gray-100"
+                    >
+                      <Plus size={14} />
+                    </button>
+                  </div>
+                )}
+                {level !== 3 && (
+                  <button onClick={handleClose} className="w-8 h-8 flex items-center justify-center rounded-full active:bg-gray-100">
+                    <X size={18} />
+                  </button>
+                )}
+              </div>
             </div>
 
             {/* Content area */}
@@ -405,30 +452,8 @@ export default function MenuSheet({ open, onClose }: MenuSheetProps) {
               {/* Level 3 — Modifier drill-in, instant (no animation) */}
               {configItem && (
                   <div className="absolute inset-0 bg-white flex flex-col" style={{ zIndex: 10 }}>
-                    {/* Header: item name + qty, then order tabs on own row */}
+                    {/* Qty editor lives in the sheet header (next to X) */}
                     <div className="shrink-0">
-                      {/* Title row + qty editor */}
-                      <div className="flex items-center gap-2 px-4 pb-2">
-                        <div className="flex-1 min-w-0">
-                          <h2 className="text-base font-semibold truncate">{configItem.name}</h2>
-                        </div>
-                        <div className="flex items-center gap-3 shrink-0">
-                          <button
-                            onClick={removeOrder}
-                            disabled={orders.length <= 1}
-                            className="w-7 h-7 rounded-full border border-[var(--outline-variant)] flex items-center justify-center disabled:opacity-30 active:bg-gray-100"
-                          >
-                            <Minus size={14} />
-                          </button>
-                          <span className="text-sm font-semibold min-w-[16px] text-center">{quantity}</span>
-                          <button
-                            onClick={addAnotherOrder}
-                            className="w-7 h-7 rounded-full border border-[var(--outline-variant)] flex items-center justify-center active:bg-gray-100"
-                          >
-                            <Plus size={14} />
-                          </button>
-                        </div>
-                      </div>
                       {/* Order tabs row — own row, shown when >1 orders */}
                       {orders.length > 1 && (
                         <div className="flex gap-2 px-4 pb-2 overflow-x-auto no-scrollbar">
@@ -457,13 +482,18 @@ export default function MenuSheet({ open, onClose }: MenuSheetProps) {
 
                     {/* Modifier groups */}
                     <div ref={modScrollRef} className="flex-1 overflow-y-auto thin-scrollbar px-4 pb-2">
-                      {configItem.modifierGroups.filter((g) => isGroupVisible(g, activeOrder.selections)).map((group) => {
-                        return (
+                      {(() => {
+                        const visibleGroups = configItem.modifierGroups.filter((g) => isGroupVisible(g, activeOrder.selections));
+                        return visibleGroups.map((group, gIdx) => {
+                          const selectedCount = (activeOrder.selections[group.id] || []).length;
+                          const isSkipped = group.required && selectedCount < group.minSelect &&
+                            visibleGroups.slice(gIdx + 1).some((g) => (activeOrder.selections[g.id] || []).length > 0);
+                          return (
                           <div key={group.id} ref={(el) => { modGroupRefs.current[group.id] = el; }} className="mb-3">
                             <p className="text-xs font-semibold mb-1.5 text-[#1D1B20]">
                               {group.name}
-                              <span className="font-normal text-[var(--outline)] ml-1">
-                                {group.required ? "(Required)" : "(Optional)"}
+                              <span className={`font-normal ml-1 text-[12px] ${isSkipped ? "text-[var(--error)]" : "text-[var(--outline)]"}`}>
+                                {group.required ? "Required" : "Optional"}
                               </span>
                             </p>
 
@@ -491,7 +521,8 @@ export default function MenuSheet({ open, onClose }: MenuSheetProps) {
                             </div>
                           </div>
                         );
-                      })}
+                        });
+                      })()}
                     </div>
 
                     {/* Add to order */}

@@ -333,7 +333,7 @@ export default function PaymentDrawer({
   const Panel = ({ children }: { children: React.ReactNode; maxH?: string }) => (
     <div
       className="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl z-50 flex flex-col overflow-hidden"
-      style={{ height: "60%", boxShadow: "0 -8px 32px -4px rgba(0,0,0,0.18)" }}
+      style={{ height: "calc(60% + 20px)", boxShadow: "0 -8px 32px -4px rgba(0,0,0,0.18)" }}
     >
       {/* Drag handle */}
       <div className="pt-2.5 pb-1 flex justify-center cursor-pointer shrink-0" onClick={onClose}>

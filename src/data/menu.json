@@ -566,6 +566,27 @@
             "price": 24,
             "description": "Slow-roasted prime rib, gruyère, horseradish cream, au jus, on a toasted hoagie",
             "modifierGroups": []
+          },
+          {
+            "id": "item-fully-loaded-burger",
+            "name": "The Fully Loaded Super Deluxe Double Bacon Cheeseburger",
+            "price": 32,
+            "description": "Two dry-aged beef patties, double aged cheddar, applewood bacon, fried egg, crispy onion, house pickles, and special sauce on a toasted brioche bun",
+            "modifierGroups": [
+              {
+                "id": "mg-fully-loaded-temp",
+                "name": "Temperature",
+                "required": true,
+                "minSelect": 1,
+                "maxSelect": 1,
+                "options": [
+                  { "id": "mod-fl-mr", "name": "Medium Rare", "price": 0 },
+                  { "id": "mod-fl-med", "name": "Medium", "price": 0 },
+                  { "id": "mod-fl-mw", "name": "Medium Well", "price": 0 },
+                  { "id": "mod-fl-well", "name": "Well Done", "price": 0 }
+                ]
+              }
+            ]
           }
         ]
       },

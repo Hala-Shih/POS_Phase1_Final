@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { ArrowLeft, Users, MapPin, ArrowRightLeft, X, Ban, Check } from "lucide-react";
 import { motion, AnimatePresence, useDragControls } from "framer-motion";
 import { Staff, Table } from "@/lib/types";
+import { useOrderStore } from "@/store/order-store";
 
 interface HeaderProps {
   onBack?: () => void;
@@ -50,6 +51,14 @@ export default function Header({
   const [showVoidConfirm, setShowVoidConfirm] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const tableMenuRef = useRef<HTMLDivElement>(null);
+  const setTransferSheetOpen = useOrderStore((s) => s.setTransferSheetOpen);
+
+  // Sync transfer-table sheet open state with the global store so app-level
+  // chrome (e.g., FooterNav) can react to it.
+  useEffect(() => {
+    setTransferSheetOpen(showTableTransfer);
+    return () => setTransferSheetOpen(false);
+  }, [showTableTransfer, setTransferSheetOpen]);
 
   // Close menus on outside click
   useEffect(() => {
@@ -71,7 +80,18 @@ export default function Header({
       <div className="h-12 flex items-center px-3 border-b border-[var(--outline-variant)] bg-white shrink-0">
         {onBack && (
           <button
-            onClick={onBack}
+            onClick={() => {
+              if (showTableTransfer) {
+                // While the transfer-to-table sheet is open, the back button
+                // should dismiss the sheet (returning to the order view)
+                // rather than navigating away from the screen.
+                setShowTableTransfer(false);
+                setSelectedTransferTableId(null);
+                setTransferArea("All");
+                return;
+              }
+              onBack();
+            }}
             className="w-10 h-10 flex items-center justify-center -ml-1 rounded-full active:bg-gray-100"
           >
             <ArrowLeft size={20} />
@@ -296,7 +316,7 @@ export default function Header({
         }));
 
         return (
-          <div className="absolute inset-0 z-50 flex flex-col">
+          <div className="absolute left-0 right-0 z-50 flex flex-col" style={{ top: 48, bottom: 0 }}>
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -321,7 +341,7 @@ export default function Header({
                   setTransferArea("All");
                 }
               }}
-              className="absolute left-0 right-0 bg-white rounded-t-2xl flex flex-col z-10" style={{ top: 48, bottom: 48 }}
+              className="absolute inset-0 bg-white flex flex-col z-10"
             >
               {/* Header */}
               <div

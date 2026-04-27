@@ -32,6 +32,7 @@ export default function App() {
   const currentScreen = useOrderStore((s) => s.currentScreen);
   const setScreen = useOrderStore((s) => s.setScreen);
   const resetOrder = useOrderStore((s) => s.resetOrder);
+  const transferSheetOpen = useOrderStore((s) => s.transferSheetOpen);
 
   const [activeDrawer, setActiveDrawer] = useState<ActiveDrawer>("none");
   const [actionItem, setActionItem] = useState<{ id: string; name: string } | null>(null);
@@ -237,7 +238,7 @@ export default function App() {
           onSubviewChange={setPaymentSubview}
         />
       </div>
-      {!paymentSubview && currentScreen !== "payment" && <FooterNav activeTab={footerTab} onSelect={handleFooterSelect} />}
+      {!paymentSubview && currentScreen !== "payment" && !transferSheetOpen && <FooterNav activeTab={footerTab} onSelect={handleFooterSelect} />}
     </div>
   );
 }

@@ -87,6 +87,7 @@ function buildItemizedUnits(items: CartItem[]): ItemizedUnit[] {
 export default function PaymentScreen({ autoOpenSplit, overlayOnly = false, onCloseSplit, paymentMode = "split" }: { autoOpenSplit?: boolean; overlayOnly?: boolean; onCloseSplit?: () => void; paymentMode?: "split" | "multipay" } = {}) {
   const { cartItems, cartTotal, cartCount, guestCount, selectedTable, currentStaff, setScreen, resetOrder, setStaff, setTable } =
     useOrderStore();
+  const checkDiscount = useOrderStore((s) => s.checkDiscount);
 
   const giftCardDrag = useDragControls();
   const splitDrag = useDragControls();
@@ -212,6 +213,14 @@ export default function PaymentScreen({ autoOpenSplit, overlayOnly = false, onCl
   const itemizedRemainingCount = unpaidItemUnits.length;
 
   const rawSubtotal = cartTotal();
+  // Apply the check-level discount set from the check Actions drawer first,
+  // so the Payment screen reflects the discounted subtotal carried over from
+  // the check view.
+  const checkDiscountedSubtotal = checkDiscount
+    ? checkDiscount.type === "percent"
+      ? roundCurrency(rawSubtotal * (1 - Math.min(100, checkDiscount.value) / 100))
+      : roundCurrency(Math.max(0, rawSubtotal - checkDiscount.value))
+    : rawSubtotal;
   // Apply order-level adjustments
   const adjustedSubtotal = orderComped
     ? 0
@@ -219,9 +228,9 @@ export default function PaymentScreen({ autoOpenSplit, overlayOnly = false, onCl
       ? orderPriceOverride
       : orderDiscount
         ? orderDiscount.type === "percent"
-          ? roundCurrency(rawSubtotal * (1 - orderDiscount.value / 100))
-          : roundCurrency(Math.max(0, rawSubtotal - orderDiscount.value))
-        : rawSubtotal;
+          ? roundCurrency(checkDiscountedSubtotal * (1 - orderDiscount.value / 100))
+          : roundCurrency(Math.max(0, checkDiscountedSubtotal - orderDiscount.value))
+        : checkDiscountedSubtotal;
   const subtotal = adjustedSubtotal;
   const tax = taxExempt ? 0 : subtotal * TAX_RATE;
   const orderBaseTotal = subtotal + tax;

@@ -373,15 +373,20 @@ export default function ItemConfigSheet({
 
         {/* Modifier Groups */}
         <div className="flex-1 overflow-y-auto thin-scrollbar px-4 py-2">
-          {item.modifierGroups.filter((group) => isGroupVisible(group, activeOrder.selections)).map((group) => {
-            return (
+          {(() => {
+            const visibleGroups = item.modifierGroups.filter((group) => isGroupVisible(group, activeOrder.selections));
+            return visibleGroups.map((group, gIdx) => {
+              const selectedCount = (activeOrder.selections[group.id] || []).length;
+              const isSkipped = group.required && selectedCount < group.minSelect &&
+                visibleGroups.slice(gIdx + 1).some((g) => (activeOrder.selections[g.id] || []).length > 0);
+              return (
               <div key={group.id} ref={(el) => { sectionRefs.current[group.id] = el; }} className="mb-4">
                 <h3 className="text-sm font-semibold mb-2">
                   {group.name}
                   {group.required ? (
-                    <span className="text-xs font-normal text-[var(--outline)]"> (Required)</span>
+                    <span className={`text-[12px] font-normal ml-1 ${isSkipped ? "text-[var(--error)]" : "text-[var(--outline)]"}`}>Required</span>
                   ) : (
-                    <span className="text-xs font-normal text-[var(--outline)]"> (Optional)</span>
+                    <span className="text-[12px] font-normal ml-1 text-[var(--outline)]">Optional</span>
                   )}
                 </h3>
 
@@ -415,7 +420,8 @@ export default function ItemConfigSheet({
                 </div>
               </div>
             );
-          })}
+            });
+          })()}
         </div>
 
         {/* Add to cart / Save changes button */}

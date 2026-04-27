@@ -194,6 +194,11 @@ interface OrderState {
   checkTip: number;
   setCheckTip: (value: number) => void;
 
+  // Check-level discount applied to the entire check (after item subtotal,
+  // before tax). Set via the check-level Actions drawer.
+  checkDiscount: CartItemDiscount | null;
+  setCheckDiscount: (discount: CartItemDiscount | null) => void;
+
   // Menu navigation state
   activeMenuBook: string;
   setActiveMenuBook: (name: string) => void;
@@ -206,6 +211,17 @@ interface OrderState {
   openMenuOnArrival: boolean;
   setOpenMenuOnArrival: (val: boolean) => void;
 
+  // Combo configuration sheet open flag (taller than the standard
+  // 60% drawer; CheckSummaryScreen uses this to reserve more space
+  // so the totals stay visible above it).
+  comboSheetOpen: boolean;
+  setComboSheetOpen: (val: boolean) => void;
+
+  // Transfer-to-table sheet open flag — used to hide the global FooterNav
+  // while the floor-map transfer overlay is shown.
+  transferSheetOpen: boolean;
+  setTransferSheetOpen: (val: boolean) => void;
+
   // Reset all
   resetOrder: () => void;
   loadTableOrder: (table: Table) => void;
@@ -217,6 +233,12 @@ export const useOrderStore = create<OrderState>((set, get) => ({
 
   openMenuOnArrival: false,
   setOpenMenuOnArrival: (val) => set({ openMenuOnArrival: val }),
+
+  comboSheetOpen: false,
+  setComboSheetOpen: (val) => set({ comboSheetOpen: val }),
+
+  transferSheetOpen: false,
+  setTransferSheetOpen: (val) => set({ transferSheetOpen: val }),
 
   language: "en",
   toggleLanguage: () =>
@@ -649,6 +671,9 @@ export const useOrderStore = create<OrderState>((set, get) => ({
   checkTip: 0,
   setCheckTip: (value) => set({ checkTip: Math.max(0, Math.round(value * 100) / 100) }),
 
+  checkDiscount: null,
+  setCheckDiscount: (discount) => set({ checkDiscount: discount }),
+
   activeMenuBook: "Lunch",
   setActiveMenuBook: (name) => set({ activeMenuBook: name }),
   activeBookId: null,
@@ -663,6 +688,7 @@ export const useOrderStore = create<OrderState>((set, get) => ({
       guestCount: 0,
       cartItems: [],
       checkTip: 0,
+      checkDiscount: null,
       activeMenuBook: "Lunch",
       activeBookId: null,
       activeCategoryId: null,
@@ -670,7 +696,75 @@ export const useOrderStore = create<OrderState>((set, get) => ({
 
   loadTableOrder: (table) => {
     const isSent = table.orderStatus === "sent";
-    // Mock cart items for occupied tables
+    // Order #0001 (T1) — steak content per design spec.
+    if (table.id === "t1") {
+      const steakItems: CartItem[] = [
+        {
+          id: generateId(),
+          menuItemId: "item-filet-mignon",
+          name: "Filet Mignon",
+          basePrice: 56,
+          quantity: 1,
+          modifiers: [
+            {
+              groupId: "mg-filet-temp",
+              groupName: "Temperature",
+              modifiers: [{ id: "mod-filet-mr", name: "Medium Rare", price: 0 }],
+            },
+            {
+              groupId: "mg-filet-sauce",
+              groupName: "Sauce",
+              modifiers: [{ id: "mod-filet-peppercorn", name: "Peppercorn", price: 0 }],
+            },
+          ],
+          sent: isSent,
+          totalPrice: 56,
+        },
+        {
+          id: generateId(),
+          menuItemId: "item-calamari",
+          name: "Calamari",
+          basePrice: 14,
+          quantity: 1,
+          modifiers: [],
+          sent: isSent,
+          totalPrice: 14,
+        },
+        {
+          id: generateId(),
+          menuItemId: "item-truffle-fries",
+          name: "Truffle Fries",
+          basePrice: 13,
+          quantity: 1,
+          modifiers: [],
+          sent: isSent,
+          totalPrice: 13,
+        },
+        {
+          id: generateId(),
+          menuItemId: "item-fully-loaded-burger",
+          name: "The Fully Loaded Super Deluxe Double Bacon Cheeseburger",
+          basePrice: 32,
+          quantity: 1,
+          modifiers: [
+            {
+              groupId: "mg-fully-loaded-temp",
+              groupName: "Temperature",
+              modifiers: [{ id: "mod-fl-med", name: "Medium", price: 0 }],
+            },
+          ],
+          sent: isSent,
+          totalPrice: 32,
+        },
+      ];
+      set({
+        selectedTable: table,
+        guestCount: table.guestCount || 1,
+        cartItems: steakItems,
+      });
+      return;
+    }
+    // Mock cart items for other occupied tables
     const mockItems: CartItem[] = [
       {
         id: generateId(),

@@ -32,6 +32,7 @@ export default function CheckSummaryScreen({ menuOpen: externalMenuOpen, setMenu
     cartTotal,
     cartCount,
     checkTip,
+    checkDiscount,
     markAllSent,
     setScreen,
     resetOrder,
@@ -90,20 +91,31 @@ export default function CheckSummaryScreen({ menuOpen: externalMenuOpen, setMenu
     return sum + unit * item.quantity;
   }, 0);
   const subtotal = total;
-  const discountTotal = Math.max(0, preDiscountSubtotal - subtotal);
-  const tax = subtotal * 0.0875;
+  const itemDiscountTotal = Math.max(0, preDiscountSubtotal - subtotal);
+  // Apply check-level discount on top of any per-item discounts.
+  const checkDiscountAmount = checkDiscount
+    ? checkDiscount.type === "percent"
+      ? Math.round(subtotal * (Math.min(100, checkDiscount.value) / 100) * 100) / 100
+      : Math.min(subtotal, checkDiscount.value)
+    : 0;
+  const discountedSubtotal = Math.max(0, subtotal - checkDiscountAmount);
+  const discountTotal = itemDiscountTotal + checkDiscountAmount;
+  const tax = Math.round(discountedSubtotal * 0.0875 * 100) / 100;
   const tip = checkTip;
-  const grandTotal = subtotal + tax + tip;
+  const grandTotal = discountedSubtotal + tax + tip;
   const fullHeightDrawerOpen = menuOpen || searchOpen || cartOpen;
   const actionDrawerOpen = itemActionOpen || externalDrawerType === "action";
   const paymentDrawerOpen = externalDrawerType === "payment";
   const anyDrawerOpen = fullHeightDrawerOpen || actionDrawerOpen || paymentDrawerOpen;
+  const comboSheetOpen = useOrderStore((s) => s.comboSheetOpen);
 
-  // All app-shell drawers open at the standard 60% height (Rule 12).
-  // We constrain the check body's scroll viewport to the area above the
-  // drawer so list items can never scroll behind it.
-  const drawerReservedHeight = anyDrawerOpen
-    ? "calc(var(--device-height) * 0.6)"
+  // App-shell drawers open at 60% + 20px (Rule 12). The combo configuration
+  // sheet is taller (75%), so when it's open we reserve that height instead
+  // so totals stay visible above it and the list can scroll fully.
+  const drawerReservedHeight = comboSheetOpen
+    ? "calc(var(--device-height) * 0.75)"
+    : anyDrawerOpen
+    ? "calc(var(--device-height) * 0.6 + 20px)"
     : undefined;
 
   const handlePay = () => {
@@ -143,7 +155,7 @@ export default function CheckSummaryScreen({ menuOpen: externalMenuOpen, setMenu
       <div
         className="flex-1 overflow-y-auto thin-scrollbar min-h-0"
         style={
-          anyDrawerOpen
+          anyDrawerOpen || comboSheetOpen
             ? { maxHeight: `calc(100% - ${drawerReservedHeight})` }
             : undefined
         }
@@ -208,7 +220,15 @@ export default function CheckSummaryScreen({ menuOpen: externalMenuOpen, setMenu
             <div className="px-4 pt-3 pb-4 border-t border-gray-100 bg-[#FBFAFF]">
               <TotalsRow label="Subtotal" value={`$${subtotal.toFixed(2)}`} />
               {discountTotal > 0 && (
-                <TotalsRow label="Discount" value={`-$${discountTotal.toFixed(2)}`} muted />
+                <TotalsRow
+                  label={
+                    checkDiscount && checkDiscount.type === "percent" && itemDiscountTotal === 0
+                      ? `Discount (${checkDiscount.value}%)`
+                      : "Discount"
+                  }
+                  value={`-$${discountTotal.toFixed(2)}`}
+                  muted
+                />
               )}
               <TotalsRow label="Tax (8.75%)" value={`$${tax.toFixed(2)}`} muted />
               <TotalsRow

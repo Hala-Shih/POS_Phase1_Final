@@ -28,7 +28,7 @@ interface ActionDrawerProps {
 }
 
 export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMultiplePayment, itemContext }: ActionDrawerProps) {
-  const { cartItems, cartTotal, checkTip, setCheckTip, markAllSent, resetOrder, setItemDiscount, removeItem, updateQuantity, updateNote, updatePriceAdjustment, setItemPriceOverride, toggleBreakline, updateItemModifiers, updateComboSelections, splitAndUpdateNotes, splitCartItemToSingleItems, splitOneAndUpdateModifiers, consolidateCart } = useOrderStore();
+  const { cartItems, cartTotal, checkTip, setCheckTip, markAllSent, resetOrder, setItemDiscount, setCheckDiscount, removeItem, updateQuantity, updateNote, updatePriceAdjustment, setItemPriceOverride, toggleBreakline, updateItemModifiers, updateComboSelections, splitAndUpdateNotes, splitCartItemToSingleItems, splitOneAndUpdateModifiers, consolidateCart } = useOrderStore();
 
   // Check-level states
   const [showVoidConfirm, setShowVoidConfirm] = useState(false);
@@ -146,9 +146,13 @@ export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMul
     if (itemContext) {
       setItemDiscount(itemContext.id, { type, value: normalizedValue });
     } else {
+      // Check-level: clear any per-item discounts so the cart lines no longer
+      // show per-item "% off" / "$ off" badges, then apply a single check-wide
+      // discount that simply subtracts from the subtotal in the totals row.
       cartItems.forEach((item) => {
-        setItemDiscount(item.id, { type, value: normalizedValue });
+        if (item.discount) setItemDiscount(item.id, null);
       });
+      setCheckDiscount({ type, value: normalizedValue });
     }
     setShowDiscountPanel(false);
     setShowCustomDiscountInput(false);
@@ -330,7 +334,7 @@ export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMul
       <>
         <div
           className="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl z-50 flex flex-col overflow-hidden"
-          style={{ height: "60%", boxShadow: "0 -8px 32px -4px rgba(0,0,0,0.18)" }}
+          style={{ height: "calc(60% + 20px)", boxShadow: "0 -8px 32px -4px rgba(0,0,0,0.18)" }}
         >
           {/* Drag handle */}
           <div className="pt-2.5 pb-1 flex justify-center cursor-pointer shrink-0" onClick={handleClose}>
@@ -818,7 +822,7 @@ export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMul
     <>
       <div
         className="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl z-50 flex flex-col overflow-hidden"
-        style={{ height: "60%", boxShadow: "0 -8px 32px -4px rgba(0,0,0,0.18)" }}
+        style={{ height: "calc(60% + 20px)", boxShadow: "0 -8px 32px -4px rgba(0,0,0,0.18)" }}
       >
         {/* Drag handle */}
         <div className="pt-2.5 pb-1 flex justify-center cursor-pointer shrink-0" onClick={handleClose}>

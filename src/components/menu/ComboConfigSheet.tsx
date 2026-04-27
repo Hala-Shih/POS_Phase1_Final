@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 
 import { Check, Minus, Plus, ArrowLeft } from "lucide-react";
+import { useOrderStore } from "@/store/order-store";
 import {
   MenuItem,
   ComboGroup,
@@ -65,6 +66,15 @@ export default function ComboConfigSheet({
   onUpdateExisting,
 }: ComboConfigSheetProps) {
   const comboGroups = item.comboGroups || [];
+
+  // Broadcast open state so the underlying CheckSummaryScreen can reserve
+  // extra space below its scroll viewport (combo sheet is taller than the
+  // standard 60% drawer).
+  const setComboSheetOpen = useOrderStore((s) => s.setComboSheetOpen);
+  useEffect(() => {
+    setComboSheetOpen(true);
+    return () => setComboSheetOpen(false);
+  }, [setComboSheetOpen]);
 
   const [orders, setOrders] = useState<ComboState[]>(() =>
     existingCartItems.length > 0
@@ -493,11 +503,17 @@ export default function ComboConfigSheet({
 
         {/* Combo groups — scrollable */}
         <div ref={scrollContainerRef} className="flex-1 overflow-y-auto thin-scrollbar px-4 py-2">
-          {comboGroups.map((group) => {
+          {comboGroups.map((group, groupIdx) => {
             const selectedList = activeOrder.selectedComponent[group.id] || [];
             const complete = isGroupCompleteForOrder(activeOrder, group);
             const isMulti = group.maxSelect > 1;
             const remainingRequired = Math.max(0, group.minSelect - selectedList.length);
+            // "Skipped" = required group not yet satisfied, but the user has
+            // moved on (made selections in a later combo group).
+            const laterGroupHasSelection = comboGroups
+              .slice(groupIdx + 1)
+              .some((g) => (activeOrder.selectedComponent[g.id] || []).length > 0);
+            const isGroupSkipped = group.required && !complete && laterGroupHasSelection;
 
             return (
               <div key={group.id} ref={(el) => { sectionRefs.current[group.id] = el; }} className="mb-3">
@@ -509,7 +525,7 @@ export default function ComboConfigSheet({
                     )}
                     <h3 className="text-sm font-semibold">{group.name}</h3>
                     {group.required && (
-                      <span className="text-[10px] text-[var(--outline)]">
+                      <span className={`text-[12px] ${isGroupSkipped ? "text-[var(--error)]" : "text-[var(--outline)]"}`}>
                         Required
                       </span>
                     )}
@@ -560,12 +576,19 @@ export default function ComboConfigSheet({
                 {/* Modifier groups for selected components */}
                 {selectedList.filter((comp) => comp.modifierGroups.length > 0).map((comp) => (
                   <div key={comp.id} className="mt-2 mb-1 pl-1">
-                    {comp.modifierGroups.map((mg) => (
+                    {comp.modifierGroups.map((mg, mgIdx) => {
+                      const mgSelectedCount = (activeOrder.componentModifiers[group.id]?.[comp.id]?.[mg.id] || []).length;
+                      const laterMgEngaged = comp.modifierGroups
+                        .slice(mgIdx + 1)
+                        .some((other) => (activeOrder.componentModifiers[group.id]?.[comp.id]?.[other.id] || []).length > 0);
+                      const isModSkipped = mg.required && mgSelectedCount < mg.minSelect &&
+                        (laterMgEngaged || laterGroupHasSelection);
+                      return (
                       <div key={mg.id} ref={(el) => { sectionRefs.current[`${group.id}:${comp.id}:${mg.id}`] = el; }} className="mb-2">
                         <p className="text-xs font-semibold text-[var(--outline)] mb-1.5">
                           {shortGroupName(group.name)}: {comp.name} - {mg.name}
                           {mg.required && (
-                            <span className="font-normal"> (Required)</span>
+                            <span className={`font-normal ml-1 text-[12px] ${isModSkipped ? "text-[var(--error)]" : ""}`}>Required</span>
                           )}
                         </p>
                         <div className="grid grid-cols-3 gap-1.5">
@@ -596,7 +619,8 @@ export default function ComboConfigSheet({
                           })}
                         </div>
                       </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 ))}
               </div>
