@@ -36,6 +36,16 @@ export default function App() {
   const [activeDrawer, setActiveDrawer] = useState<ActiveDrawer>("none");
   const [actionItem, setActionItem] = useState<{ id: string; name: string } | null>(null);
   const [splitCheckOnOpen, setSplitCheckOnOpen] = useState(false);
+  // Which fullscreen flow opened: "split" (Split check) or "multipay" (Multi-pay).
+  // Drives the overlay header title in PaymentScreen.
+  const [paymentMode, setPaymentMode] = useState<"split" | "multipay">("split");
+  // Tracks which drawer (if any) initiated the Split-check / Multi-pay flow,
+  // so that closing the fullscreen Split flow can return the user there.
+  const [splitOrigin, setSplitOrigin] = useState<"action" | "payment" | null>(null);
+  // True when PaymentDrawer is showing a dedicated method page (Cash / Credit
+  // / Gift). In that mode the footer nav is hidden so the page reads as
+  // fullscreen and only the drawer's own close button returns the user.
+  const [paymentSubview, setPaymentSubview] = useState(false);
 
   // Derived drawer flags (kept for prop compatibility with child screens).
   const menuOpen = activeDrawer === "menu";
@@ -71,6 +81,7 @@ export default function App() {
       if (activeDrawer !== "none") closeDrawers();
     } else {
       setSplitCheckOnOpen(false);
+      setSplitOrigin(null);
       // App-shell drawers are only meaningful on `check`. Close on any other screen.
       if (currentScreen !== "check" && activeDrawer !== "none") {
         closeDrawers();
@@ -78,6 +89,18 @@ export default function App() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentScreen]);
+
+  // Close the fullscreen Split / Multi-pay flow and return to the originating drawer.
+  const handleCloseSplitFlow = useCallback(() => {
+    const origin = splitOrigin;
+    setSplitCheckOnOpen(false);
+    setSplitOrigin(null);
+    setScreen("check");
+    if (origin) {
+      // Reopen on the next tick so the screen-change effect has run.
+      setTimeout(() => openDrawer(origin), 0);
+    }
+  }, [splitOrigin, setScreen, openDrawer]);
 
   const handleSetMenuOpen = (open: boolean) => {
     if (open) openDrawer("menu");
@@ -140,7 +163,20 @@ export default function App() {
       case "order":
         return <OrderScreen />;
       case "payment":
-        return <PaymentScreen autoOpenSplit={splitCheckOnOpen} />;
+        // Bottom layer is always the order summary; PaymentScreen renders only
+        // its fullscreen Split / Multi-pay overlays on top.
+        return (
+          <>
+            <CheckSummaryScreen onBack={handleCloseSplitFlow} />
+            <PaymentScreen
+              key={`pay-${paymentMode}-${splitCheckOnOpen ? "open" : "closed"}`}
+              autoOpenSplit={splitCheckOnOpen}
+              overlayOnly
+              onCloseSplit={handleCloseSplitFlow}
+              paymentMode={paymentMode}
+            />
+          </>
+        );
       case "orders":
         return <OrdersScreen />;
       default:
@@ -162,11 +198,15 @@ export default function App() {
             openDrawer("payment");
           }}
           onSplitCheck={() => {
+            setSplitOrigin("action");
+            setPaymentMode("split");
             setSplitCheckOnOpen(true);
             setScreen("payment");
           }}
           onMultiplePayment={() => {
-            setSplitCheckOnOpen(false);
+            setSplitOrigin("action");
+            setPaymentMode("multipay");
+            setSplitCheckOnOpen(true);
             setScreen("payment");
           }}
           itemContext={actionItem ?? undefined}
@@ -176,12 +216,16 @@ export default function App() {
           onClose={closeDrawers}
           onSplit={() => {
             closeDrawers();
+            setSplitOrigin("payment");
+            setPaymentMode("split");
             setSplitCheckOnOpen(true);
             setScreen("payment");
           }}
           onMultiplePayment={() => {
             closeDrawers();
-            setSplitCheckOnOpen(false);
+            setSplitOrigin("payment");
+            setPaymentMode("multipay");
+            setSplitCheckOnOpen(true);
             setScreen("payment");
           }}
           onPrint={closeDrawers}
@@ -190,9 +234,10 @@ export default function App() {
             closeDrawers();
             setScreen("login");
           }}
+          onSubviewChange={setPaymentSubview}
         />
       </div>
-      <FooterNav activeTab={footerTab} onSelect={handleFooterSelect} />
+      {!paymentSubview && currentScreen !== "payment" && <FooterNav activeTab={footerTab} onSelect={handleFooterSelect} />}
     </div>
   );
 }

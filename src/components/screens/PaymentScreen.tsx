@@ -84,7 +84,7 @@ function buildItemizedUnits(items: CartItem[]): ItemizedUnit[] {
   });
 }
 
-export default function PaymentScreen({ autoOpenSplit }: { autoOpenSplit?: boolean } = {}) {
+export default function PaymentScreen({ autoOpenSplit, overlayOnly = false, onCloseSplit, paymentMode = "split" }: { autoOpenSplit?: boolean; overlayOnly?: boolean; onCloseSplit?: () => void; paymentMode?: "split" | "multipay" } = {}) {
   const { cartItems, cartTotal, cartCount, guestCount, selectedTable, currentStaff, setScreen, resetOrder, setStaff, setTable } =
     useOrderStore();
 
@@ -125,12 +125,16 @@ export default function PaymentScreen({ autoOpenSplit }: { autoOpenSplit?: boole
   const [isCustomTender, setIsCustomTender] = useState(false);
   const [customTenderValue, setCustomTenderValue] = useState("");
 
-  // Split check state
-  const [showSplitDrawer, setShowSplitDrawer] = useState(false);
+  // Split check state — start open in overlay mode when parent requests
+  // auto-open so the morph animation begins on the first render frame
+  // (no flash of empty overlay between PaymentDrawer unmount and split mount).
+  const [showSplitDrawer, setShowSplitDrawer] = useState(!!autoOpenSplit);
   const [splitType, setSplitType] = useState<SplitType | null>(null);
   const [splitGuestCount, setSplitGuestCount] = useState(2);
   // Confirmed split state (persists after drawer closes)
   const [confirmedSplit, setConfirmedSplit] = useState<ConfirmedSplit | null>(null);
+  // Multi-pay: which methods the user has selected (multi-select).
+  const [multipayMethods, setMultipayMethods] = useState<Set<"cash" | "credit" | "gift">>(new Set());
   const [activeGuestIdx, setActiveGuestIdx] = useState(0);
   const [paidGuests, setPaidGuests] = useState<Set<number>>(new Set());
   // Amount split state
@@ -175,7 +179,7 @@ export default function PaymentScreen({ autoOpenSplit }: { autoOpenSplit?: boole
 
   // Auto-scroll to show action buttons or numpad panel when they open
   useEffect(() => {
-    if (autoOpenSplit) setShowSplitDrawer(true);
+    if (autoOpenSplit && !overlayOnly) setShowSplitDrawer(true);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -447,7 +451,14 @@ export default function PaymentScreen({ autoOpenSplit }: { autoOpenSplit?: boole
   const drawerTotal = payableTotal + previewTip;
 
   return (
-    <div className="h-full flex flex-col relative bg-white">
+    <div
+      className={
+        overlayOnly
+          ? "absolute inset-0"
+          : "h-full flex flex-col relative bg-white"
+      }
+    >
+      {!overlayOnly && <>
       {/* Header */}
       <Header
         onBack={handleClose}
@@ -1224,6 +1235,7 @@ export default function PaymentScreen({ autoOpenSplit }: { autoOpenSplit?: boole
           </>
         )}
       </div>
+      </>}
 
       {/* Gift Card Drawer */}
       <AnimatePresence>
@@ -1575,22 +1587,40 @@ export default function PaymentScreen({ autoOpenSplit }: { autoOpenSplit?: boole
       </AnimatePresence>
 
       {/* Split Check Drawer */}
-      <AnimatePresence>
+      <AnimatePresence onExitComplete={() => { if (overlayOnly) onCloseSplit?.(); }}>
         {showSplitDrawer && (
           <>
+            {!overlayOnly && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 0.4 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setShowSplitDrawer(false)}
+                className="absolute inset-0 bg-black z-40"
+              />
+            )}
             <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 0.4 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setShowSplitDrawer(false)}
-              className="absolute inset-0 bg-black z-40"
-            />
-            <motion.div
-              initial={{ y: "100%" }}
-              animate={{ y: 0 }}
-              exit={{ y: "100%" }}
-              transition={{ type: "spring", damping: 25, stiffness: 300 }}
-              drag="y"
+              initial={
+                overlayOnly
+                  ? { opacity: 0 }
+                  : { y: "100%" }
+              }
+              animate={
+                overlayOnly
+                  ? { opacity: 1 }
+                  : { y: 0 }
+              }
+              exit={
+                overlayOnly
+                  ? { opacity: 0 }
+                  : { y: "100%" }
+              }
+              transition={
+                overlayOnly
+                  ? { duration: 0.18, ease: "easeOut" }
+                  : { type: "spring", damping: 25, stiffness: 300 }
+              }
+              drag={overlayOnly ? false : "y"}
               dragControls={splitDrag}
               dragListener={false}
               dragConstraints={{ top: 0, bottom: 0 }}
@@ -1600,31 +1630,53 @@ export default function PaymentScreen({ autoOpenSplit }: { autoOpenSplit?: boole
                   setShowSplitDrawer(false);
                 }
               }}
-              className="absolute bottom-0 left-0 right-0 bg-white z-50 flex flex-col"
-              style={{
-                borderRadius: splitType === "item" ? "0" : "20px 20px 0 0",
-                boxShadow: "0px -2px 9px rgba(0, 0, 0, 0.25)",
-                ...(splitType === "item" ? { top: 48 } : { height: 476 }),
-              }}
+              className="absolute left-0 right-0 bg-white z-50 flex flex-col overflow-hidden"
+              style={
+                overlayOnly
+                  ? { top: 48, height: 592 }
+                  : {
+                      bottom: 0,
+                      borderRadius: splitType === "item" ? "0" : "20px 20px 0 0",
+                      boxShadow: "0px -2px 9px rgba(0, 0, 0, 0.25)",
+                      ...(splitType === "item" ? { top: 48 } : { height: 476 }),
+                    }
+              }
             >
-              {/* Handle */}
-              <div
-                onPointerDown={(e) => splitDrag.start(e)}
-                style={{ touchAction: "none" }}
-                className="flex justify-center pt-3"
-              >
-                <div className="rounded-full" style={{ width: 96, height: 6, background: "#B6B6B6" }} />
-              </div>
+              {/* Handle (drawer mode only) */}
+              {!overlayOnly && (
+                <div
+                  onPointerDown={(e) => splitDrag.start(e)}
+                  style={{ touchAction: "none" }}
+                  className="flex justify-center pt-3"
+                >
+                  <div className="rounded-full" style={{ width: 96, height: 6, background: "#B6B6B6" }} />
+                </div>
+              )}
+
+              {/* Header (overlay mode only) */}
+              {overlayOnly && (
+                <div className="absolute top-0 left-0 right-0 h-12 flex items-center justify-between px-5 z-10">
+                  <span className="text-base font-semibold text-[#1D1B20]">{paymentMode === "multipay" ? "Multi-pay" : "Split check"}</span>
+                  <button
+                    onClick={() => setShowSplitDrawer(false)}
+                    className="w-10 h-10 -mr-2 rounded-full flex items-center justify-center active:bg-gray-100"
+                    aria-label={paymentMode === "multipay" ? "Close multi-pay" : "Close split check"}
+                  >
+                    <X size={22} color="#1D1B20" />
+                  </button>
+                </div>
+              )}
 
               {/* Total row */}
-              <div className="flex justify-between items-baseline px-5 pt-4">
+              <div className={`flex justify-between items-baseline px-5 ${overlayOnly ? "pt-14" : "pt-4"}`}>
                 <span className="font-medium text-black" style={{ fontSize: 36, lineHeight: "44px" }}>Total</span>
                 <span className="font-medium text-black" style={{ fontSize: 36, lineHeight: "44px" }}>
                   ${orderBaseTotal.toFixed(2)}
                 </span>
               </div>
 
-              {/* Split Check by */}
+              {/* Split Check by (split mode only) */}
+              {paymentMode !== "multipay" && (
               <div className="px-4 mt-4 flex flex-col gap-1.5">
                 <span className="text-base font-medium" style={{ color: "#1D1B20", letterSpacing: "0.15px" }}>
                   Split Check by
@@ -1662,9 +1714,60 @@ export default function PaymentScreen({ autoOpenSplit }: { autoOpenSplit?: boole
                   })}
                 </div>
               </div>
+              )}
+
+              {/* Multi-pay: payment method selection (multi-select) */}
+              {paymentMode === "multipay" && (
+                <div className="px-4 mt-4 flex flex-col gap-2">
+                  <span className="text-base font-medium" style={{ color: "#1D1B20", letterSpacing: "0.15px" }}>
+                    Select the payment methods
+                  </span>
+                  <div className="flex flex-col gap-2">
+                    {([
+                      { id: "cash", label: "Cash" },
+                      { id: "credit", label: "Credit Card" },
+                      { id: "gift", label: "Gift Card" },
+                    ] as const).map(({ id, label }) => {
+                      const isSelected = multipayMethods.has(id);
+                      return (
+                        <button
+                          key={id}
+                          type="button"
+                          onClick={() => {
+                            setMultipayMethods((prev) => {
+                              const next = new Set(prev);
+                              if (next.has(id)) next.delete(id);
+                              else next.add(id);
+                              return next;
+                            });
+                          }}
+                          className="w-full h-[52px] rounded-lg flex items-center justify-between pl-3 pr-3"
+                          style={{
+                            background: isSelected ? "#E8DEF8" : "#FFFFFF",
+                            border: isSelected ? "1px solid #515151" : "1px solid #DADADA",
+                          }}
+                        >
+                          <span className="text-sm text-black" style={{ letterSpacing: "0.25px" }}>
+                            {label}
+                          </span>
+                          <span
+                            className="w-5 h-5 rounded flex items-center justify-center"
+                            style={{
+                              background: isSelected ? "#4A4459" : "#FFFFFF",
+                              border: isSelected ? "1px solid #4A4459" : "1px solid #79747E",
+                            }}
+                          >
+                            {isSelected && <Check size={14} color="#FFFFFF" />}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
 
               {/* Even split options */}
-              {splitType === "even" && (
+              {paymentMode !== "multipay" && splitType === "even" && (
                 <div className="px-4 mt-6 flex flex-col gap-4">
                   {/* Split into guests */}
                   <div className="flex items-center justify-between">
@@ -1705,7 +1808,7 @@ export default function PaymentScreen({ autoOpenSplit }: { autoOpenSplit?: boole
               )}
 
               {/* Amount split options */}
-              {splitType === "amount" && (() => {
+              {paymentMode !== "multipay" && splitType === "amount" && (() => {
                 const amountPaidSoFar = confirmedSplit?.type === "amount" ? splitAmountPaidSoFar : 0;
                 const amountRemaining = orderBaseTotal - amountPaidSoFar;
                 const isSubsequent = confirmedSplit?.type === "amount" && splitAmountPayments.length > 0;
@@ -1750,7 +1853,7 @@ export default function PaymentScreen({ autoOpenSplit }: { autoOpenSplit?: boole
                 );
               })()}
 
-              {splitType === "item" && (
+              {paymentMode !== "multipay" && splitType === "item" && (
                 <div className="px-4 mt-4 flex flex-col gap-3 min-h-0 flex-1 overflow-hidden">
                   {paidItemUnitIds.size > 0 && (
                     <div className="flex justify-between shrink-0">
@@ -1833,46 +1936,28 @@ export default function PaymentScreen({ autoOpenSplit }: { autoOpenSplit?: boole
               <div className="px-5 mt-auto pb-5 pt-6">
                 <button
                   disabled={
-                    splitType === null ||
-                    (splitType === "amount" && (() => {
-                      const val = parseFloat(splitAmountInput);
-                      const maxAllowed = confirmedSplit?.type === "amount"
-                        ? orderBaseTotal - splitAmountPaidSoFar
-                        : orderBaseTotal;
-                      return !splitAmountInput || isNaN(val) || val <= 0 || val > maxAllowed + 0.01;
-                    })()) ||
-                    (splitType === "item" && itemizedSelectedCount === 0)
+                    paymentMode === "multipay"
+                      ? multipayMethods.size === 0
+                      : (
+                          splitType === null ||
+                          (splitType === "amount" && (() => {
+                            const val = parseFloat(splitAmountInput);
+                            const maxAllowed = confirmedSplit?.type === "amount"
+                              ? orderBaseTotal - splitAmountPaidSoFar
+                              : orderBaseTotal;
+                            return !splitAmountInput || isNaN(val) || val <= 0 || val > maxAllowed + 0.01;
+                          })()) ||
+                          (splitType === "item" && itemizedSelectedCount === 0)
+                        )
                   }
                   onClick={() => {
-                    if (splitType === "even") {
-                      setConfirmedSplit({ type: "even", guests: splitGuestCount });
-                      setActiveGuestIdx(0);
-                      setTip(0);
-                    } else if (splitType === "amount") {
-                      const amt = parseFloat(splitAmountInput) || 0;
-                      setSplitAmountCurrent(roundCurrency(amt));
-                      if (!confirmedSplit || confirmedSplit.type !== "amount") {
-                        // First time setting up amount split
-                        setSplitAmountPayments([]);
-                        setCumulativePaid(0);
-                        setTotalSettled(0);
-                      }
-                      setConfirmedSplit({ type: "amount" });
-                      setTip(0);
-                    } else if (splitType === "item") {
-                      if (!confirmedSplit || confirmedSplit.type !== "item") {
-                        setPaidItemUnitIds(new Set());
-                        setLastItemizedPayment(null);
-                        setCumulativePaid(0);
-                        setTotalSettled(0);
-                      }
-                      setConfirmedSplit({ type: "item" });
-                      setTip(0);
-                    }
-                    setShowSplitDrawer(false);
+                    // Downstream flow not yet defined for either Split check
+                    // or Multi-pay. Confirm is intentionally a no-op for now;
+                    // the button still appears active when valid selections
+                    // are made so the visual state can be reviewed.
                   }}
                   className="w-full h-14 rounded-full flex items-center justify-center active:opacity-80 disabled:opacity-40 transition-colors"
-                  style={{ background: splitType ? "#00B618" : "#CFCFCF" }}
+                  style={{ background: (paymentMode === "multipay" ? multipayMethods.size > 0 : !!splitType) ? "#00B618" : "#CFCFCF" }}
                 >
                   <span
                     className="text-base font-medium"

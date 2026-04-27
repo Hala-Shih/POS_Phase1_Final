@@ -368,8 +368,8 @@ export default function MenuSheet({ open, onClose }: MenuSheetProps) {
                                 className="flex items-center gap-1.5 px-3 rounded-xl border transition-colors active:opacity-80"
                                 style={{
                                   height: 44,
-                                  border: count > 0 ? "1px solid #6750A4" : isCombo ? "1px solid #B5A7D4" : "1px solid #E7E0EC",
-                                  background: count > 0 ? "#F3EDF7" : isCombo ? "#FAF7FF" : item.soldOut ? "#F5F5F5" : "white",
+                                  border: count > 0 ? "1px solid #6750A4" : "1px solid #E7E0EC",
+                                  background: count > 0 ? "#F3EDF7" : item.soldOut ? "#F5F5F5" : "white",
                                   opacity: item.soldOut ? 0.5 : 1,
                                 }}
                               >
@@ -388,9 +388,7 @@ export default function MenuSheet({ open, onClose }: MenuSheetProps) {
                                   </span>
                                 )}
                                 {isCombo && !item.soldOut && (
-                                  <span className="text-[9px] font-bold tracking-wide uppercase shrink-0" style={{ color: "#6750A4" }}>
-                                    ▦
-                                  </span>
+                                  <ChevronRight size={14} className="shrink-0" style={{ color: count > 0 ? "#6750A4" : "#79747e" }} />
                                 )}
                                 {hasModifiers && !item.soldOut && (
                                   <ChevronRight size={14} className="shrink-0" style={{ color: count > 0 ? "#6750A4" : "#79747e" }} />

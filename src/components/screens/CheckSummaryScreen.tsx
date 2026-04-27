@@ -23,7 +23,7 @@ import Header from "@/components/ui/Header";
 
 type ExternalDrawerType = "none" | "action" | "payment";
 
-export default function CheckSummaryScreen({ menuOpen: externalMenuOpen, setMenuOpen: externalSetMenuOpen, searchOpen: externalSearchOpen, setSearchOpen: externalSetSearchOpen, itemActionOpen = false, externalDrawerType = "none", onOpenItemActions, onOpenPaymentDrawer }: { menuOpen?: boolean; setMenuOpen?: (v: boolean) => void; searchOpen?: boolean; setSearchOpen?: (v: boolean) => void; itemActionOpen?: boolean; externalDrawerType?: ExternalDrawerType; onOpenItemActions?: (item: { id: string; name: string }) => void; onOpenPaymentDrawer?: () => void } = {}) {
+export default function CheckSummaryScreen({ menuOpen: externalMenuOpen, setMenuOpen: externalSetMenuOpen, searchOpen: externalSearchOpen, setSearchOpen: externalSetSearchOpen, itemActionOpen = false, externalDrawerType = "none", onOpenItemActions, onOpenPaymentDrawer, onBack }: { menuOpen?: boolean; setMenuOpen?: (v: boolean) => void; searchOpen?: boolean; setSearchOpen?: (v: boolean) => void; itemActionOpen?: boolean; externalDrawerType?: ExternalDrawerType; onOpenItemActions?: (item: { id: string; name: string }) => void; onOpenPaymentDrawer?: () => void; onBack?: () => void } = {}) {
   const {
     currentStaff,
     selectedTable,
@@ -123,7 +123,7 @@ export default function CheckSummaryScreen({ menuOpen: externalMenuOpen, setMenu
     <div className="h-full flex flex-col relative bg-white">
       {/* Header */}
       <Header
-        onBack={() => setScreen("tables")}
+        onBack={onBack ?? (() => setScreen("tables"))}
         serverName={currentStaff?.name}
         tableName={selectedTable?.name}
         guestCount={guestCount}

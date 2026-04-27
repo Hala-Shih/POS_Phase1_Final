@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { X, Send, PauseCircle, Tag, Trash2, Users, CreditCard, AlertTriangle, Check, StickyNote, Minus, Plus, Pencil, DollarSign, ArrowDownToLine, ChevronLeft, Banknote, Printer } from "lucide-react";
+import { X, Send, PauseCircle, Tag, Trash2, Users, CreditCard, Split, WalletCards, AlertTriangle, Check, StickyNote, Minus, Plus, Pencil, DollarSign, ArrowDownToLine, ChevronLeft, Banknote, Printer } from "lucide-react";
 import { useOrderStore } from "@/store/order-store";
 import menuData from "@/data/menu.json";
 import { MenuBook, MenuItem, Modifier, CartItemModifier } from "@/lib/types";
@@ -844,7 +844,7 @@ export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMul
 
         {/* Main actions grid */}
         {!showVoidConfirm && !showDiscountPanel && !showTipPanel && (
-          <div className="flex-1 overflow-y-auto thin-scrollbar p-3">
+          <div className="flex-1 overflow-y-auto thin-scrollbar p-4 pb-5">
             <div className="grid grid-cols-2 gap-2.5">
               <ActionTile
                 icon={sentFeedback ? <Check size={16} /> : <Send size={16} />}
@@ -856,6 +856,15 @@ export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMul
                 onClick={handleSendToKitchen}
               />
               <ActionTile
+                icon={<Split size={16} />}
+                iconBg="#F3EDF7"
+                iconColor="#6750A4"
+                title="Split check"
+                subtitle="Divide bill among guests"
+                disabled={!hasItems}
+                onClick={() => { if (hasUnsentItems) markAllSent(); onSplitCheck(); handleClose(); }}
+              />
+              <ActionTile
                 icon={<PauseCircle size={16} />}
                 iconBg="#FEF9C3"
                 iconColor="#CA8A04"
@@ -863,6 +872,15 @@ export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMul
                 subtitle="Pause firing course"
                 disabled={!hasUnsentItems}
                 onClick={handleClose}
+              />
+              <ActionTile
+                icon={<WalletCards size={16} />}
+                iconBg="#F3EDF7"
+                iconColor="#6750A4"
+                title="Multi-pay"
+                subtitle="Collect separately"
+                disabled={!hasItems}
+                onClick={() => { if (hasUnsentItems) markAllSent(); onMultiplePayment(); handleClose(); }}
               />
               <ActionTile
                 icon={<Tag size={16} />}
@@ -874,22 +892,13 @@ export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMul
                 onClick={openDiscountPanel}
               />
               <ActionTile
-                icon={<Users size={16} />}
-                iconBg="#F3EDF7"
-                iconColor="#6750A4"
-                title="Split check"
-                subtitle="Divide bill among guests"
-                disabled={!hasItems}
-                onClick={() => { onSplitCheck(); handleClose(); }}
-              />
-              <ActionTile
-                icon={<CreditCard size={16} />}
-                iconBg="#F3EDF7"
-                iconColor="#6750A4"
-                title="Multi-pay"
-                subtitle="Collect separately"
-                disabled={!hasItems}
-                onClick={() => { onMultiplePayment(); handleClose(); }}
+                icon={printFeedback ? <Check size={16} /> : <Printer size={16} />}
+                iconBg="#E0F2FE"
+                iconColor="#0369A1"
+                title="Print"
+                subtitle={printFeedback ? "Sent to printer" : "Print check receipt"}
+                disabled={!hasItems || printFeedback}
+                onClick={handlePrint}
               />
               <ActionTile
                 icon={<Banknote size={16} />}
@@ -899,15 +908,6 @@ export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMul
                 subtitle={checkTip > 0 ? `Tip $${checkTip.toFixed(2)}` : "Pre-payment gratuity"}
                 disabled={!hasItems}
                 onClick={openTipPanel}
-              />
-              <ActionTile
-                icon={printFeedback ? <Check size={16} /> : <Printer size={16} />}
-                iconBg="#E0F2FE"
-                iconColor="#0369A1"
-                title="Print"
-                subtitle={printFeedback ? "Sent to printer" : "Print check receipt"}
-                disabled={!hasItems || printFeedback}
-                onClick={handlePrint}
               />
               <ActionTile
                 icon={<Trash2 size={16} />}
@@ -927,6 +927,11 @@ export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMul
           <div className="px-3 pb-3 pt-2 border-t border-gray-100 shrink-0">
             <button
               onClick={() => {
+                // Auto-send any unsent items to the kitchen before entering
+                // the payment flow, so the kitchen always has the full order.
+                if (hasUnsentItems) {
+                  markAllSent();
+                }
                 onPay();
               }}
               disabled={!hasItems}

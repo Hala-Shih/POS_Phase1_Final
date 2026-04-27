@@ -265,6 +265,32 @@ Re-evaluation must use the same merge criteria above and must be the responsibil
 
 ---
 
+## 19. Floormap Table Status Vocabulary
+
+The Tables (floormap) screen **must** render every table using the canonical status vocabulary below. New table tiles, badges, and legends **must** use these states and only these states; the visible color, border, and badge **must** match the corresponding row.
+
+### Statuses
+
+| Status | When it applies | Tile fill | Border | Badge | Tappable |
+|---|---|---|---|---|---|
+| **Available** | No open check on the table. | White | Thin grey outline (`var(--outline-variant)`) | None | Yes — opens new-order flow (guest count → menu). |
+| **Occupied · Editing** | Table has an open check whose `orderStatus` is `editing` (not yet sent to kitchen). | Amber `#FFF8E1` | `2px solid #F5A623` | Orange circle with `guestCount` | Yes — opens that table's order summary (Rule 17). |
+| **Occupied · Sent** | Table has an open check whose `orderStatus` is `sent` (already sent to kitchen). | Mint `#E8F5E9` | `2px solid #00B618` | Green circle with `guestCount` | Yes — opens that table's order summary (Rule 17). |
+| **Checkout** | Table the user is currently working on (active selection). | Solid `var(--primary)` (purple) with white text | None, plus a 4 px outer ring of the same purple | White circle with thin black outline showing `guestCount` | Yes — keeps the user on the active order. |
+| **Unavailable** | Table is out of service / blocked off. | Transparent | `2px dashed var(--outline-variant)`, 60 % opacity | None | No — taps are ignored. |
+
+### Rules
+
+- **Color encodes both `status` and the nested `orderStatus` for occupied tables.** Implementations **must not** introduce a third color for "occupied" without also defining the corresponding `orderStatus` mapping here.
+- The guest-count badge **must** match the table's color theme (orange for editing, green for sent, white-on-black for checkout). Available and Unavailable tables **must not** show a guest-count badge.
+- "Occupied" is the umbrella term used in code (`TableStatus = "occupied"`) and in user-facing language wherever the editing/sent split is not relevant. Whenever the distinction matters (e.g. filters, kitchen workflow), surfaces **must** use the more specific labels **Editing** and **Sent**, mapped from `orderStatus`.
+- `unavailable` tables **must** be visually distinct from `available` (dashed border + reduced opacity) and **must not** receive tap handlers.
+- The Checkout state is exclusive: at most one table at a time may render in the Checkout style. Switching the active table **must** clear the previous table's Checkout style.
+- Status terminology shown to staff (legends, filters, summaries) **must** use the labels in the table above (`Available`, `Editing`, `Sent`, `Checkout`, `Closed` for unavailable). These labels coexist with the canonical order-status terminology in Rule 10 (`Open` / `Close` / `Void` / `Combined`); do not conflate the two vocabularies — Rule 10 describes order lifecycle, Rule 19 describes table presentation.
+
+
+---
+
 ## Implementation Checklist (for new drawers / screens)
 
 - [ ] Drawer state owned by the orchestration layer, not the component.
@@ -283,6 +309,7 @@ Re-evaluation must use the same merge criteria above and must be the responsibil
 - [ ] Every interactive control has a tap target of at least 44 × 44 px with at least 8 px of spacing from adjacent controls (Rule 16). Visually smaller icons are wrapped in a 44 px hit area.
 - [ ] Tapping an occupied table tile always opens that table's order summary, regardless of cart/local state (Rule 17).
 - [ ] Adding or modifying items goes through the cart store's centralized merge logic so identical default-state lines auto-combine and differing modifiers split into separate lines (Rule 18). Per-line customizations (note, discount, override, adjustment, breakline, comp) make a line non-stackable.
+- [ ] Floormap table tiles render with the canonical status vocabulary in Rule 19 (Available / Occupied·Editing / Occupied·Sent / Checkout / Unavailable) using the documented colors, borders, and badges. Unavailable tables are not tappable. At most one Checkout tile is visible at a time.
 
 ---
 
@@ -305,3 +332,4 @@ Use these scenarios to verify compliance after any change to drawer or navigatio
 13. Inspect every interactive control across all screens and drawers (buttons, icon buttons, chips, tabs, list rows, toggles, checkboxes, close affordances) → Each must measure at least 44 × 44 px in its tap area, even when the visible icon or label is smaller. Adjacent controls must have at least 8 px of spacing. Disabled state must preserve the same height.
 14. From the Tables screen, tap any occupied table (any of `In Progress`, `Sent`, `Editing`, `Open`) → The app must navigate directly to that table's order summary. Repeat from a state where another table is currently selected, where the cart contains items, and where no items are in the cart → behavior must be identical in all cases. Tap an available (empty) table → must follow the new-order flow, not the summary.
 15. Add a Filet Mignon (Medium Rare, no sauce) → one line, qty 1. Add another Filet Mignon with the exact same modifiers from any surface → must merge into qty 2 on the same line. Increment that line to qty 2 from the cart, then Modify and switch one to Well Done → the original line must remain at qty 1 with Medium Rare, and a new line at qty 1 with Well Done must appear. Add a third Filet Mignon as Well Done from the menu → must merge with the Well Done line (qty 2). Apply a note to the Well Done line, then add a fourth Well Done from the menu → must NOT merge with the noted line; a new default-state line must appear. Repeat with combos that have identical selections → same merge rules apply (Rule 18).
+16. Open the Tables screen and inspect each tile against Rule 19: empty tables must render in white with a thin grey outline and no badge; tables with an editing order must render in amber with an orange border and an orange guest-count badge; tables with a sent order must render in mint with a green border and a green guest-count badge; the active table must render in solid primary purple with a white guest-count badge inside a thin black ring and a 4 px outer purple ring; out-of-service tables must render with a dashed border at 60 % opacity and must ignore taps. Switching to a different active table must remove the Checkout styling from the previous tile.

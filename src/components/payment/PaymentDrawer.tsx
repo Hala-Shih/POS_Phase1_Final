@@ -181,11 +181,17 @@ interface PaymentDrawerProps {
   onMultiplePayment: () => void;
   onPrint: () => void;
   onPaymentComplete: () => void;
+  /**
+   * Called when the drawer enters/exits a dedicated payment-method subview
+   * (cash / credit / gift). Parent uses this to hide the footer nav and
+   * order summary, so the subview reads as a fullscreen page.
+   */
+  onSubviewChange?: (active: boolean) => void;
 }
 
 const mainButtons = [
   { id: "cash",     label: "Cash",             icon: DollarSign },
-  { id: "split",    label: "Split",            icon: Split      },
+  { id: "split",    label: "Split check",      icon: Split      },
   { id: "credit",   label: "Credit Card",      icon: CreditCard },
   { id: "multiple", label: "Multi-pay", icon: WalletCards},
   { id: "gift",     label: "Gift Card",        icon: Gift       },
@@ -194,6 +200,7 @@ const mainButtons = [
 
 export default function PaymentDrawer({
   open, onClose, onSplit, onMultiplePayment, onPrint, onPaymentComplete,
+  onSubviewChange,
 }: PaymentDrawerProps) {
   const { cartItems, cartTotal, guestCount } = useOrderStore();
 
@@ -235,6 +242,13 @@ export default function PaymentDrawer({
   const [completedAmount, setCompletedAmount] = useState(0);
   const [completedTotal, setCompletedTotal]   = useState(0);
   const [completedChange, setCompletedChange] = useState<number | null>(null);
+
+  /* notify parent when in a dedicated method subview (Cash/Credit/Gift/Complete) */
+  useEffect(() => {
+    const isSubview = open && (view === "cash" || view === "credit" || view === "gift" || view === "complete");
+    onSubviewChange?.(isSubview);
+    return () => { onSubviewChange?.(false); };
+  }, [open, view, onSubviewChange]);
 
   /* reset all state when drawer closes */
   useEffect(() => {
@@ -353,6 +367,31 @@ export default function PaymentDrawer({
     </div>
   );
 
+  /* ── fullscreen panel for dedicated payment-method pages ── */
+  /* Covers the order summary but leaves the screen's top header visible
+     (h-12 = 48px). The parent hides the footer nav while a subview is
+     active, so only the close button returns the user to the main view. */
+  const FullPanel = ({ children }: { children: React.ReactNode }) => (
+    <div className="absolute left-0 right-0 bottom-0 bg-white z-50 flex flex-col overflow-hidden" style={{ top: 48 }}>
+      {children}
+    </div>
+  );
+
+  /* Header for fullscreen subviews — title + X (returns to main view). */
+  const FullHeader = ({ title }: { title: string }) => (
+    <div className="h-12 flex items-center justify-between px-4 border-b border-gray-100 shrink-0">
+      <h2 className="text-[15px] font-semibold text-[#1D1B20] leading-tight truncate">{title}</h2>
+      <button
+        type="button"
+        aria-label="Close"
+        onClick={() => setView("main")}
+        className="w-8 h-8 flex items-center justify-center rounded-full active:bg-gray-100 shrink-0 -mr-2"
+      >
+        <X size={18} />
+      </button>
+    </div>
+  );
+
   /* ════════════════════════════════════
      LEVEL 1 — Main payment buttons
   ════════════════════════════════════ */
@@ -372,7 +411,7 @@ export default function PaymentDrawer({
               <button key={id} type="button"
                 disabled={cartItems.length === 0}
                 onClick={() => {
-                  if (id === "split")    { setView("split");  return; }
+                  if (id === "split")    { onSplit(); return; }
                   if (id === "cash")     { setView("cash");   return; }
                   if (id === "credit")   { setCcStep("tap"); setCcTipIdx(null); setView("credit"); return; }
                   if (id === "gift")     { setGcSerial(""); setGcPin(""); setGcStep("input"); setGcResult(null); setGcApplyAmount(""); setGcTipIdx(null); setView("gift"); return; }
@@ -514,8 +553,8 @@ export default function PaymentDrawer({
   if (view === "cash") {
     const cashConfirmDisabled = cashTenderIdx === null && !cashExact && (!cashCustomTender || !cashCustomTenderVal);
     return (
-      <Panel maxH="calc(var(--device-height) * 0.90)">
-        <BackHeader title="Cash" />
+      <FullPanel>
+        <FullHeader title="Cash" />
 
         <div className="px-5 pb-3 shrink-0">
           <div className="flex items-baseline justify-between">
@@ -641,7 +680,7 @@ export default function PaymentDrawer({
             </span>
           </button>
         </div>
-      </Panel>
+      </FullPanel>
     );
   }
 
@@ -652,8 +691,8 @@ export default function PaymentDrawer({
     const ccTipAmount    = ccTipIdx !== null ? payableTotal * TIP_PRESETS[ccTipIdx].value : 0;
     const ccTotalWithTip = payableTotal + ccTipAmount;
     return (
-      <Panel maxH="calc(var(--device-height) * 0.88)">
-        <BackHeader title="Credit Card" />
+      <FullPanel>
+        <FullHeader title="Credit Card" />
 
         <div className="flex justify-between items-baseline px-5 pb-4 shrink-0">
           <span className="font-medium text-black" style={{ fontSize: 36, lineHeight: "44px" }}>Total</span>
@@ -753,7 +792,7 @@ export default function PaymentDrawer({
             </div>
           </div>
         )}
-      </Panel>
+      </FullPanel>
     );
   }
 
@@ -762,8 +801,8 @@ export default function PaymentDrawer({
   ════════════════════════════════════ */
   if (view === "gift") {
     return (
-      <Panel maxH="calc(var(--device-height) * 0.88)">
-        <BackHeader title="Gift Card" />
+      <FullPanel>
+        <FullHeader title="Gift Card" />
 
         <div className="flex justify-between items-baseline px-5 pb-4 shrink-0">
           <span className="font-medium text-black" style={{ fontSize: 36, lineHeight: "44px" }}>Total</span>
@@ -915,7 +954,7 @@ export default function PaymentDrawer({
             </button>
           )}
         </div>
-      </Panel>
+      </FullPanel>
     );
   }
 
@@ -923,7 +962,7 @@ export default function PaymentDrawer({
      Payment Complete
   ════════════════════════════════════ */
   return (
-    <Panel maxH="calc(var(--device-height) * 0.72)">
+    <FullPanel>
       <div className="flex justify-between items-baseline px-5 pt-5 shrink-0">
         <span className="font-medium text-black" style={{ fontSize: 36, lineHeight: "44px" }}>Total</span>
         <span className="font-medium text-black" style={{ fontSize: 36, lineHeight: "44px" }}>${completedTotal.toFixed(2)}</span>
@@ -957,6 +996,6 @@ export default function PaymentDrawer({
           <span className="text-base font-medium text-white">Close order</span>
         </button>
       </div>
-    </Panel>
+    </FullPanel>
   );
 }
