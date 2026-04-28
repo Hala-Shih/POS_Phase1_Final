@@ -29,7 +29,7 @@ interface ActionDrawerProps {
 }
 
 export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMultiplePayment, itemContext }: ActionDrawerProps) {
-  const { cartItems, cartTotal, checkTip, setCheckTip, markAllSent, resetOrder, setItemDiscount, setCheckDiscount, removeItem, updateQuantity, updateNote, updatePriceAdjustment, setItemPriceOverride, toggleBreakline, updateItemModifiers, updateComboSelections, splitAndUpdateNotes, splitCartItemToSingleItems, splitOneAndUpdateModifiers, consolidateCart } = useOrderStore();
+  const { cartItems, cartTotal, checkTip, checkDiscount, setCheckTip, markAllSent, resetOrder, setItemDiscount, setCheckDiscount, removeItem, updateQuantity, updateNote, updatePriceAdjustment, setItemPriceOverride, toggleBreakline, updateItemModifiers, updateComboSelections, splitAndUpdateNotes, splitCartItemToSingleItems, splitOneAndUpdateModifiers, consolidateCart } = useOrderStore();
 
   // Check-level states
   const [showVoidConfirm, setShowVoidConfirm] = useState(false);
@@ -226,6 +226,18 @@ export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMul
   const handleRemoveTip = () => {
     setCheckTip(0);
     setShowTipPanel(false);
+    handleClose();
+  };
+
+  const handleRemoveDiscount = () => {
+    if (itemContext) {
+      setItemDiscount(itemContext.id, null);
+    } else {
+      setCheckDiscount(null);
+    }
+    setShowDiscountPanel(false);
+    setShowCustomDiscountInput(false);
+    setCustomDiscountInput("");
     handleClose();
   };
 
@@ -702,6 +714,15 @@ export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMul
                     </button>
                   </div>
                 )}
+                {cartItem?.discount && (
+                  <button
+                    onClick={handleRemoveDiscount}
+                    className="w-full h-10 rounded-xl text-sm font-medium mb-2 border border-[#E7E0EC] active:bg-gray-100"
+                    style={{ color: "#B3261E" }}
+                  >
+                    Remove discount
+                  </button>
+                )}
                 <button
                   onClick={() => {
                     setShowCustomDiscountInput(false);
@@ -1022,6 +1043,15 @@ export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMul
                   Apply
                 </button>
               </div>
+            )}
+            {checkDiscount && (
+              <button
+                onClick={handleRemoveDiscount}
+                className="w-full h-10 rounded-xl text-sm font-medium mb-2 border border-[#E7E0EC] active:bg-gray-100"
+                style={{ color: "#B3261E" }}
+              >
+                Remove discount
+              </button>
             )}
             <button
               onClick={() => {
