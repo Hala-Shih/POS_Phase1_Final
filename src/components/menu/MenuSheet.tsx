@@ -6,6 +6,7 @@ import { useOrderStore } from "@/store/order-store";
 import menuData from "@/data/menu.json";
 import { MenuBook, MenuItem, CartItemModifier, Modifier } from "@/lib/types";
 import ComboConfigSheet from "@/components/menu/ComboConfigSheet";
+import DragHandle from "@/components/ui/DragHandle";
 
 const menuBooks = menuData as MenuBook[];
 
@@ -290,14 +291,14 @@ export default function MenuSheet({ open, onClose }: MenuSheetProps) {
     <>
       {open && (
         <>
+          {/* Transparent backdrop — tap outside drawer to dismiss */}
+          <div className="absolute inset-0 z-40" onClick={handleClose} />
           <div
             className="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl z-50 flex flex-col overflow-hidden"
             style={{ height: "calc(60% + 20px)", boxShadow: "0 -8px 32px -4px rgba(0,0,0,0.18)" }}
           >
-            {/* Drag handle */}
-            <div className="pt-2.5 pb-1 flex justify-center cursor-pointer shrink-0" onClick={handleClose}>
-              <div className="w-9 h-1 rounded-full bg-[#CAC4D0]" />
-            </div>
+            {/* Drag handle (tap or swipe-down to dismiss) */}
+            <DragHandle onDismiss={handleClose} />
 
             {/* Header */}
             <div className="flex items-center justify-between px-4 pb-3 border-b border-gray-100 shrink-0">

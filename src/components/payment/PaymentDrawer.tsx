@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { useOrderStore } from "@/store/order-store";
 import type { CartItem } from "@/lib/types";
+import DragHandle from "@/components/ui/DragHandle";
 import { getPriceBreakdown, formatCurrency, formatSignedCurrency } from "@/lib/pricing";
 
 /* ── helpers (mirror PaymentScreen) ── */
@@ -331,16 +332,18 @@ export default function PaymentDrawer({
   // Note: maxH is accepted for backwards compatibility but ignored; all views
   // open at the same standard height (Rule 12). Internal scroll handles overflow.
   const Panel = ({ children }: { children: React.ReactNode; maxH?: string }) => (
-    <div
-      className="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl z-50 flex flex-col overflow-hidden"
-      style={{ height: "calc(60% + 20px)", boxShadow: "0 -8px 32px -4px rgba(0,0,0,0.18)" }}
-    >
-      {/* Drag handle */}
-      <div className="pt-2.5 pb-1 flex justify-center cursor-pointer shrink-0" onClick={onClose}>
-        <div className="w-9 h-1 rounded-full bg-[#CAC4D0]" />
+    <>
+      {/* Transparent backdrop — tap outside drawer to dismiss */}
+      <div className="absolute inset-0 z-40" onClick={onClose} />
+      <div
+        className="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl z-50 flex flex-col overflow-hidden"
+        style={{ height: "calc(60% + 20px)", boxShadow: "0 -8px 32px -4px rgba(0,0,0,0.18)" }}
+      >
+        {/* Drag handle (tap or swipe-down to dismiss) */}
+        <DragHandle onDismiss={onClose} />
+        {children}
       </div>
-      {children}
-    </div>
+    </>
   );
 
   /* ── shared back header ── */

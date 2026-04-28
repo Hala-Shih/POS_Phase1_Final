@@ -190,6 +190,7 @@ export default function CheckSummaryScreen({ menuOpen: externalMenuOpen, setMenu
                     item={item}
                     onInteract={collapseToCheck}
                     onTap={() => onOpenItemActions?.({ id: item.id, name: item.name })}
+                    drawerOpen={anyDrawerOpen}
                     muted={false}
                     selected={selectedItemId === item.id}
                   />
@@ -209,6 +210,7 @@ export default function CheckSummaryScreen({ menuOpen: externalMenuOpen, setMenu
                     item={item}
                     onInteract={collapseToCheck}
                     onTap={() => onOpenItemActions?.({ id: item.id, name: item.name })}
+                    drawerOpen={anyDrawerOpen}
                     muted
                     selected={selectedItemId === item.id}
                   />
@@ -285,12 +287,14 @@ function CheckItem({
   muted,
   onTap,
   onInteract,
+  drawerOpen,
   selected,
 }: {
   item: ReturnType<typeof useOrderStore.getState>["cartItems"][number];
   muted: boolean;
   onTap: () => void;
   onInteract?: () => void;
+  drawerOpen?: boolean;
   selected?: boolean;
 }) {
   const { updateQuantity, removeItem } = useOrderStore();
@@ -308,6 +312,13 @@ function CheckItem({
       >
         <button
           onClick={() => {
+            // When a drawer is open, tapping the cart item should ONLY
+            // collapse the drawer (treat the cart area as "return to full
+            // check view") rather than also activating the item action.
+            if (drawerOpen) {
+              onInteract?.();
+              return;
+            }
             onInteract?.();
             onTap();
           }}
