@@ -41,8 +41,7 @@ interface ItemizedUnit {
   modifiers: string[];
   comboSelections: string[];
   note?: string;
-  breaklineAbove?: boolean;
-  breaklineBelow?: boolean;
+  breakline?: boolean;
 }
 
 function roundCurrency(value: number) {
@@ -62,10 +61,9 @@ function buildItemizedUnits(items: CartItem[]): ItemizedUnit[] {
         group.modifiers.map((modifier) => modifier.name)
       );
 
-      const base = `${selection.groupName}: ${selection.component.name}`;
       return modifierNames.length > 0
-        ? `${base} (${modifierNames.join(", ")})`
-        : base;
+        ? `${selection.component.name} (${modifierNames.join(", ")})`
+        : selection.component.name;
     });
 
     return Array.from({ length: item.quantity }, (_, unitIndex) => ({
@@ -78,16 +76,14 @@ function buildItemizedUnits(items: CartItem[]): ItemizedUnit[] {
       modifiers,
       comboSelections,
       note: item.note,
-      breaklineAbove: unitIndex === 0 ? item.breaklineAbove : false,
-      breaklineBelow: unitIndex === item.quantity - 1 ? item.breaklineBelow : false,
+      breakline: item.breakline,
     }));
   });
 }
 
-export default function PaymentScreen({ autoOpenSplit, overlayOnly = false, onCloseSplit, paymentMode = "split" }: { autoOpenSplit?: boolean; overlayOnly?: boolean; onCloseSplit?: () => void; paymentMode?: "split" | "multipay" } = {}) {
+export default function PaymentScreen() {
   const { cartItems, cartTotal, cartCount, guestCount, selectedTable, currentStaff, setScreen, resetOrder, setStaff, setTable } =
     useOrderStore();
-  const checkDiscount = useOrderStore((s) => s.checkDiscount);
 
   const giftCardDrag = useDragControls();
   const splitDrag = useDragControls();
@@ -126,16 +122,12 @@ export default function PaymentScreen({ autoOpenSplit, overlayOnly = false, onCl
   const [isCustomTender, setIsCustomTender] = useState(false);
   const [customTenderValue, setCustomTenderValue] = useState("");
 
-  // Split check state — start open in overlay mode when parent requests
-  // auto-open so the morph animation begins on the first render frame
-  // (no flash of empty overlay between PaymentDrawer unmount and split mount).
-  const [showSplitDrawer, setShowSplitDrawer] = useState(!!autoOpenSplit);
+  // Split check state
+  const [showSplitDrawer, setShowSplitDrawer] = useState(false);
   const [splitType, setSplitType] = useState<SplitType | null>(null);
   const [splitGuestCount, setSplitGuestCount] = useState(2);
   // Confirmed split state (persists after drawer closes)
   const [confirmedSplit, setConfirmedSplit] = useState<ConfirmedSplit | null>(null);
-  // Multi-pay: which methods the user has selected (multi-select).
-  const [multipayMethods, setMultipayMethods] = useState<Set<"cash" | "credit" | "gift">>(new Set());
   const [activeGuestIdx, setActiveGuestIdx] = useState(0);
   const [paidGuests, setPaidGuests] = useState<Set<number>>(new Set());
   // Amount split state
@@ -180,11 +172,6 @@ export default function PaymentScreen({ autoOpenSplit, overlayOnly = false, onCl
 
   // Auto-scroll to show action buttons or numpad panel when they open
   useEffect(() => {
-    if (autoOpenSplit && !overlayOnly) setShowSplitDrawer(true);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  useEffect(() => {
     if (showOrderDiscountPanel || showOrderPriceOverridePanel) {
       setTimeout(() => {
         orderActionPanelRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
@@ -213,14 +200,6 @@ export default function PaymentScreen({ autoOpenSplit, overlayOnly = false, onCl
   const itemizedRemainingCount = unpaidItemUnits.length;
 
   const rawSubtotal = cartTotal();
-  // Apply the check-level discount set from the check Actions drawer first,
-  // so the Payment screen reflects the discounted subtotal carried over from
-  // the check view.
-  const checkDiscountedSubtotal = checkDiscount
-    ? checkDiscount.type === "percent"
-      ? roundCurrency(rawSubtotal * (1 - Math.min(100, checkDiscount.value) / 100))
-      : roundCurrency(Math.max(0, rawSubtotal - checkDiscount.value))
-    : rawSubtotal;
   // Apply order-level adjustments
   const adjustedSubtotal = orderComped
     ? 0
@@ -228,9 +207,9 @@ export default function PaymentScreen({ autoOpenSplit, overlayOnly = false, onCl
       ? orderPriceOverride
       : orderDiscount
         ? orderDiscount.type === "percent"
-          ? roundCurrency(checkDiscountedSubtotal * (1 - orderDiscount.value / 100))
-          : roundCurrency(Math.max(0, checkDiscountedSubtotal - orderDiscount.value))
-        : checkDiscountedSubtotal;
+          ? roundCurrency(rawSubtotal * (1 - orderDiscount.value / 100))
+          : roundCurrency(Math.max(0, rawSubtotal - orderDiscount.value))
+        : rawSubtotal;
   const subtotal = adjustedSubtotal;
   const tax = taxExempt ? 0 : subtotal * TAX_RATE;
   const orderBaseTotal = subtotal + tax;
@@ -460,14 +439,7 @@ export default function PaymentScreen({ autoOpenSplit, overlayOnly = false, onCl
   const drawerTotal = payableTotal + previewTip;
 
   return (
-    <div
-      className={
-        overlayOnly
-          ? "absolute inset-0"
-          : "h-full flex flex-col relative bg-white"
-      }
-    >
-      {!overlayOnly && <>
+    <div className="h-full flex flex-col relative bg-white">
       {/* Header */}
       <Header
         onBack={handleClose}
@@ -476,6 +448,7 @@ export default function PaymentScreen({ autoOpenSplit, overlayOnly = false, onCl
         guestCount={guestCount}
         onGuestCountTap={() => setScreen("guest-count")}
         onTableTap={() => setScreen("tables")}
+        onLogout={() => { resetOrder(); setScreen("login"); }}
         onTransfer={(staff) => setStaff(staff)}
         staffList={staffData as Staff[]}
         currentStaffId={currentStaff?.id}
@@ -514,43 +487,34 @@ export default function PaymentScreen({ autoOpenSplit, overlayOnly = false, onCl
             {confirmedSplit?.type === "item" ? (
               selectedItemUnits.length > 0 ? (
                 selectedItemUnits.map((unit) => (
-                    <div key={unit.unitId}>
-                      {unit.breaklineAbove && (
-                        <div className="px-4 py-1.5">
-                          <div className="h-px bg-gray-300" />
+                  <div key={unit.unitId} className={unit.breakline ? "" : "border-b border-gray-100"}>
+                    <div className="flex justify-between px-4 py-2">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-sm">1x</span>
+                          <span className="text-sm">{unit.name}</span>
+                          {unit.unitCount > 1 && (
+                            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-white border border-gray-200 text-[var(--outline)]">
+                              {unit.unitIndex + 1}/{unit.unitCount}
+                            </span>
+                          )}
                         </div>
-                      )}
-                      <div className="border-b border-gray-100">
-                        <div className="flex justify-between px-4 py-2">
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-1.5">
-                              <span className="text-sm">1x</span>
-                              <span className="text-sm">{unit.name}</span>
-                              {unit.unitCount > 1 && (
-                                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-white border border-gray-200 text-[var(--outline)]">
-                                  {unit.unitIndex + 1}/{unit.unitCount}
-                                </span>
-                              )}
-                            </div>
-                            {unit.modifiers.length > 0 && (
-                              <p className="text-xs text-[var(--outline)] ml-5">{unit.modifiers.join(", ")}</p>
-                            )}
-                            {unit.comboSelections.length > 0 && (
-                              <p className="text-xs text-[var(--outline)] ml-5">{unit.comboSelections.join(" · ")}</p>
-                            )}
-                            {unit.note && (
-                              <p className="text-xs text-[var(--primary)] italic ml-5">Note: {unit.note}</p>
-                            )}
-                          </div>
-                          <span className="text-sm font-medium shrink-0 ml-2">${unit.unitTotal.toFixed(2)}</span>
-                        </div>
+                        {unit.modifiers.length > 0 && (
+                          <p className="text-xs text-[var(--outline)] ml-5">{unit.modifiers.join(", ")}</p>
+                        )}
+                        {unit.comboSelections.length > 0 && (
+                          <p className="text-xs text-[var(--outline)] ml-5">{unit.comboSelections.join(" · ")}</p>
+                        )}
+                        {unit.note && (
+                          <p className="text-xs text-[var(--primary)] italic ml-5">Note: {unit.note}</p>
+                        )}
                       </div>
-                      {unit.breaklineBelow && (
-                        <div className="px-4 py-1.5">
-                          <div className="h-px bg-gray-300" />
-                        </div>
-                      )}
+                      <span className="text-sm font-medium shrink-0 ml-2">${unit.unitTotal.toFixed(2)}</span>
                     </div>
+                    {unit.breakline && (
+                      <div className="mx-4 mt-0.5 mb-0" style={{ height: 3, borderRadius: 2, background: "var(--foreground)" }} />
+                    )}
+                  </div>
                 ))
               ) : (
                 <div className="px-4 py-3 text-sm text-[var(--outline)]">
@@ -559,69 +523,60 @@ export default function PaymentScreen({ autoOpenSplit, overlayOnly = false, onCl
               )
             ) : (
               cartItems.map((item) => (
-                <div key={item.id}>
-                  {item.breaklineAbove && (
-                    <div className="px-4 py-1.5">
-                      <div className="h-px bg-gray-300" />
+                <div key={item.id} className={item.breakline ? "" : "border-b border-gray-100"}>
+                  <div className="flex justify-between px-4 py-2">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-sm">{item.quantity}x</span>
+                        <span className="text-sm">{item.name}</span>
+                      </div>
+                      {item.modifiers.length > 0 && (
+                        <p className="text-xs text-[var(--outline)] ml-5">
+                          {item.modifiers
+                            .flatMap((g) => g.modifiers.map((m) => m.name))
+                            .join(", ")}
+                        </p>
+                      )}
+                      {item.comboSelections && item.comboSelections.length > 0 && (
+                        <p className="text-xs text-[var(--outline)] ml-5">
+                          {item.comboSelections
+                            .map((s) => {
+                              const modNames = s.modifiers
+                                .flatMap((g) => g.modifiers.map((m) => m.name));
+                              return modNames.length > 0
+                                ? `${s.component.name} (${modNames.join(", ")})`
+                                : s.component.name;
+                            })
+                            .join(" · ")}
+                        </p>
+                      )}
+                      {item.note && (
+                        <p className="text-xs text-[var(--primary)] italic ml-5">
+                          Note: {item.note}
+                        </p>
+                      )}
                     </div>
-                  )}
-                  <div className="border-b border-gray-100">
-                    <div className="flex justify-between px-4 py-2">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-sm">{item.quantity}x</span>
-                          <span className="text-sm">{item.name}</span>
-                        </div>
-                        {item.modifiers.length > 0 && (
-                          <p className="text-xs text-[var(--outline)] ml-5">
-                            {item.modifiers
-                              .flatMap((g) => g.modifiers.map((m) => m.name))
-                              .join(", ")}
-                          </p>
-                        )}
-                        {item.comboSelections && item.comboSelections.length > 0 && (
-                          <p className="text-xs text-[var(--outline)] ml-5">
-                            {item.comboSelections
-                              .map((s) => {
-                                const modNames = s.modifiers
-                                  .flatMap((g) => g.modifiers.map((m) => m.name));
-                                return modNames.length > 0
-                                  ? `${s.component.name} (${modNames.join(", ")})`
-                                  : s.component.name;
-                              })
-                              .join(" · ")}
-                          </p>
-                        )}
-                        {item.note && (
-                          <p className="text-xs text-[var(--primary)] italic ml-5">
-                            Note: {item.note}
-                          </p>
-                        )}
-                      </div>
-                      <div className="flex flex-col items-end shrink-0 ml-2">
-                        {(item.comped || item.discount || item.priceOverride != null) && (
-                          <span className="text-[10px] line-through text-[var(--outline)]">
-                            ${((item.basePrice + item.modifiers.reduce((s, g) => s + g.modifiers.reduce((s2, m) => s2 + m.price, 0), 0)) * item.quantity).toFixed(2)}
-                          </span>
-                        )}
-                        {item.comped ? (
-                          <span className="text-xs font-semibold px-1.5 py-0.5 rounded-full bg-[#E8DEF8] text-[#6750A4]">COMP</span>
-                        ) : item.discount ? (
-                          <span className="text-sm font-medium text-[#6750A4]">
-                            ${item.totalPrice.toFixed(2)}
-                          </span>
-                        ) : (
-                          <span className="text-sm font-medium">
-                            ${item.totalPrice.toFixed(2)}
-                          </span>
-                        )}
-                      </div>
+                    <div className="flex flex-col items-end shrink-0 ml-2">
+                      {(item.comped || item.discount || item.priceOverride != null) && (
+                        <span className="text-[10px] line-through text-[var(--outline)]">
+                          ${((item.basePrice + item.modifiers.reduce((s, g) => s + g.modifiers.reduce((s2, m) => s2 + m.price, 0), 0)) * item.quantity).toFixed(2)}
+                        </span>
+                      )}
+                      {item.comped ? (
+                        <span className="text-xs font-semibold px-1.5 py-0.5 rounded-full bg-[#E8DEF8] text-[#6750A4]">COMP</span>
+                      ) : item.discount ? (
+                        <span className="text-sm font-medium text-[#6750A4]">
+                          ${item.totalPrice.toFixed(2)}
+                        </span>
+                      ) : (
+                        <span className="text-sm font-medium">
+                          ${item.totalPrice.toFixed(2)}
+                        </span>
+                      )}
                     </div>
                   </div>
-                  {item.breaklineBelow && (
-                    <div className="px-4 py-1.5">
-                      <div className="h-px bg-gray-300" />
-                    </div>
+                  {item.breakline && (
+                    <div className="mx-4 mt-0.5 mb-0" style={{ height: 3, borderRadius: 2, background: "var(--foreground)" }} />
                   )}
                 </div>
               ))
@@ -1244,7 +1199,6 @@ export default function PaymentScreen({ autoOpenSplit, overlayOnly = false, onCl
           </>
         )}
       </div>
-      </>}
 
       {/* Gift Card Drawer */}
       <AnimatePresence>
@@ -1596,40 +1550,22 @@ export default function PaymentScreen({ autoOpenSplit, overlayOnly = false, onCl
       </AnimatePresence>
 
       {/* Split Check Drawer */}
-      <AnimatePresence onExitComplete={() => { if (overlayOnly) onCloseSplit?.(); }}>
+      <AnimatePresence>
         {showSplitDrawer && (
           <>
-            {!overlayOnly && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 0.4 }}
-                exit={{ opacity: 0 }}
-                onClick={() => setShowSplitDrawer(false)}
-                className="absolute inset-0 bg-black z-40"
-              />
-            )}
             <motion.div
-              initial={
-                overlayOnly
-                  ? { opacity: 0 }
-                  : { y: "100%" }
-              }
-              animate={
-                overlayOnly
-                  ? { opacity: 1 }
-                  : { y: 0 }
-              }
-              exit={
-                overlayOnly
-                  ? { opacity: 0 }
-                  : { y: "100%" }
-              }
-              transition={
-                overlayOnly
-                  ? { duration: 0.18, ease: "easeOut" }
-                  : { type: "spring", damping: 25, stiffness: 300 }
-              }
-              drag={overlayOnly ? false : "y"}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 0.4 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowSplitDrawer(false)}
+              className="absolute inset-0 bg-black z-40"
+            />
+            <motion.div
+              initial={{ y: "100%" }}
+              animate={{ y: 0 }}
+              exit={{ y: "100%" }}
+              transition={{ type: "spring", damping: 25, stiffness: 300 }}
+              drag="y"
               dragControls={splitDrag}
               dragListener={false}
               dragConstraints={{ top: 0, bottom: 0 }}
@@ -1639,53 +1575,31 @@ export default function PaymentScreen({ autoOpenSplit, overlayOnly = false, onCl
                   setShowSplitDrawer(false);
                 }
               }}
-              className="absolute left-0 right-0 bg-white z-50 flex flex-col overflow-hidden"
-              style={
-                overlayOnly
-                  ? { top: 48, height: 592 }
-                  : {
-                      bottom: 0,
-                      borderRadius: splitType === "item" ? "0" : "20px 20px 0 0",
-                      boxShadow: "0px -2px 9px rgba(0, 0, 0, 0.25)",
-                      ...(splitType === "item" ? { top: 48 } : { height: 476 }),
-                    }
-              }
+              className="absolute bottom-0 left-0 right-0 bg-white z-50 flex flex-col"
+              style={{
+                borderRadius: splitType === "item" ? "0" : "20px 20px 0 0",
+                boxShadow: "0px -2px 9px rgba(0, 0, 0, 0.25)",
+                ...(splitType === "item" ? { top: 48 } : { height: 476 }),
+              }}
             >
-              {/* Handle (drawer mode only) */}
-              {!overlayOnly && (
-                <div
-                  onPointerDown={(e) => splitDrag.start(e)}
-                  style={{ touchAction: "none" }}
-                  className="flex justify-center pt-3"
-                >
-                  <div className="rounded-full" style={{ width: 96, height: 6, background: "#B6B6B6" }} />
-                </div>
-              )}
-
-              {/* Header (overlay mode only) */}
-              {overlayOnly && (
-                <div className="absolute top-0 left-0 right-0 h-12 flex items-center justify-between px-5 z-10">
-                  <span className="text-base font-semibold text-[#1D1B20]">{paymentMode === "multipay" ? "Multi-pay" : "Split check"}</span>
-                  <button
-                    onClick={() => setShowSplitDrawer(false)}
-                    className="w-10 h-10 -mr-2 rounded-full flex items-center justify-center active:bg-gray-100"
-                    aria-label={paymentMode === "multipay" ? "Close multi-pay" : "Close split check"}
-                  >
-                    <X size={22} color="#1D1B20" />
-                  </button>
-                </div>
-              )}
+              {/* Handle */}
+              <div
+                onPointerDown={(e) => splitDrag.start(e)}
+                style={{ touchAction: "none" }}
+                className="flex justify-center pt-3"
+              >
+                <div className="rounded-full" style={{ width: 96, height: 6, background: "#B6B6B6" }} />
+              </div>
 
               {/* Total row */}
-              <div className={`flex justify-between items-baseline px-5 ${overlayOnly ? "pt-14" : "pt-4"}`}>
+              <div className="flex justify-between items-baseline px-5 pt-4">
                 <span className="font-medium text-black" style={{ fontSize: 36, lineHeight: "44px" }}>Total</span>
                 <span className="font-medium text-black" style={{ fontSize: 36, lineHeight: "44px" }}>
                   ${orderBaseTotal.toFixed(2)}
                 </span>
               </div>
 
-              {/* Split Check by (split mode only) */}
-              {paymentMode !== "multipay" && (
+              {/* Split Check by */}
               <div className="px-4 mt-4 flex flex-col gap-1.5">
                 <span className="text-base font-medium" style={{ color: "#1D1B20", letterSpacing: "0.15px" }}>
                   Split Check by
@@ -1723,60 +1637,9 @@ export default function PaymentScreen({ autoOpenSplit, overlayOnly = false, onCl
                   })}
                 </div>
               </div>
-              )}
-
-              {/* Multi-pay: payment method selection (multi-select) */}
-              {paymentMode === "multipay" && (
-                <div className="px-4 mt-4 flex flex-col gap-2">
-                  <span className="text-base font-medium" style={{ color: "#1D1B20", letterSpacing: "0.15px" }}>
-                    Select the payment methods
-                  </span>
-                  <div className="flex flex-col gap-2">
-                    {([
-                      { id: "cash", label: "Cash" },
-                      { id: "credit", label: "Credit Card" },
-                      { id: "gift", label: "Gift Card" },
-                    ] as const).map(({ id, label }) => {
-                      const isSelected = multipayMethods.has(id);
-                      return (
-                        <button
-                          key={id}
-                          type="button"
-                          onClick={() => {
-                            setMultipayMethods((prev) => {
-                              const next = new Set(prev);
-                              if (next.has(id)) next.delete(id);
-                              else next.add(id);
-                              return next;
-                            });
-                          }}
-                          className="w-full h-[52px] rounded-lg flex items-center justify-between pl-3 pr-3"
-                          style={{
-                            background: isSelected ? "#E8DEF8" : "#FFFFFF",
-                            border: isSelected ? "1px solid #515151" : "1px solid #DADADA",
-                          }}
-                        >
-                          <span className="text-sm text-black" style={{ letterSpacing: "0.25px" }}>
-                            {label}
-                          </span>
-                          <span
-                            className="w-5 h-5 rounded flex items-center justify-center"
-                            style={{
-                              background: isSelected ? "#4A4459" : "#FFFFFF",
-                              border: isSelected ? "1px solid #4A4459" : "1px solid #79747E",
-                            }}
-                          >
-                            {isSelected && <Check size={14} color="#FFFFFF" />}
-                          </span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
 
               {/* Even split options */}
-              {paymentMode !== "multipay" && splitType === "even" && (
+              {splitType === "even" && (
                 <div className="px-4 mt-6 flex flex-col gap-4">
                   {/* Split into guests */}
                   <div className="flex items-center justify-between">
@@ -1817,7 +1680,7 @@ export default function PaymentScreen({ autoOpenSplit, overlayOnly = false, onCl
               )}
 
               {/* Amount split options */}
-              {paymentMode !== "multipay" && splitType === "amount" && (() => {
+              {splitType === "amount" && (() => {
                 const amountPaidSoFar = confirmedSplit?.type === "amount" ? splitAmountPaidSoFar : 0;
                 const amountRemaining = orderBaseTotal - amountPaidSoFar;
                 const isSubsequent = confirmedSplit?.type === "amount" && splitAmountPayments.length > 0;
@@ -1862,7 +1725,7 @@ export default function PaymentScreen({ autoOpenSplit, overlayOnly = false, onCl
                 );
               })()}
 
-              {paymentMode !== "multipay" && splitType === "item" && (
+              {splitType === "item" && (
                 <div className="px-4 mt-4 flex flex-col gap-3 min-h-0 flex-1 overflow-hidden">
                   {paidItemUnitIds.size > 0 && (
                     <div className="flex justify-between shrink-0">
@@ -1945,28 +1808,46 @@ export default function PaymentScreen({ autoOpenSplit, overlayOnly = false, onCl
               <div className="px-5 mt-auto pb-5 pt-6">
                 <button
                   disabled={
-                    paymentMode === "multipay"
-                      ? multipayMethods.size === 0
-                      : (
-                          splitType === null ||
-                          (splitType === "amount" && (() => {
-                            const val = parseFloat(splitAmountInput);
-                            const maxAllowed = confirmedSplit?.type === "amount"
-                              ? orderBaseTotal - splitAmountPaidSoFar
-                              : orderBaseTotal;
-                            return !splitAmountInput || isNaN(val) || val <= 0 || val > maxAllowed + 0.01;
-                          })()) ||
-                          (splitType === "item" && itemizedSelectedCount === 0)
-                        )
+                    splitType === null ||
+                    (splitType === "amount" && (() => {
+                      const val = parseFloat(splitAmountInput);
+                      const maxAllowed = confirmedSplit?.type === "amount"
+                        ? orderBaseTotal - splitAmountPaidSoFar
+                        : orderBaseTotal;
+                      return !splitAmountInput || isNaN(val) || val <= 0 || val > maxAllowed + 0.01;
+                    })()) ||
+                    (splitType === "item" && itemizedSelectedCount === 0)
                   }
                   onClick={() => {
-                    // Downstream flow not yet defined for either Split check
-                    // or Multi-pay. Confirm is intentionally a no-op for now;
-                    // the button still appears active when valid selections
-                    // are made so the visual state can be reviewed.
+                    if (splitType === "even") {
+                      setConfirmedSplit({ type: "even", guests: splitGuestCount });
+                      setActiveGuestIdx(0);
+                      setTip(0);
+                    } else if (splitType === "amount") {
+                      const amt = parseFloat(splitAmountInput) || 0;
+                      setSplitAmountCurrent(roundCurrency(amt));
+                      if (!confirmedSplit || confirmedSplit.type !== "amount") {
+                        // First time setting up amount split
+                        setSplitAmountPayments([]);
+                        setCumulativePaid(0);
+                        setTotalSettled(0);
+                      }
+                      setConfirmedSplit({ type: "amount" });
+                      setTip(0);
+                    } else if (splitType === "item") {
+                      if (!confirmedSplit || confirmedSplit.type !== "item") {
+                        setPaidItemUnitIds(new Set());
+                        setLastItemizedPayment(null);
+                        setCumulativePaid(0);
+                        setTotalSettled(0);
+                      }
+                      setConfirmedSplit({ type: "item" });
+                      setTip(0);
+                    }
+                    setShowSplitDrawer(false);
                   }}
                   className="w-full h-14 rounded-full flex items-center justify-center active:opacity-80 disabled:opacity-40 transition-colors"
-                  style={{ background: (paymentMode === "multipay" ? multipayMethods.size > 0 : !!splitType) ? "#00B618" : "#CFCFCF" }}
+                  style={{ background: splitType ? "#00B618" : "#CFCFCF" }}
                 >
                   <span
                     className="text-base font-medium"
