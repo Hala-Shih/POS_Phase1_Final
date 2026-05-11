@@ -396,7 +396,7 @@ export default function SearchDrawer({ open, onClose }: SearchDrawerProps) {
               className="text-[15px] font-semibold text-[#1D1B20] leading-tight break-words"
               style={{ display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden" }}
             >
-              {configItem ? configItem.name : "Search"}
+              {configItem ? configItem.name : "Menu search"}
             </span>
           </div>
           <div className="flex items-center gap-2 shrink-0">
