@@ -43,7 +43,7 @@ export default function LoginScreen() {
         actionLabel="Login"
         onAction={handleLogin}
         showRefresh={true}
-        onRefresh={() => setPin("")}
+        onRefresh={() => setPin(pin.slice(0, -1))}
       />
     </div>
   );

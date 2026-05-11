@@ -102,7 +102,7 @@ export default function Header({
           <span className="text-base font-medium ml-1 flex-1">{title}</span>
         )}
 
-        <div className="flex items-center gap-3 ml-auto">
+        <div className="flex items-center gap-[20px] ml-auto">
           {guestCount != null && guestCount > 0 && (
             <button
               onClick={onGuestCountTap}

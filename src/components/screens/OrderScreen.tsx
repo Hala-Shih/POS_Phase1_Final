@@ -415,6 +415,9 @@ export default function OrderScreen() {
           onUpdateExisting={(cartItemId, modifiers) => {
             updateItemModifiers(cartItemId, modifiers);
           }}
+          onDeleteItem={(cartItemId) => {
+            removeItem(cartItemId);
+          }}
         />
       )}
 

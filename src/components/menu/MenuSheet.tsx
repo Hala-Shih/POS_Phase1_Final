@@ -25,7 +25,7 @@ function formatUpcharge(price: number) {
 }
 
 export default function MenuSheet({ open, onClose }: MenuSheetProps) {
-  const { addItem, updateItemModifiers, updateComboSelections, updateQuantity, cartItems } = useOrderStore();
+  const { addItem, updateItemModifiers, updateComboSelections, updateQuantity, removeItem, cartItems } = useOrderStore();
 
   const [activeBookId, setActiveBookId] = useState<string | null>(null);
   const [activeCatId, setActiveCatId] = useState<string | null>(null);
@@ -291,8 +291,6 @@ export default function MenuSheet({ open, onClose }: MenuSheetProps) {
     <>
       {open && (
         <>
-          {/* Transparent backdrop — tap outside drawer to dismiss */}
-          <div className="absolute inset-0 z-40" onClick={handleClose} />
           <div
             className="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl z-50 flex flex-col overflow-hidden"
             style={{ height: "calc(60% + 20px)", boxShadow: "0 -8px 32px -4px rgba(0,0,0,0.18)" }}
@@ -311,36 +309,6 @@ export default function MenuSheet({ open, onClose }: MenuSheetProps) {
                 <span className="text-[15px] font-semibold text-[#1D1B20] leading-tight break-words" style={{ display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{headerTitle}</span>
               </div>
               <div className="flex items-center gap-2 shrink-0">
-                {level === 3 && configItem && (
-                  <div className="flex items-center gap-3">
-                    {orders.length <= 1 ? (
-                      <button
-                        onClick={handleClose}
-                        aria-label="Delete item"
-                        data-no-tap-target
-                        className="w-7 h-7 rounded-full border border-[var(--outline-variant)] flex items-center justify-center active:bg-gray-100"
-                      >
-                        <Trash2 size={14} />
-                      </button>
-                    ) : (
-                      <button
-                        onClick={removeOrder}
-                        data-no-tap-target
-                        className="w-7 h-7 rounded-full border border-[var(--outline-variant)] flex items-center justify-center active:bg-gray-100"
-                      >
-                        <Minus size={14} />
-                      </button>
-                    )}
-                    <span className="text-sm font-semibold min-w-[16px] text-center">{quantity}</span>
-                    <button
-                      onClick={addAnotherOrder}
-                      data-no-tap-target
-                      className="w-7 h-7 rounded-full border border-[var(--outline-variant)] flex items-center justify-center active:bg-gray-100"
-                    >
-                      <Plus size={14} />
-                    </button>
-                  </div>
-                )}
                 {level !== 3 && (
                   <button onClick={handleClose} className="w-8 h-8 flex items-center justify-center rounded-full active:bg-gray-100">
                     <X size={18} />
@@ -455,9 +423,16 @@ export default function MenuSheet({ open, onClose }: MenuSheetProps) {
                   <div className="absolute inset-0 bg-white flex flex-col" style={{ zIndex: 10 }}>
                     {/* Qty editor lives in the sheet header (next to X) */}
                     <div className="shrink-0">
-                      {/* Order tabs row — own row, shown when >1 orders */}
-                      {orders.length > 1 && (
-                        <div className="flex gap-2 px-4 pb-2 overflow-x-auto no-scrollbar">
+                      {/* Order tabs row — always visible */}
+                      <div className="flex items-center px-4 pb-2">
+                        <button
+                          onClick={addAnotherOrder}
+                          disabled={!allOrdersComplete || orders.some(o => !o.cartItemId)}
+                          className="w-7 h-7 rounded-full border border-dashed border-[var(--outline-variant)] flex items-center justify-center shrink-0 transition-colors active:bg-gray-50 mr-[12px] disabled:opacity-30"
+                        >
+                          <Plus size={14} />
+                        </button>
+                        <div className="flex gap-2 overflow-x-auto no-scrollbar min-w-0">
                           {orders.map((order, i) => {
                             const complete = configItem.modifierGroups
                               .filter((g) => g.required && isGroupVisible(g, order.selections))
@@ -465,6 +440,11 @@ export default function MenuSheet({ open, onClose }: MenuSheetProps) {
                             return (
                               <button
                                 key={i}
+                                ref={(el) => {
+                                  if (i === activeOrderIndex && el) {
+                                    el.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
+                                  }
+                                }}
                                 onClick={() => setActiveOrderIndex(i)}
                                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-medium shrink-0 transition-colors ${
                                   i === activeOrderIndex
@@ -478,7 +458,7 @@ export default function MenuSheet({ open, onClose }: MenuSheetProps) {
                             );
                           })}
                         </div>
-                      )}
+                      </div>
                     </div>
 
                     {/* Modifier groups */}
@@ -527,7 +507,18 @@ export default function MenuSheet({ open, onClose }: MenuSheetProps) {
                     </div>
 
                     {/* Add to order */}
-                    <div className="border-t border-[var(--outline-variant)] px-4 py-3 shrink-0">
+                    <div className="border-t border-[var(--outline-variant)] px-4 py-3 shrink-0 flex gap-2">
+                      {activeOrder?.cartItemId && (
+                        <button
+                          onClick={() => {
+                            removeItem(activeOrder.cartItemId!);
+                            setConfigItem(null);
+                          }}
+                          className="h-10 px-4 rounded-xl border-2 border-[var(--error)] text-[var(--error)] flex items-center justify-center gap-1.5 text-sm font-semibold active:opacity-80 transition-opacity"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      )}
                       <button
                         onClick={() => {
                           if (showNextOrder) {
@@ -540,7 +531,7 @@ export default function MenuSheet({ open, onClose }: MenuSheetProps) {
                           handleAddModifiers();
                         }}
                         disabled={showNextOrder ? false : (!allOrdersComplete || !hasNewOrChangedOrders)}
-                        className="w-full h-10 rounded-xl bg-[var(--primary)] text-white flex items-center justify-center gap-2 text-sm font-semibold disabled:opacity-40 active:opacity-80 transition-opacity"
+                        className="flex-1 h-10 rounded-xl bg-[var(--primary)] text-white flex items-center justify-center gap-2 text-sm font-semibold disabled:opacity-40 active:opacity-80 transition-opacity"
                       >
                         {showNextOrder ? "Next Order" : (activeOrder?.cartItemId ? "Save changes" : "Add to order")}
                       </button>

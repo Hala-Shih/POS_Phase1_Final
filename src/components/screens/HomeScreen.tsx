@@ -1,27 +1,19 @@
 "use client";
 
 import { useOrderStore } from "@/store/order-store";
-import tablesData from "@/data/tables.json";
-import { Table } from "@/lib/types";
 import { ArrowLeft, Globe, Settings } from "lucide-react";
-
-const tables = tablesData as Table[];
 
 const labels = {
   en: {
     dineIn: "Dine In",
-    availableTables: "Available tables",
     orders: "Orders",
-    open: "Open",
     summary: "Summary",
     settings: "Settings",
     language: "English",
   },
   zh: {
     dineIn: "內用",
-    availableTables: "可用桌位",
     orders: "訂單",
-    open: "進行中",
     summary: "總結",
     settings: "設定",
     language: "中文",
@@ -31,9 +23,6 @@ const labels = {
 export default function HomeScreen() {
   const { currentStaff, language, toggleLanguage, setScreen } = useOrderStore();
   const t = labels[language];
-
-  const availableCount = tables.filter((t) => t.status === "available").length;
-  const openOrderCount = tables.filter((t) => t.hasActiveOrder).length;
 
   return (
     <div className="h-full flex flex-col bg-[var(--surface)]">
@@ -67,12 +56,6 @@ export default function HomeScreen() {
           className="bg-white rounded-2xl border border-[var(--outline-variant)] p-5 flex items-center justify-between active:scale-[0.98] transition-transform"
         >
           <span className="text-lg font-semibold">{t.dineIn}</span>
-          <div className="flex items-center gap-1.5">
-            <span className="text-sm text-[var(--outline)]">
-              {t.availableTables}
-            </span>
-            <span className="text-lg font-bold">{availableCount}</span>
-          </div>
         </button>
 
         {/* Orders card */}
@@ -81,10 +64,6 @@ export default function HomeScreen() {
           className="bg-white rounded-2xl border border-[var(--outline-variant)] p-5 flex items-center justify-between active:scale-[0.98] transition-transform"
         >
           <span className="text-lg font-semibold">{t.orders}</span>
-          <div className="flex items-center gap-1.5">
-            <span className="text-sm text-[var(--outline)]">{t.open}</span>
-            <span className="text-lg font-bold">{openOrderCount}</span>
-          </div>
         </button>
 
         {/* Summary card */}

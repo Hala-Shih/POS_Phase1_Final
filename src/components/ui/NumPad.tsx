@@ -1,5 +1,7 @@
 "use client";
 
+import { Delete } from "lucide-react";
+
 interface NumPadProps {
   value: string;
   onChange: (value: string) => void;
@@ -66,17 +68,17 @@ export default function NumPad({
         <div className="flex gap-4 justify-center">
           {showRefresh ? (
             <button
-              onClick={onRefresh}
+              onClick={handleBackspace}
               className="w-[72px] h-[72px] rounded-full flex items-center justify-center text-sm text-[var(--outline)] active:bg-gray-100 transition-colors"
             >
-              Refresh
+              <Delete size={32} />
             </button>
           ) : (
             <button
               onClick={handleBackspace}
               className="w-[72px] h-[72px] rounded-full flex items-center justify-center text-lg text-[var(--outline)] active:bg-gray-100 transition-colors"
             >
-              ⌫
+              <Delete size={32} />
             </button>
           )}
           {digitButton("0")}

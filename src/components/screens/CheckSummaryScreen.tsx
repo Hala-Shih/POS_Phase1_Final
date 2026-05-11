@@ -559,10 +559,14 @@ function PriceColumn({
   const breakdown = getPriceBreakdown(item);
   const baseTone = muted ? "text-[var(--outline)]" : "text-[var(--foreground)]";
 
-  if (!breakdown.hasOverride && breakdown.netAdjustment === 0 && !breakdown.isComped) {
+  // Only show strikethrough original price for overrides, discounts, note
+  // adjustments, or comps — NOT for modifier-only upcharges.
+  const hasNonModifierAdjustment = breakdown.hasOverride || breakdown.isComped || breakdown.noteAdjustment != null || breakdown.discount != null;
+
+  if (!hasNonModifierAdjustment) {
     return (
       <span className={`text-[13px] font-medium shrink-0 mt-0.5 ${baseTone}`}>
-        {formatCurrency(breakdown.basePrice)}
+        {formatCurrency(breakdown.effectiveUnitPrice)}
       </span>
     );
   }

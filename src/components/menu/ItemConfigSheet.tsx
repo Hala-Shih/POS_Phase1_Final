@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { motion, useDragControls } from "framer-motion";
-import { Minus, Plus, Check } from "lucide-react";
+import { Minus, Plus, Check, Trash2 } from "lucide-react";
 import { MenuItem, CartItemModifier, Modifier, CartItem } from "@/lib/types";
 
 interface ItemConfigSheetProps {
@@ -11,6 +11,7 @@ interface ItemConfigSheetProps {
   onClose: () => void;
   onAdd: (modifiers: CartItemModifier[]) => void;
   onUpdateExisting?: (cartItemId: string, modifiers: CartItemModifier[]) => void;
+  onDeleteItem?: (cartItemId: string) => void;
 }
 
 interface OrderConfig {
@@ -28,6 +29,7 @@ export default function ItemConfigSheet({
   onClose,
   onAdd,
   onUpdateExisting,
+  onDeleteItem,
 }: ItemConfigSheetProps) {
   const dragControls = useDragControls();
   const [orders, setOrders] = useState<OrderConfig[]>([{ selections: {} }]);
@@ -325,30 +327,21 @@ export default function ItemConfigSheet({
           <div className="w-10 h-1 rounded-full bg-gray-300" />
         </div>
 
-        {/* Header: item name + quantity */}
+        {/* Header: item name */}
         <div className="flex items-center justify-between px-4 pb-2">
           <h2 className="text-base font-semibold flex-1">{item.name}</h2>
-          <div className="flex items-center gap-3">
-            <button
-              onClick={removeOrder}
-              disabled={orders.length <= 1}
-              className="w-7 h-7 rounded-full border border-[var(--outline-variant)] flex items-center justify-center disabled:opacity-30 active:bg-gray-100"
-            >
-              <Minus size={14} />
-            </button>
-            <span className="text-sm font-semibold min-w-[16px] text-center">{quantity}</span>
-            <button
-              onClick={addAnotherOrder}
-              className="w-7 h-7 rounded-full border border-[var(--outline-variant)] flex items-center justify-center active:bg-gray-100"
-            >
-              <Plus size={14} />
-            </button>
-          </div>
         </div>
 
-        {/* Order tabs (shown when >1 order) */}
-        {orders.length > 1 && (
-          <div className="flex gap-2 px-4 pb-2 overflow-x-auto no-scrollbar">
+        {/* Order tabs — always visible */}
+        <div className="flex items-center px-4 pb-2">
+          <button
+            onClick={addAnotherOrder}
+            disabled={!allOrdersComplete || orders.some(o => !o.cartItemId)}
+            className="w-7 h-7 rounded-full border border-dashed border-[var(--outline-variant)] flex items-center justify-center shrink-0 transition-colors active:bg-gray-50 mr-[12px] disabled:opacity-30"
+          >
+            <Plus size={14} />
+          </button>
+          <div className="flex gap-2 overflow-x-auto no-scrollbar min-w-0">
             {orders.map((order, i) => {
               const orderComplete = item.modifierGroups
                 .filter((g) => g.required && isGroupVisible(g, order.selections))
@@ -356,6 +349,11 @@ export default function ItemConfigSheet({
               return (
                 <button
                   key={i}
+                  ref={(el) => {
+                    if (i === activeOrderIndex && el) {
+                      el.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
+                    }
+                  }}
                   onClick={() => setActiveOrderIndex(i)}
                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-medium shrink-0 transition-colors ${
                     i === activeOrderIndex
@@ -369,7 +367,7 @@ export default function ItemConfigSheet({
               );
             })}
           </div>
-        )}
+        </div>
 
         {/* Modifier Groups */}
         <div className="flex-1 overflow-y-auto thin-scrollbar px-4 py-2">
@@ -424,12 +422,23 @@ export default function ItemConfigSheet({
           })()}
         </div>
 
-        {/* Add to cart / Save changes button */}
-        <div className="border-t border-[var(--outline-variant)] px-4 py-3">
+        {/* Delete / Add to cart / Save changes button */}
+        <div className="border-t border-[var(--outline-variant)] px-4 py-3 flex gap-2">
+          {activeOrder.cartItemId && onDeleteItem && (
+            <button
+              onClick={() => {
+                onDeleteItem(activeOrder.cartItemId!);
+                onClose();
+              }}
+              className="h-11 px-4 rounded-xl border-2 border-[var(--error)] text-[var(--error)] flex items-center justify-center gap-1.5 text-sm font-semibold active:opacity-80 transition-opacity"
+            >
+              <Trash2 size={16} />
+            </button>
+          )}
           <button
             onClick={handlePrimaryAction}
             disabled={primaryDisabled}
-            className="w-full h-11 rounded-xl bg-[var(--primary)] text-white flex items-center justify-center gap-2 text-sm font-semibold disabled:opacity-40 active:opacity-80 transition-opacity"
+            className="flex-1 h-11 rounded-xl bg-[var(--primary)] text-white flex items-center justify-center gap-2 text-sm font-semibold disabled:opacity-40 active:opacity-80 transition-opacity"
           >
             {showNextAction ? "Next Order" : (activeOrder.cartItemId ? "Save changes" : "Add to cart")}
           </button>
