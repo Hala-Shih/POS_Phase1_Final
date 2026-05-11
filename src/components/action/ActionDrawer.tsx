@@ -29,7 +29,7 @@ interface ActionDrawerProps {
 }
 
 export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMultiplePayment, itemContext }: ActionDrawerProps) {
-  const { cartItems, cartTotal, checkTip, checkDiscount, setCheckTip, markAllSent, resetOrder, setItemDiscount, setCheckDiscount, removeItem, updateQuantity, updateNote, updatePriceAdjustment, setItemPriceOverride, toggleBreakline, updateItemModifiers, updateComboSelections, splitAndUpdateNotes, splitCartItemToSingleItems, splitOneAndUpdateModifiers, consolidateCart } = useOrderStore();
+  const { cartItems, cartTotal, checkTip, checkDiscount, setCheckTip, markAllSent, resetOrder, setItemDiscount, setCheckDiscount, removeItem, updateQuantity, updateNote, updatePriceAdjustment, setItemPriceOverride, toggleBreakline, updateItemModifiers, updateComboSelections, splitAndUpdateNotes, splitCartItemToSingleItems, splitOneAndUpdateModifiers, consolidateCart, addItem } = useOrderStore();
 
   // Check-level states
   const [showVoidConfirm, setShowVoidConfirm] = useState(false);
@@ -65,6 +65,10 @@ export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMul
   const [showModifySheet, setShowModifySheet] = useState(false);
   const [localModSelections, setLocalModSelections] = useState<Record<string, Modifier[]>>({});
   const [originalModSelections, setOriginalModSelections] = useState<Record<string, Modifier[]>>({});
+  // Per-order modifier selections when qty > 1 (mirrors MenuSheet order tabs pattern).
+  const [activeModifyOrderIndex, setActiveModifyOrderIndex] = useState(0);
+  const [modifyOrderSelections, setModifyOrderSelections] = useState<Record<string, Modifier[]>[]>([]);
+  const [originalOrderSelections, setOriginalOrderSelections] = useState<Record<string, Modifier[]>[]>([]);
   // For combo modify: cart item ids that should be presented as separate orders
   // (after splitting a stacked combo line so each unit can be modified independently).
   const [modifyComboCartItemIds, setModifyComboCartItemIds] = useState<string[]>([]);
@@ -130,6 +134,9 @@ export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMul
     setShowModifySheet(false);
     setLocalModSelections({});
     setOriginalModSelections({});
+    setActiveModifyOrderIndex(0);
+    setModifyOrderSelections([]);
+    setOriginalOrderSelections([]);
     onClose();
   };
 
@@ -319,6 +326,9 @@ export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMul
     setShowModifySheet(false);
     setLocalModSelections({});
     setOriginalModSelections({});
+    setActiveModifyOrderIndex(0);
+    setModifyOrderSelections([]);
+    setOriginalOrderSelections([]);
     setModifyComboCartItemIds([]);
   };
   // Shared function: open modify panel with pre-populated selections
@@ -328,6 +338,26 @@ export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMul
     cartItem.modifiers.forEach((cm) => { initial[cm.groupId] = [...cm.modifiers]; });
     setLocalModSelections(initial);
     setOriginalModSelections(initial);
+    // For non-combo items, initialise per-order selections
+    // so each unit can be modified independently via order tabs.
+    if (!isCombo) {
+      const perOrder = Array.from({ length: cartItem.quantity }, () => {
+        const copy: Record<string, Modifier[]> = {};
+        cartItem.modifiers.forEach((cm) => { copy[cm.groupId] = [...cm.modifiers]; });
+        return copy;
+      });
+      setModifyOrderSelections(perOrder);
+      setOriginalOrderSelections(perOrder.map((o) => {
+        const copy: Record<string, Modifier[]> = {};
+        Object.entries(o).forEach(([gid, mods]) => { copy[gid] = [...mods]; });
+        return copy;
+      }));
+      setActiveModifyOrderIndex(0);
+    } else {
+      setModifyOrderSelections([]);
+      setOriginalOrderSelections([]);
+      setActiveModifyOrderIndex(0);
+    }
     // For combos with stacked qty > 1, split into individual cart items so
     // each unit can be modified independently in the combo config sheet.
     if (isCombo && cartItem.quantity > 1) {
@@ -338,6 +368,39 @@ export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMul
     }
     setShowModifySheet(true);
   };
+
+  // Whether any order tab has changed modifiers (for per-order modify).
+  // New orders (idx >= originalOrderSelections.length) are always considered changed
+  // if they have at least one required group filled.
+  const isAnyOrderModifyChanged = modifyOrderSelections.length > 0 && modifyOrderSelections.some((sel, idx) => {
+    if (idx >= originalOrderSelections.length) {
+      // New order — consider changed (needs saving) if it has any selections
+      return Object.values(sel).some((mods) => mods.length > 0);
+    }
+    const orig = originalOrderSelections[idx] || {};
+    const groupIds = new Set([...Object.keys(sel), ...Object.keys(orig)]);
+    for (const gid of Array.from(groupIds)) {
+      const origMods = (orig[gid] || []).map((m) => m.id).sort().join(",");
+      const currMods = (sel[gid] || []).map((m) => m.id).sort().join(",");
+      if (origMods !== currMods) return true;
+    }
+    return false;
+  });
+
+  // Are there any new (not-yet-in-cart) order tabs?
+  const hasNewOrders = modifyOrderSelections.length > originalOrderSelections.length;
+
+  // Check if every new order has all required modifier groups filled
+  const allNewOrdersComplete = modifyOrderSelections.every((sel, idx) => {
+    if (idx < originalOrderSelections.length) return true; // existing order, skip
+    if (!menuItem) return false;
+    return menuItem.modifierGroups
+      .filter((g) => g.required)
+      .every((g) => (sel[g.id] || []).length >= g.minSelect);
+  });
+
+  // Active order selections for the modify panel (per-order mode).
+  const activeOrderModSelections = modifyOrderSelections[activeModifyOrderIndex] || localModSelections;
 
   if (!open) return null;
 
@@ -361,72 +424,136 @@ export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMul
               {isItemLevel2PanelOpen && (
                 <button
                   onClick={handleBackFromItemLevel2}
-                  className="w-7 h-7 flex items-center justify-center rounded-full active:bg-gray-100 shrink-0"
+                  className={`flex items-center justify-center rounded-full active:bg-gray-100 shrink-0 ${showModifySheet ? "w-8 h-8 -ml-2" : "w-7 h-7"}`}
                   aria-label="Back"
                 >
-                  <ChevronLeft size={16} />
+                  <ChevronLeft size={showModifySheet ? 20 : 16} />
                 </button>
               )}
               <div className="flex-1 min-w-0">
-                <p className="text-[13px] font-medium leading-snug truncate">{cartItem.name}</p>
+                <p
+                  className={showModifySheet ? "text-[15px] font-semibold text-[#1D1B20] leading-tight break-words" : "text-[13px] font-medium leading-snug truncate"}
+                  style={showModifySheet ? { display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical" as const, overflow: "hidden" } : undefined}
+                >{cartItem.name}</p>
               </div>
-              <ActionPriceColumn item={cartItem} />
-              <button onClick={handleClose} className="w-7 h-7 flex items-center justify-center rounded-full active:bg-gray-100 shrink-0">
-                <X size={16} />
-              </button>
-            </div>
-
-            {/* Quantity editor + order tabs — share one row to save space */}
-            <div className="flex items-center gap-3 px-4 pb-2">
-              <button
-                onClick={() => {
-                  if (cartItem.sent) return;
-                  if (cartItem.quantity <= 1) { removeItem(cartItem.id); handleClose(); }
-                  else updateQuantity(cartItem.id, -1);
-                }}
-                className="w-7 h-7 rounded-full border border-[var(--outline-variant)] flex items-center justify-center active:bg-gray-100 disabled:opacity-30 shrink-0"
-                disabled={cartItem.sent}
-              >
-                {cartItem.quantity <= 1 ? <Trash2 size={12} className="text-[var(--error)]" /> : <Minus size={12} />}
-              </button>
-              <span className="text-[13px] font-semibold min-w-[16px] text-center shrink-0">{cartItem.quantity}</span>
-              <button
-                onClick={() => {
-                  if (cartItem.sent) return;
-                  updateQuantity(cartItem.id, 1);
-                }}
-                className="w-7 h-7 rounded-full border border-[var(--outline-variant)] flex items-center justify-center active:bg-gray-100 disabled:opacity-30 shrink-0"
-                disabled={cartItem.sent}
-              >
-                <Plus size={12} />
-              </button>
-
-              {/* Order tabs — inline, horizontally scrollable when overflowing */}
-              {noteOrderTabs.length > 1 && isItemLevel2PanelOpen && (
-                <div className="flex gap-2 overflow-x-auto no-scrollbar min-w-0 flex-1">
-                  {noteOrderTabs.map((tab) => {
-                    const hasOrderNote = ((noteDrafts[tab.key] ?? tab.note ?? "").trim().length > 0);
-                    return (
-                      <button
-                        key={tab.key}
-                        onClick={() => {
-                          setActiveNoteOrderKey(tab.key);
-                          setNoteText(noteDrafts[tab.key] ?? tab.note ?? "");
-                        }}
-                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-medium shrink-0 transition-colors ${
-                          tab.key === selectedNoteTab?.key
-                            ? "border-[var(--primary)] bg-[var(--primary-light)]"
-                            : "border-[var(--outline-variant)]"
-                        }`}
-                      >
-                        {hasOrderNote && <Check size={12} className="text-[var(--primary)]" />}
-                        {tab.label}
-                      </button>
-                    );
-                  })}
-                </div>
+              {!showModifySheet && (
+                <>
+                  <ActionPriceColumn item={cartItem} />
+                  <button onClick={handleClose} className="w-7 h-7 flex items-center justify-center rounded-full active:bg-gray-100 shrink-0">
+                    <X size={16} />
+                  </button>
+                </>
               )}
             </div>
+
+            {showModifySheet ? (
+              /* Order tabs row — matches MenuSheet Level 3 pattern */
+              modifyOrderSelections.length > 0 ? (
+                <div className="flex items-center px-4 pb-2">
+                  <button
+                    onClick={() => {
+                      if (!cartItem || !menuItem) return;
+                      // Add a new empty order tab — only auto-fill required single-option groups
+                      const autoSel: Record<string, Modifier[]> = {};
+                      menuItem.modifierGroups?.forEach((g) => {
+                        if (g.required && g.options.length === 1) autoSel[g.id] = [g.options[0]];
+                      });
+                      setModifyOrderSelections((prev) => [...prev, autoSel]);
+                      // Do NOT extend originalOrderSelections — new orders are pending
+                      setActiveModifyOrderIndex(modifyOrderSelections.length);
+                    }}
+                    className="w-7 h-7 rounded-full border border-dashed border-[var(--outline-variant)] flex items-center justify-center shrink-0 transition-colors active:bg-gray-50 mr-[12px] disabled:opacity-30"
+                  >
+                    <Plus size={14} />
+                  </button>
+                  <div className="flex gap-2 overflow-x-auto no-scrollbar min-w-0">
+                    {modifyOrderSelections.map((sel, i) => {
+                      const isNewOrder = i >= originalOrderSelections.length;
+                      let showCheck = false;
+                      if (isNewOrder) {
+                        // New order — show check when all required groups are filled
+                        showCheck = !!menuItem && menuItem.modifierGroups
+                          .filter((g) => g.required)
+                          .every((g) => (sel[g.id] || []).length >= g.minSelect);
+                      } else {
+                        const orig = originalOrderSelections[i] || {};
+                        showCheck = Object.keys(sel).some((gid) => {
+                          const origMods = (orig[gid] || []).map((m) => m.id).sort().join(",");
+                          const currMods = (sel[gid] || []).map((m) => m.id).sort().join(",");
+                          return origMods !== currMods;
+                        });
+                      }
+                      return (
+                        <button
+                          key={i}
+                          onClick={() => setActiveModifyOrderIndex(i)}
+                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-medium shrink-0 transition-colors ${
+                            i === activeModifyOrderIndex
+                              ? "border-[var(--primary)] bg-[var(--primary-light)]"
+                              : "border-[var(--outline-variant)]"
+                          }`}
+                        >
+                          {showCheck && <Check size={12} className="text-[var(--primary)]" />}
+                          Order {i + 1}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              ) : null
+            ) : (
+              /* Quantity editor + note order tabs */
+              <div className="flex items-center gap-3 px-4 pb-2">
+                <button
+                  onClick={() => {
+                    if (cartItem.sent) return;
+                    if (cartItem.quantity <= 1) { removeItem(cartItem.id); handleClose(); }
+                    else updateQuantity(cartItem.id, -1);
+                  }}
+                  className="w-7 h-7 rounded-full border border-[var(--outline-variant)] flex items-center justify-center active:bg-gray-100 disabled:opacity-30 shrink-0"
+                  disabled={cartItem.sent}
+                >
+                  {cartItem.quantity <= 1 ? <Trash2 size={12} className="text-[var(--error)]" /> : <Minus size={12} />}
+                </button>
+                <span className="text-[13px] font-semibold min-w-[16px] text-center shrink-0">{cartItem.quantity}</span>
+                <button
+                  onClick={() => {
+                    if (cartItem.sent) return;
+                    updateQuantity(cartItem.id, 1);
+                  }}
+                  className="w-7 h-7 rounded-full border border-[var(--outline-variant)] flex items-center justify-center active:bg-gray-100 disabled:opacity-30 shrink-0"
+                  disabled={cartItem.sent}
+                >
+                  <Plus size={12} />
+                </button>
+
+                {/* Order tabs — inline, horizontally scrollable when overflowing */}
+                {noteOrderTabs.length > 1 && isItemLevel2PanelOpen && (
+                  <div className="flex gap-2 overflow-x-auto no-scrollbar min-w-0 flex-1">
+                    {noteOrderTabs.map((tab) => {
+                      const hasOrderNote = ((noteDrafts[tab.key] ?? tab.note ?? "").trim().length > 0);
+                      return (
+                        <button
+                          key={tab.key}
+                          onClick={() => {
+                            setActiveNoteOrderKey(tab.key);
+                            setNoteText(noteDrafts[tab.key] ?? tab.note ?? "");
+                          }}
+                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-medium shrink-0 transition-colors ${
+                            tab.key === selectedNoteTab?.key
+                              ? "border-[var(--primary)] bg-[var(--primary-light)]"
+                              : "border-[var(--outline-variant)]"
+                          }`}
+                        >
+                          {hasOrderNote && <Check size={12} className="text-[var(--primary)]" />}
+                          {tab.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Modifier / combo / note / discount details with inline deltas
@@ -583,16 +710,16 @@ export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMul
                 </div>
               </div>
             ) : showModifySheet && menuItem && !isCombo ? (
-              /* Inline modifier editor */
-              <div className="px-4 py-3">
+              /* Modifier editor — matches MenuSheet Level 3 */
+              <div className="px-4 pb-2">
                 {menuItem.modifierGroups?.map((group) => {
-                  const selected = localModSelections[group.id] || [];
+                  const selected = activeOrderModSelections[group.id] || [];
                   return (
-                    <div key={group.id} className="mb-4">
-                      <p className="text-[12px] font-semibold mb-2">
+                    <div key={group.id} className="mb-3">
+                      <p className="text-xs font-semibold mb-1.5 text-[#1D1B20]">
                         {group.name}
-                        <span className="font-normal text-[var(--outline)] ml-1">
-                          ({group.required ? "Required" : "Optional"})
+                        <span className="font-normal ml-1 text-[12px] text-[var(--outline)]">
+                          {group.required ? "Required" : "Optional"}
                         </span>
                       </p>
                       <div className="grid grid-cols-2 gap-1.5">
@@ -602,7 +729,7 @@ export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMul
                             <button
                               key={option.id}
                               onClick={() => {
-                                setLocalModSelections((prev) => {
+                                const updateSelections = (prev: Record<string, Modifier[]>) => {
                                   const cur = prev[group.id] || [];
                                   const exists = cur.find((m) => m.id === option.id);
                                   let next: Modifier[];
@@ -616,7 +743,16 @@ export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMul
                                     next = [...cur, option];
                                   }
                                   return { ...prev, [group.id]: next };
-                                });
+                                };
+                                if (modifyOrderSelections.length > 0) {
+                                  setModifyOrderSelections((prev) => {
+                                    const copy = [...prev];
+                                    copy[activeModifyOrderIndex] = updateSelections(copy[activeModifyOrderIndex]);
+                                    return copy;
+                                  });
+                                } else {
+                                  setLocalModSelections(updateSelections);
+                                }
                               }}
                               className={`flex items-center justify-between px-3 py-2.5 rounded-xl border transition-colors text-left ${
                                 isSelected
@@ -790,33 +926,112 @@ export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMul
               </div>
             )}
           </div>
-          {showModifySheet && menuItem && !isCombo && (
-            <div className="border-t border-[var(--outline-variant)] px-4 py-3 shrink-0">
+          {showModifySheet && menuItem && !isCombo && (() => {
+            const activeIsNew = activeModifyOrderIndex >= originalOrderSelections.length;
+            return (
+            <div className="border-t border-[var(--outline-variant)] px-4 py-3 shrink-0 flex gap-2">
+              {activeIsNew ? (
+                <button
+                  onClick={() => {
+                    const idx = activeModifyOrderIndex;
+                    setModifyOrderSelections((prev) => prev.filter((_, i) => i !== idx));
+                    if (idx >= modifyOrderSelections.length - 1) {
+                      setActiveModifyOrderIndex(Math.max(0, idx - 1));
+                    }
+                  }}
+                  className="h-10 px-4 rounded-xl border-2 border-[var(--outline-variant)] text-[var(--outline)] flex items-center justify-center gap-1.5 text-sm font-semibold active:opacity-80 transition-opacity"
+                >
+                  Cancel
+                </button>
+              ) : (
+                <button
+                  onClick={() => {
+                    if (modifyOrderSelections.length > 1) {
+                      const idx = activeModifyOrderIndex;
+                      setModifyOrderSelections((prev) => prev.filter((_, i) => i !== idx));
+                      setOriginalOrderSelections((prev) => prev.filter((_, i) => i !== idx));
+                      updateQuantity(cartItem.id, -1);
+                      if (idx >= modifyOrderSelections.length - 1) {
+                        setActiveModifyOrderIndex(Math.max(0, idx - 1));
+                      }
+                    } else {
+                      removeItem(cartItem.id);
+                      handleClose();
+                    }
+                  }}
+                  className="h-10 px-4 rounded-xl border-2 border-[var(--error)] text-[var(--error)] flex items-center justify-center gap-1.5 text-sm font-semibold active:opacity-80 transition-opacity"
+                >
+                  <Trash2 size={16} />
+                </button>
+              )}
               <button
-                disabled={!isModifySelectionChanged}
+                disabled={modifyOrderSelections.length > 0 ? (hasNewOrders ? !allNewOrdersComplete : !isAnyOrderModifyChanged) : !isModifySelectionChanged}
                 onClick={() => {
-                  const modifiers: CartItemModifier[] = Object.entries(localModSelections)
-                    .filter(([, mods]) => mods.length > 0)
-                    .map(([groupId, mods]) => {
-                      const group = menuItem.modifierGroups.find((g) => g.id === groupId)!;
-                      return { groupId, groupName: group.name, modifiers: mods };
+                  if (modifyOrderSelections.length > 0) {
+                    // Per-order modify: apply per-order modifiers
+                    // each order's modifiers independently.
+                    modifyOrderSelections.forEach((sel, idx) => {
+                      const isNewOrder = idx >= originalOrderSelections.length;
+                      if (isNewOrder) {
+                        // New order — add to cart as a new item
+                        const modifiers: CartItemModifier[] = Object.entries(sel)
+                          .filter(([, mods]) => mods.length > 0)
+                          .map(([groupId, mods]) => {
+                            const group = menuItem.modifierGroups.find((g) => g.id === groupId)!;
+                            return { groupId, groupName: group.name, modifiers: mods };
+                          });
+                        addItem({
+                          menuItemId: cartItem.menuItemId,
+                          name: cartItem.name,
+                          basePrice: cartItem.basePrice,
+                          modifiers,
+                        });
+                      } else {
+                        const orig = originalOrderSelections[idx] || {};
+                        const groupIds = new Set([...Object.keys(sel), ...Object.keys(orig)]);
+                        let changed = false;
+                        for (const gid of Array.from(groupIds)) {
+                          const origMods = (orig[gid] || []).map((m) => m.id).sort().join(",");
+                          const currMods = (sel[gid] || []).map((m) => m.id).sort().join(",");
+                          if (origMods !== currMods) { changed = true; break; }
+                        }
+                        if (changed) {
+                          const modifiers: CartItemModifier[] = Object.entries(sel)
+                            .filter(([, mods]) => mods.length > 0)
+                            .map(([groupId, mods]) => {
+                              const group = menuItem.modifierGroups.find((g) => g.id === groupId)!;
+                              return { groupId, groupName: group.name, modifiers: mods };
+                            });
+                          if (originalOrderSelections.length === 1) {
+                            updateItemModifiers(cartItem.id, modifiers);
+                          } else {
+                            splitOneAndUpdateModifiers(cartItem.id, modifiers);
+                          }
+                        }
+                      }
                     });
-                  // If the item has qty > 1, split off one unit with the new modifiers
-                  // so the previously-modified units stay intact (e.g. medium rare stays
-                  // when the new unit is changed to well done).
-                  if (cartItem.quantity > 1) {
-                    splitOneAndUpdateModifiers(cartItem.id, modifiers);
                   } else {
-                    updateItemModifiers(cartItem.id, modifiers);
+                    const modifiers: CartItemModifier[] = Object.entries(localModSelections)
+                      .filter(([, mods]) => mods.length > 0)
+                      .map(([groupId, mods]) => {
+                        const group = menuItem.modifierGroups.find((g) => g.id === groupId)!;
+                        return { groupId, groupName: group.name, modifiers: mods };
+                      });
+                    if (cartItem.quantity > 1) {
+                      splitOneAndUpdateModifiers(cartItem.id, modifiers);
+                    } else {
+                      updateItemModifiers(cartItem.id, modifiers);
+                    }
                   }
                   handleClose();
                 }}
-                className="w-full h-11 rounded-xl bg-[var(--primary)] text-white flex items-center justify-center text-sm font-semibold active:opacity-80 disabled:opacity-40 transition-opacity"
+                className="flex-1 h-10 rounded-xl bg-[var(--primary)] text-white flex items-center justify-center gap-2 text-sm font-semibold disabled:opacity-40 active:opacity-80 transition-opacity"
               >
-                Save changes
+                {hasNewOrders ? "Add to order" : "Save changes"}
               </button>
             </div>
-          )}
+            );
+          })()}
           <div style={{ paddingBottom: "max(env(safe-area-inset-bottom), 2px)" }} />
         </div>
 
@@ -1297,23 +1512,10 @@ function ActionTile({
 function ActionPriceColumn({ item }: { item: import("@/lib/types").CartItem }) {
   const breakdown = getPriceBreakdown(item);
 
-  if (!breakdown.hasOverride && breakdown.netAdjustment === 0 && !breakdown.isComped) {
-    return (
-      <span className="text-[13px] font-semibold text-[#1D1B20] shrink-0 tabular-nums">
-        {formatCurrency(breakdown.basePrice)}
-      </span>
-    );
-  }
-
   return (
-    <div className="shrink-0 text-right leading-tight tabular-nums">
-      <div className="text-[11px] text-[var(--outline)] line-through">
-        {formatCurrency(breakdown.basePrice)}
-      </div>
-      <div className="text-[13px] font-semibold text-[#6750A4]">
-        {formatCurrency(breakdown.effectiveUnitPrice)}
-      </div>
-    </div>
+    <span className="text-[13px] font-semibold text-[#1D1B20] shrink-0 tabular-nums">
+      {formatCurrency(breakdown.effectiveUnitPrice)}
+    </span>
   );
 }
 

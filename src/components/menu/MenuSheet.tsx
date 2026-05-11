@@ -508,7 +508,7 @@ export default function MenuSheet({ open, onClose }: MenuSheetProps) {
 
                     {/* Add to order */}
                     <div className="border-t border-[var(--outline-variant)] px-4 py-3 shrink-0 flex gap-2">
-                      {activeOrder?.cartItemId && (
+                      {activeOrder?.cartItemId ? (
                         <button
                           onClick={() => {
                             removeItem(activeOrder.cartItemId!);
@@ -517,6 +517,21 @@ export default function MenuSheet({ open, onClose }: MenuSheetProps) {
                           className="h-10 px-4 rounded-xl border-2 border-[var(--error)] text-[var(--error)] flex items-center justify-center gap-1.5 text-sm font-semibold active:opacity-80 transition-opacity"
                         >
                           <Trash2 size={16} />
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => {
+                            if (orders.length > 1) {
+                              const next = orders.filter((_, i) => i !== activeOrderIndex);
+                              setOrders(next);
+                              setActiveOrderIndex(Math.min(activeOrderIndex, next.length - 1));
+                            } else {
+                              setConfigItem(null);
+                            }
+                          }}
+                          className="h-10 px-4 rounded-xl border-2 border-[var(--outline-variant)] text-[var(--outline)] flex items-center justify-center gap-1.5 text-sm font-semibold active:opacity-80 transition-opacity"
+                        >
+                          Cancel
                         </button>
                       )}
                       <button

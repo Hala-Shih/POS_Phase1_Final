@@ -14,7 +14,6 @@ const tabs: { id: FooterTab; label: string; icon: typeof BookOpen }[] = [
   { id: "menu", label: "Menu", icon: BookOpen },
   { id: "search", label: "Menu search", icon: Search },
   { id: "action", label: "Actions", icon: Zap },
-  { id: "payment", label: "Payment", icon: CreditCard },
 ];
 
 export default function FooterNav({ activeTab, onSelect }: FooterNavProps) {

@@ -81,9 +81,11 @@ function buildItemizedUnits(items: CartItem[]): ItemizedUnit[] {
   });
 }
 
-export default function PaymentScreen() {
+export default function PaymentScreen({ onClose: externalClose }: { onClose?: () => void } = {}) {
   const { cartItems, cartTotal, cartCount, guestCount, selectedTable, currentStaff, setScreen, resetOrder, setStaff, setTable } =
     useOrderStore();
+
+  const goBack = externalClose ?? (() => setScreen("check"));
 
   const giftCardDrag = useDragControls();
   const splitDrag = useDragControls();
@@ -375,7 +377,7 @@ export default function PaymentScreen() {
       setShowLeaveToast(true);
       return;
     }
-    setScreen("check");
+    goBack();
   };
 
   const resetItemizedSplitState = () => {
@@ -461,8 +463,17 @@ export default function PaymentScreen() {
       {/* Content */}
       <div className="flex-1 overflow-y-auto">
         {/* Payment title */}
-        <div className="flex items-center px-4 py-3 border-b border-[var(--outline-variant)]">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--outline-variant)]">
           <h1 className="text-xl font-semibold">Payment</h1>
+          {externalClose && (
+            <button
+              onClick={handleClose}
+              aria-label="Close"
+              className="w-8 h-8 flex items-center justify-center rounded-full active:bg-gray-100"
+            >
+              <X size={20} />
+            </button>
+          )}
         </div>
 
         {/* View items (collapsible) */}
@@ -2782,7 +2793,7 @@ export default function PaymentScreen() {
               <button
                 onClick={() => {
                   setShowLeaveToast(false);
-                  setScreen("check");
+                  goBack();
                 }}
                 className="w-full h-12 rounded-md flex items-center justify-center active:opacity-80"
                 style={{ background: "#E8DEF8" }}
