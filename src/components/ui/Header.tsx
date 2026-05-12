@@ -21,6 +21,7 @@ interface HeaderProps {
   onVoidOrder?: () => void;
   tableList?: Table[];
   currentTableId?: string;
+  onCollapseDrawers?: () => void;
 }
 
 export default function Header({
@@ -38,6 +39,7 @@ export default function Header({
   onVoidOrder,
   tableList,
   currentTableId,
+  onCollapseDrawers,
 }: HeaderProps) {
   const transferStaffDrag = useDragControls();
   const transferTableDrag = useDragControls();
@@ -136,6 +138,7 @@ export default function Header({
                       onClick={() => {
                         setShowTableMenu(false);
                         setShowTableTransfer(true);
+                        onCollapseDrawers?.();
                       }}
                       className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-[var(--foreground)] hover:bg-gray-50 active:bg-gray-100"
                     >

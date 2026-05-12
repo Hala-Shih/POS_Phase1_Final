@@ -211,6 +211,10 @@ interface OrderState {
   openMenuOnArrival: boolean;
   setOpenMenuOnArrival: (val: boolean) => void;
 
+  // Auto-open payment flow on check screen arrival
+  openPaymentOnArrival: boolean;
+  setOpenPaymentOnArrival: (val: boolean) => void;
+
   // Combo configuration sheet open flag (taller than the standard
   // 60% drawer; CheckSummaryScreen uses this to reserve more space
   // so the totals stay visible above it).
@@ -233,6 +237,9 @@ export const useOrderStore = create<OrderState>((set, get) => ({
 
   openMenuOnArrival: false,
   setOpenMenuOnArrival: (val) => set({ openMenuOnArrival: val }),
+
+  openPaymentOnArrival: false,
+  setOpenPaymentOnArrival: (val) => set({ openPaymentOnArrival: val }),
 
   comboSheetOpen: false,
   setComboSheetOpen: (val) => set({ comboSheetOpen: val }),

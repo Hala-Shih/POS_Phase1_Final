@@ -73,6 +73,8 @@ export default function OrdersScreen() {
     }
   });
 
+  const setOpenPaymentOnArrival = useOrderStore((s) => s.setOpenPaymentOnArrival);
+
   const handleOrderTap = (order: Order) => {
     loadTableOrder({
       id: order.tableId,
@@ -89,6 +91,10 @@ export default function OrdersScreen() {
       hasActiveOrder: true,
       orderStatus: order.status,
     });
+    const isOpen = order.status === "editing";
+    if (isOpen) {
+      setOpenPaymentOnArrival(true);
+    }
     setScreen("check");
   };
 

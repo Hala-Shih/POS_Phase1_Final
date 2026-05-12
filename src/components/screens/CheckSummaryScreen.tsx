@@ -148,6 +148,7 @@ export default function CheckSummaryScreen({ menuOpen: externalMenuOpen, setMenu
         onVoidOrder={handleVoidOrder}
         tableList={tablesData as Table[]}
         currentTableId={selectedTable?.id}
+        onCollapseDrawers={collapseToCheck}
       />
 
       {/* Scrollable check body — viewport is reduced when a drawer is open

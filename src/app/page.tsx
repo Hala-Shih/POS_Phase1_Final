@@ -65,6 +65,9 @@ export default function App() {
   }, []);
 
   // Rule 4: screen transitions must clean up incompatible drawer state.
+  const openPaymentOnArrival = useOrderStore((s) => s.openPaymentOnArrival);
+  const setOpenPaymentOnArrival = useOrderStore((s) => s.setOpenPaymentOnArrival);
+
   useEffect(() => {
     // App-shell drawers are only meaningful on `check`. Close on any other screen.
     if (currentScreen !== "check" && activeDrawer !== "none") {
@@ -72,6 +75,15 @@ export default function App() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentScreen]);
+
+  // Auto-open payment flow when navigating to check from an open order.
+  useEffect(() => {
+    if (currentScreen === "check" && openPaymentOnArrival) {
+      setOpenPaymentOnArrival(false);
+      closeDrawers();
+      setShowPaymentFlow(true);
+    }
+  }, [currentScreen, openPaymentOnArrival, setOpenPaymentOnArrival, closeDrawers]);
 
   // Open the fullscreen payment flow overlay.
   const openPaymentFlow = useCallback(() => {
