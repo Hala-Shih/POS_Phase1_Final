@@ -74,6 +74,41 @@
             "price": 17,
             "description": "Thinly sliced tenderloin with arugula, capers, shaved parmesan, and truffle vinaigrette",
             "modifierGroups": []
+          },
+          {
+            "id": "item-crab-cakes",
+            "name": "Lump Crab Cakes",
+            "price": 19,
+            "description": "Pan-seared jumbo lump crab with remoulade, micro greens, and lemon",
+            "modifierGroups": []
+          },
+          {
+            "id": "item-stuffed-mushrooms",
+            "name": "Stuffed Portobello Mushrooms",
+            "price": 14,
+            "description": "Roasted portobello caps with herbed goat cheese, sun-dried tomatoes, and balsamic glaze",
+            "modifierGroups": []
+          },
+          {
+            "id": "item-shrimp-cocktail",
+            "name": "Jumbo Shrimp Cocktail",
+            "price": 18,
+            "description": "Chilled jumbo shrimp with classic cocktail sauce and fresh horseradish",
+            "modifierGroups": []
+          },
+          {
+            "id": "item-wagyu-sliders",
+            "name": "Wagyu Beef Sliders",
+            "price": 16,
+            "description": "Three mini wagyu patties with aged gruyère, caramelized shallots, and dijonnaise",
+            "modifierGroups": []
+          },
+          {
+            "id": "item-coconut-shrimp",
+            "name": "Coconut Shrimp",
+            "price": 15,
+            "description": "Crispy coconut-crusted shrimp with mango-chili dipping sauce",
+            "modifierGroups": []
           }
         ]
       },
@@ -160,6 +195,54 @@
             "price": 14,
             "description": "Shaved kale, dried cranberries, toasted pine nuts, pecorino, and lemon vinaigrette",
             "modifierGroups": []
+          },
+          {
+            "id": "item-quinoa-salad",
+            "name": "Mediterranean Quinoa Bowl",
+            "price": 16,
+            "description": "Tricolor quinoa with cucumber, kalamata olives, feta, cherry tomatoes, and herb vinaigrette",
+            "modifierGroups": [
+              {
+                "id": "mg-quinoa-protein",
+                "name": "Add Protein",
+                "required": false,
+                "minSelect": 0,
+                "maxSelect": 1,
+                "options": [
+                  { "id": "mod-quinoa-chicken", "name": "Grilled Chicken", "price": 8 },
+                  { "id": "mod-quinoa-salmon", "name": "Pan-Seared Salmon", "price": 12 },
+                  { "id": "mod-quinoa-falafel", "name": "Crispy Falafel", "price": 6 }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "item-cobb-salad",
+            "name": "Classic Cobb",
+            "price": 17,
+            "description": "Grilled chicken, avocado, bacon, egg, blue cheese, tomato, and red wine vinaigrette",
+            "modifierGroups": []
+          },
+          {
+            "id": "item-pear-salad",
+            "name": "Pear & Gorgonzola",
+            "price": 15,
+            "description": "Sliced Bartlett pear, gorgonzola, candied pecans, mixed greens, and honey-mustard dressing",
+            "modifierGroups": []
+          },
+          {
+            "id": "item-nicoise-salad",
+            "name": "Niçoise Salad",
+            "price": 18,
+            "description": "Seared ahi tuna, haricots verts, fingerling potatoes, olives, egg, and Dijon vinaigrette",
+            "modifierGroups": []
+          },
+          {
+            "id": "item-spinach-salad",
+            "name": "Baby Spinach Salad",
+            "price": 14,
+            "description": "Baby spinach, crispy prosciutto, roasted pears, shaved manchego, and warm bacon dressing",
+            "modifierGroups": []
           }
         ]
       },
@@ -188,6 +271,41 @@
             "description": "Ask your server for today's selection",
             "modifierGroups": [],
             "soldOut": true
+          },
+          {
+            "id": "item-tomato-bisque",
+            "name": "Roasted Tomato Bisque",
+            "price": 11,
+            "description": "Roasted Roma tomatoes blended with cream, fresh basil, and a grilled cheese crouton",
+            "modifierGroups": []
+          },
+          {
+            "id": "item-clam-chowder",
+            "name": "New England Clam Chowder",
+            "price": 13,
+            "description": "Creamy chowder with littleneck clams, bacon, potatoes, and thyme in a bread bowl",
+            "modifierGroups": []
+          },
+          {
+            "id": "item-mushroom-soup",
+            "name": "Wild Mushroom Soup",
+            "price": 12,
+            "description": "Porcini, shiitake, and cremini mushrooms in a velvety cream with truffle oil drizzle",
+            "modifierGroups": []
+          },
+          {
+            "id": "item-miso-soup",
+            "name": "Miso Soup",
+            "price": 9,
+            "description": "White miso broth with silken tofu, wakame seaweed, and scallions",
+            "modifierGroups": []
+          },
+          {
+            "id": "item-minestrone",
+            "name": "Classic Minestrone",
+            "price": 11,
+            "description": "Hearty Italian vegetable soup with cannellini beans, pasta, and pesto drizzle",
+            "modifierGroups": []
           }
         ]
       },
@@ -328,6 +446,89 @@
                 ]
               }
             ]
+          },
+          {
+            "id": "item-tomahawk",
+            "name": "Tomahawk Ribeye",
+            "price": 85,
+            "description": "32oz bone-in ribeye, dry-aged 45 days, served with roasted garlic and herb butter",
+            "modifierGroups": [
+              {
+                "id": "mg-tomahawk-temp",
+                "name": "Temperature",
+                "required": true,
+                "minSelect": 1,
+                "maxSelect": 1,
+                "options": [
+                  { "id": "mod-tomahawk-rare", "name": "Rare", "price": 0 },
+                  { "id": "mod-tomahawk-mr", "name": "Medium Rare", "price": 0 },
+                  { "id": "mod-tomahawk-med", "name": "Medium", "price": 0 },
+                  { "id": "mod-tomahawk-mw", "name": "Medium Well", "price": 0 }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "item-porterhouse",
+            "name": "Porterhouse for Two",
+            "price": 110,
+            "description": "40oz prime porterhouse with bone marrow butter, carved tableside",
+            "modifierGroups": [
+              {
+                "id": "mg-porterhouse-temp",
+                "name": "Temperature",
+                "required": true,
+                "minSelect": 1,
+                "maxSelect": 1,
+                "options": [
+                  { "id": "mod-porter-rare", "name": "Rare", "price": 0 },
+                  { "id": "mod-porter-mr", "name": "Medium Rare", "price": 0 },
+                  { "id": "mod-porter-med", "name": "Medium", "price": 0 },
+                  { "id": "mod-porter-mw", "name": "Medium Well", "price": 0 }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "item-flank-steak",
+            "name": "Chimichurri Flank Steak",
+            "price": 38,
+            "description": "12oz grilled flank steak with house chimichurri, roasted peppers, and crispy potatoes",
+            "modifierGroups": [
+              {
+                "id": "mg-flank-temp",
+                "name": "Temperature",
+                "required": true,
+                "minSelect": 1,
+                "maxSelect": 1,
+                "options": [
+                  { "id": "mod-flank-mr", "name": "Medium Rare", "price": 0 },
+                  { "id": "mod-flank-med", "name": "Medium", "price": 0 },
+                  { "id": "mod-flank-mw", "name": "Medium Well", "price": 0 }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "item-steak-frites",
+            "name": "Steak Frites",
+            "price": 34,
+            "description": "10oz hanger steak with truffle fries, béarnaise, and mixed greens",
+            "modifierGroups": [
+              {
+                "id": "mg-frites-temp",
+                "name": "Temperature",
+                "required": true,
+                "minSelect": 1,
+                "maxSelect": 1,
+                "options": [
+                  { "id": "mod-frites-rare", "name": "Rare", "price": 0 },
+                  { "id": "mod-frites-mr", "name": "Medium Rare", "price": 0 },
+                  { "id": "mod-frites-med", "name": "Medium", "price": 0 },
+                  { "id": "mod-frites-mw", "name": "Medium Well", "price": 0 }
+                ]
+              }
+            ]
           }
         ]
       },
@@ -395,6 +596,41 @@
             "price": 38,
             "description": "Whole Mediterranean sea bass with olive tapenade, cherry tomatoes, and herbs",
             "modifierGroups": []
+          },
+          {
+            "id": "item-mahi-mahi",
+            "name": "Grilled Mahi-Mahi",
+            "price": 32,
+            "description": "With tropical mango salsa, coconut rice, and grilled pineapple",
+            "modifierGroups": []
+          },
+          {
+            "id": "item-lobster-roll",
+            "name": "Warm Lobster Roll",
+            "price": 34,
+            "description": "Butter-poached lobster on a toasted brioche split-top roll with drawn butter and fries",
+            "modifierGroups": []
+          },
+          {
+            "id": "item-fish-and-chips",
+            "name": "Beer-Battered Fish & Chips",
+            "price": 26,
+            "description": "Crispy Atlantic cod with hand-cut chips, mushy peas, and tartar sauce",
+            "modifierGroups": []
+          },
+          {
+            "id": "item-shrimp-scampi",
+            "name": "Shrimp Scampi",
+            "price": 30,
+            "description": "Jumbo shrimp sautéed in garlic, white wine, and lemon butter over angel hair pasta",
+            "modifierGroups": []
+          },
+          {
+            "id": "item-seafood-tower",
+            "name": "Grand Seafood Tower",
+            "price": 88,
+            "description": "Oysters, shrimp cocktail, lobster tail, king crab legs, tuna tartare, and mignonette",
+            "modifierGroups": []
           }
         ]
       },
@@ -450,6 +686,53 @@
             "description": "Pillowy gnocchi with brown butter, sage, butternut squash, and toasted hazelnuts",
             "modifierGroups": [],
             "soldOut": true
+          },
+          {
+            "id": "item-carbonara",
+            "name": "Spaghetti Carbonara",
+            "price": 24,
+            "description": "Guanciale, pecorino romano, egg yolk, and cracked black pepper over spaghetti",
+            "modifierGroups": []
+          },
+          {
+            "id": "item-bolognese",
+            "name": "Tagliatelle Bolognese",
+            "price": 26,
+            "description": "Slow-simmered veal and pork ragù with hand-cut egg tagliatelle and parmigiano",
+            "modifierGroups": []
+          },
+          {
+            "id": "item-pesto-orecchiette",
+            "name": "Pesto Orecchiette",
+            "price": 23,
+            "description": "House-made basil pesto with orecchiette, burrata, sun-dried tomatoes, and toasted pine nuts",
+            "modifierGroups": []
+          },
+          {
+            "id": "item-wild-mushroom-ravioli",
+            "name": "Wild Mushroom Ravioli",
+            "price": 27,
+            "description": "Handmade ravioli stuffed with porcini and ricotta in a brown butter and sage sauce",
+            "modifierGroups": []
+          },
+          {
+            "id": "item-aglio-olio",
+            "name": "Spaghetti Aglio e Olio",
+            "price": 20,
+            "description": "Spaghetti with garlic, Calabrian chili, extra virgin olive oil, and toasted breadcrumbs",
+            "modifierGroups": [
+              {
+                "id": "mg-aglio-protein",
+                "name": "Add Protein",
+                "required": false,
+                "minSelect": 0,
+                "maxSelect": 1,
+                "options": [
+                  { "id": "mod-aglio-shrimp", "name": "Grilled Shrimp", "price": 10 },
+                  { "id": "mod-aglio-chicken", "name": "Grilled Chicken", "price": 8 }
+                ]
+              }
+            ]
           }
         ]
       },
@@ -489,6 +772,41 @@
             "name": "Chicken Milanese",
             "price": 27,
             "description": "Panko-crusted chicken cutlet with arugula, shaved parmesan, and lemon vinaigrette",
+            "modifierGroups": []
+          },
+          {
+            "id": "item-cornish-hen",
+            "name": "Roasted Cornish Hen",
+            "price": 32,
+            "description": "Whole Cornish game hen with herb stuffing, pan gravy, and roasted root vegetables",
+            "modifierGroups": []
+          },
+          {
+            "id": "item-turkey-chop",
+            "name": "Grilled Turkey Chop",
+            "price": 28,
+            "description": "Bone-in turkey chop with cranberry mostarda, sweet potato mash, and Brussels sprouts",
+            "modifierGroups": []
+          },
+          {
+            "id": "item-chicken-marsala",
+            "name": "Chicken Marsala",
+            "price": 26,
+            "description": "Pan-seared chicken breast with marsala wine sauce, mushrooms, and mashed potatoes",
+            "modifierGroups": []
+          },
+          {
+            "id": "item-duck-leg-confit",
+            "name": "Duck Leg Confit",
+            "price": 34,
+            "description": "Slow-cooked duck leg with crispy skin, lentils du Puy, and red wine jus",
+            "modifierGroups": []
+          },
+          {
+            "id": "item-chicken-parm",
+            "name": "Chicken Parmigiana",
+            "price": 25,
+            "description": "Breaded chicken breast with marinara, melted mozzarella, and spaghetti",
             "modifierGroups": []
           }
         ]
@@ -587,6 +905,34 @@
                 ]
               }
             ]
+          },
+          {
+            "id": "item-turkey-burger",
+            "name": "Turkey Avocado Burger",
+            "price": 20,
+            "description": "Ground turkey patty with avocado, sprouts, tomato, and herb aioli on a whole wheat bun",
+            "modifierGroups": []
+          },
+          {
+            "id": "item-blt",
+            "name": "The Ultimate BLT",
+            "price": 17,
+            "description": "Thick-cut applewood bacon, heirloom tomato, butter lettuce, and garlic aioli on sourdough",
+            "modifierGroups": []
+          },
+          {
+            "id": "item-philly-cheesesteak",
+            "name": "Philly Cheesesteak",
+            "price": 22,
+            "description": "Shaved ribeye, provolone, caramelized onions, and peppers on a hoagie roll",
+            "modifierGroups": []
+          },
+          {
+            "id": "item-fried-chicken-sando",
+            "name": "Crispy Chicken Sandwich",
+            "price": 18,
+            "description": "Buttermilk-brined fried chicken, coleslaw, pickles, and spicy mayo on a brioche bun",
+            "modifierGroups": []
           }
         ]
       },
@@ -1260,6 +1606,41 @@
             "price": 15,
             "description": "Aperol, Prosecco, soda water, orange slice",
             "modifierGroups": []
+          },
+          {
+            "id": "item-mojito",
+            "name": "Classic Mojito",
+            "price": 15,
+            "description": "Bacardí white rum, fresh mint, lime, cane sugar, and soda water",
+            "modifierGroups": []
+          },
+          {
+            "id": "item-whiskey-sour",
+            "name": "Whiskey Sour",
+            "price": 16,
+            "description": "Maker's Mark bourbon, fresh lemon, egg white, Angostura bitters",
+            "modifierGroups": []
+          },
+          {
+            "id": "item-paloma",
+            "name": "Paloma",
+            "price": 15,
+            "description": "Espolòn tequila, fresh grapefruit, lime, agave, and Topo Chico",
+            "modifierGroups": []
+          },
+          {
+            "id": "item-dark-stormy",
+            "name": "Dark & Stormy",
+            "price": 14,
+            "description": "Gosling's dark rum, ginger beer, fresh lime, and Angostura bitters",
+            "modifierGroups": []
+          },
+          {
+            "id": "item-cosmopolitan",
+            "name": "Cosmopolitan",
+            "price": 16,
+            "description": "Belvedere vodka, Cointreau, cranberry juice, and fresh lime",
+            "modifierGroups": []
           }
         ]
       },
@@ -1320,6 +1701,82 @@
                 "options": [
                   { "id": "mod-malbec-glass", "name": "Glass (6oz)", "price": 0 },
                   { "id": "mod-malbec-bottle", "name": "Bottle", "price": 44 }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "item-syrah",
+            "name": "Syrah",
+            "price": 16,
+            "description": "E. Guigal, Côtes du Rhône, France 2020",
+            "modifierGroups": [
+              {
+                "id": "mg-syrah-pour",
+                "name": "Pour Size",
+                "required": true,
+                "minSelect": 1,
+                "maxSelect": 1,
+                "options": [
+                  { "id": "mod-syrah-glass", "name": "Glass (6oz)", "price": 0 },
+                  { "id": "mod-syrah-bottle", "name": "Bottle", "price": 48 }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "item-tempranillo",
+            "name": "Tempranillo",
+            "price": 15,
+            "description": "Marqués de Cáceres Crianza, Rioja, Spain 2019",
+            "modifierGroups": [
+              {
+                "id": "mg-tempranillo-pour",
+                "name": "Pour Size",
+                "required": true,
+                "minSelect": 1,
+                "maxSelect": 1,
+                "options": [
+                  { "id": "mod-temp-glass", "name": "Glass (6oz)", "price": 0 },
+                  { "id": "mod-temp-bottle", "name": "Bottle", "price": 44 }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "item-zinfandel",
+            "name": "Zinfandel",
+            "price": 17,
+            "description": "Seghesio, Sonoma County, California 2020",
+            "modifierGroups": [
+              {
+                "id": "mg-zin-pour",
+                "name": "Pour Size",
+                "required": true,
+                "minSelect": 1,
+                "maxSelect": 1,
+                "options": [
+                  { "id": "mod-zin-glass", "name": "Glass (6oz)", "price": 0 },
+                  { "id": "mod-zin-bottle", "name": "Bottle", "price": 52 }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "item-chianti",
+            "name": "Chianti Classico",
+            "price": 16,
+            "description": "Antinori, Pèppoli, Tuscany, Italy 2020",
+            "modifierGroups": [
+              {
+                "id": "mg-chianti-pour",
+                "name": "Pour Size",
+                "required": true,
+                "minSelect": 1,
+                "maxSelect": 1,
+                "options": [
+                  { "id": "mod-chianti-glass", "name": "Glass (6oz)", "price": 0 },
+                  { "id": "mod-chianti-bottle", "name": "Bottle", "price": 50 }
                 ]
               }
             ]
@@ -1386,6 +1843,82 @@
                 ]
               }
             ]
+          },
+          {
+            "id": "item-pinot-grigio",
+            "name": "Pinot Grigio",
+            "price": 14,
+            "description": "Santa Margherita, Alto Adige, Italy 2022",
+            "modifierGroups": [
+              {
+                "id": "mg-pg-pour",
+                "name": "Pour Size",
+                "required": true,
+                "minSelect": 1,
+                "maxSelect": 1,
+                "options": [
+                  { "id": "mod-pg-glass", "name": "Glass (6oz)", "price": 0 },
+                  { "id": "mod-pg-bottle", "name": "Bottle", "price": 42 }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "item-riesling",
+            "name": "Riesling",
+            "price": 15,
+            "description": "Dr. Loosen, Blue Slate, Mosel, Germany 2021",
+            "modifierGroups": [
+              {
+                "id": "mg-riesling-pour",
+                "name": "Pour Size",
+                "required": true,
+                "minSelect": 1,
+                "maxSelect": 1,
+                "options": [
+                  { "id": "mod-riesling-glass", "name": "Glass (6oz)", "price": 0 },
+                  { "id": "mod-riesling-bottle", "name": "Bottle", "price": 46 }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "item-rose",
+            "name": "Rosé",
+            "price": 15,
+            "description": "Whispering Angel, Côtes de Provence, France 2022",
+            "modifierGroups": [
+              {
+                "id": "mg-rose-pour",
+                "name": "Pour Size",
+                "required": true,
+                "minSelect": 1,
+                "maxSelect": 1,
+                "options": [
+                  { "id": "mod-rose-glass", "name": "Glass (6oz)", "price": 0 },
+                  { "id": "mod-rose-bottle", "name": "Bottle", "price": 46 }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "item-viognier",
+            "name": "Viognier",
+            "price": 16,
+            "description": "Yalumba, Eden Valley, Australia 2021",
+            "modifierGroups": [
+              {
+                "id": "mg-viognier-pour",
+                "name": "Pour Size",
+                "required": true,
+                "minSelect": 1,
+                "maxSelect": 1,
+                "options": [
+                  { "id": "mod-viognier-glass", "name": "Glass (6oz)", "price": 0 },
+                  { "id": "mod-viognier-bottle", "name": "Bottle", "price": 48 }
+                ]
+              }
+            ]
           }
         ]
       },
@@ -1426,6 +1959,41 @@
             "name": "Rotating Local Draft",
             "price": 10,
             "description": "Ask your server for this week's featured local craft beer",
+            "modifierGroups": []
+          },
+          {
+            "id": "item-amber-ale",
+            "name": "Fat Tire Amber Ale",
+            "price": 8,
+            "description": "New Belgium amber ale, malty and smooth",
+            "modifierGroups": []
+          },
+          {
+            "id": "item-sour-beer",
+            "name": "Gose Sour",
+            "price": 10,
+            "description": "Anderson Valley Blood Orange Gose, tart and refreshing",
+            "modifierGroups": []
+          },
+          {
+            "id": "item-hazy-ipa",
+            "name": "Hazy IPA",
+            "price": 10,
+            "description": "Sierra Nevada Hazy Little Thing, juicy and unfiltered",
+            "modifierGroups": []
+          },
+          {
+            "id": "item-lager",
+            "name": "Modelo Especial",
+            "price": 7,
+            "description": "Mexican lager, crisp and well-balanced",
+            "modifierGroups": []
+          },
+          {
+            "id": "item-hard-cider",
+            "name": "Angry Orchard Crisp Apple",
+            "price": 8,
+            "description": "Hard apple cider, naturally sweet and refreshing",
             "modifierGroups": []
           }
         ]
@@ -1527,6 +2095,7 @@
             "modifierGroups": [
               {
                 "id": "mg-bubble-tea-size",
+            
                 "name": "Size",
                 "required": true,
                 "minSelect": 1,
@@ -1583,6 +2152,54 @@
                 ]
               }
             ]
+          },
+          {
+            "id": "item-hot-chocolate",
+            "name": "Hot Chocolate",
+            "price": 5,
+            "description": "Rich Valrhona chocolate with steamed milk and whipped cream",
+            "modifierGroups": []
+          },
+          {
+            "id": "item-arnold-palmer",
+            "name": "Arnold Palmer",
+            "price": 5,
+            "description": "Half iced tea, half fresh lemonade",
+            "modifierGroups": []
+          },
+          {
+            "id": "item-virgin-mojito",
+            "name": "Virgin Mojito",
+            "price": 7,
+            "description": "Fresh mint, lime, cane sugar, and sparkling water",
+            "modifierGroups": []
+          },
+          {
+            "id": "item-matcha-latte",
+            "name": "Matcha Latte",
+            "price": 7,
+            "description": "Ceremonial-grade matcha whisked with steamed milk",
+            "modifierGroups": [
+              {
+                "id": "mg-matcha-milk",
+                "name": "Milk Choice",
+                "required": true,
+                "minSelect": 1,
+                "maxSelect": 1,
+                "options": [
+                  { "id": "mod-matcha-whole", "name": "Whole Milk", "price": 0 },
+                  { "id": "mod-matcha-oat", "name": "Oat Milk", "price": 1 },
+                  { "id": "mod-matcha-almond", "name": "Almond Milk", "price": 1 }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "item-kombucha",
+            "name": "House Kombucha",
+            "price": 7,
+            "description": "Locally brewed kombucha, rotating seasonal flavors",
+            "modifierGroups": []
           }
         ]
       }
@@ -1657,6 +2274,41 @@
             "name": "Seasonal Sorbet Trio",
             "price": 10,
             "description": "Three scoops of house-made seasonal fruit sorbets",
+            "modifierGroups": []
+          },
+          {
+            "id": "item-panna-cotta",
+            "name": "Vanilla Panna Cotta",
+            "price": 12,
+            "description": "Silky Italian custard with passion fruit coulis and fresh berries",
+            "modifierGroups": []
+          },
+          {
+            "id": "item-bread-pudding",
+            "name": "Brioche Bread Pudding",
+            "price": 13,
+            "description": "Warm brioche pudding with bourbon caramel sauce and vanilla ice cream",
+            "modifierGroups": []
+          },
+          {
+            "id": "item-profiteroles",
+            "name": "Profiteroles",
+            "price": 13,
+            "description": "Choux pastry filled with vanilla ice cream, drizzled with warm chocolate sauce",
+            "modifierGroups": []
+          },
+          {
+            "id": "item-banana-foster",
+            "name": "Bananas Foster",
+            "price": 14,
+            "description": "Caramelized bananas flambéed in dark rum and banana liqueur over vanilla ice cream",
+            "modifierGroups": []
+          },
+          {
+            "id": "item-churros",
+            "name": "Churros con Chocolate",
+            "price": 11,
+            "description": "Crispy cinnamon-sugar churros with warm Mexican chocolate dipping sauce",
             "modifierGroups": []
           }
         ]
@@ -1811,6 +2463,47 @@
             "price": 11,
             "description": "Lightly battered cod with fries and tartar sauce",
             "modifierGroups": []
+          },
+          {
+            "id": "item-kids-quesadilla",
+            "name": "Kids Cheese Quesadilla",
+            "price": 9,
+            "description": "Flour tortilla with melted cheddar and jack cheese, served with sour cream and salsa",
+            "modifierGroups": []
+          },
+          {
+            "id": "item-kids-pizza",
+            "name": "Kids Mini Pizza",
+            "price": 10,
+            "description": "Personal-size pizza with mozzarella and marinara",
+            "modifierGroups": [
+              {
+                "id": "mg-kids-pizza-top",
+                "name": "Topping",
+                "required": false,
+                "minSelect": 0,
+                "maxSelect": 2,
+                "options": [
+                  { "id": "mod-kpz-pepperoni", "name": "Pepperoni", "price": 1 },
+                  { "id": "mod-kpz-sausage", "name": "Sausage", "price": 1 },
+                  { "id": "mod-kpz-mushroom", "name": "Mushroom", "price": 1 }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "item-kids-hot-dog",
+            "name": "Kids Hot Dog",
+            "price": 9,
+            "description": "All-beef hot dog on a toasted bun with fries",
+            "modifierGroups": []
+          },
+          {
+            "id": "item-kids-mac",
+            "name": "Kids Mac & Cheese",
+            "price": 9,
+            "description": "Creamy cheddar macaroni and cheese with a breadcrumb topping",
+            "modifierGroups": []
           }
         ]
       },
@@ -1867,6 +2560,34 @@
             "name": "Shirley Temple",
             "price": 4,
             "description": "Sprite with grenadine and a maraschino cherry",
+            "modifierGroups": []
+          },
+          {
+            "id": "item-kids-choc-milk",
+            "name": "Chocolate Milk",
+            "price": 4,
+            "description": "Rich chocolate milk made with real cocoa",
+            "modifierGroups": []
+          },
+          {
+            "id": "item-kids-smoothie",
+            "name": "Kids Berry Smoothie",
+            "price": 5,
+            "description": "Blended strawberries, banana, and vanilla yogurt",
+            "modifierGroups": []
+          },
+          {
+            "id": "item-kids-hot-cocoa",
+            "name": "Kids Hot Cocoa",
+            "price": 4,
+            "description": "Warm cocoa with whipped cream and mini marshmallows",
+            "modifierGroups": []
+          },
+          {
+            "id": "item-kids-water",
+            "name": "Kids Water",
+            "price": 0,
+            "description": "Still or sparkling water",
             "modifierGroups": []
           }
         ]

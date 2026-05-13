@@ -92,7 +92,6 @@ export default function ComboConfigSheet({
   // Refs for auto-scroll (keyed by group id or "groupId:compId:modGroupId")
   const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const prevCompleteRef = useRef<Record<string, boolean>>({});
 
   // Build initial orders from existing cart items (or one new empty order if none exist)
   useEffect(() => {
@@ -150,16 +149,7 @@ export default function ComboConfigSheet({
       };
     });
 
-    // When a selected component has required modifiers, anchor to that section first.
-    if (firstRequiredModGroup) {
-      const sectionKey = `${group.id}:${component.id}:${firstRequiredModGroup.id}`;
-      setTimeout(() => {
-        const target = sectionRefs.current[sectionKey];
-        if (target) {
-          target.scrollIntoView({ behavior: "smooth", block: "start" });
-        }
-      }, 0);
-    }
+
   };
 
   const selectModifier = (
@@ -256,48 +246,7 @@ export default function ComboConfigSheet({
     return modifierNames.length > 0 ? `${left} (${modifierNames.join(", ")})` : left;
   };
 
-  // Auto-scroll to next incomplete section (group or modifier) when a section becomes complete
-  useEffect(() => {
-    // Build flat list of sections: each combo group component selection + each modifier group
-    const sections: { key: string; complete: boolean }[] = [];
-    comboGroups.forEach((g) => {
-      const selected = activeOrder.selectedComponent[g.id] || [];
-      const componentsDone =
-        selected.length >= g.minSelect && selected.every((comp) => isComponentComplete(activeOrder, g.id, comp));
-      sections.push({ key: g.id, complete: componentsDone });
 
-      // For each selected component, add its required modifier groups
-      selected.forEach((comp) => {
-        comp.modifierGroups.forEach((mg) => {
-          const mods = activeOrder.componentModifiers[g.id]?.[comp.id]?.[mg.id] || [];
-          const modComplete = !mg.required || mods.length >= mg.minSelect;
-          sections.push({ key: `${g.id}:${comp.id}:${mg.id}`, complete: modComplete });
-        });
-      });
-    });
-
-    const currentComplete: Record<string, boolean> = {};
-    sections.forEach((s) => { currentComplete[s.key] = s.complete; });
-
-    // Find the last section that just became complete
-    let justCompletedIdx = -1;
-    for (let i = 0; i < sections.length; i++) {
-      if (currentComplete[sections[i].key] && !prevCompleteRef.current[sections[i].key]) {
-        justCompletedIdx = i;
-      }
-    }
-
-    prevCompleteRef.current = currentComplete;
-
-    if (justCompletedIdx >= 0 && justCompletedIdx + 1 < sections.length) {
-      const nextSection = sections[justCompletedIdx + 1];
-      const el = sectionRefs.current[nextSection.key];
-      if (el) {
-        el.scrollIntoView({ behavior: "smooth", block: "start" });
-      }
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeOrder.selectedComponent, activeOrder.componentModifiers]);
 
   const allOrdersComplete = orders.every((o) => isOrderComplete(o));
 
@@ -388,47 +337,11 @@ export default function ComboConfigSheet({
     ? !isOrderComplete(activeOrder)
     : !allOrdersComplete || !hasNewOrChangedOrders;
 
-  const getFirstMissingSectionKey = (order: ComboState) => {
-    for (const group of comboGroups) {
-      if (!group.required) continue;
-
-      const selected = order.selectedComponent[group.id] || [];
-      if (selected.length < group.minSelect) {
-        return group.id;
-      }
-
-      for (const comp of selected) {
-        for (const mg of comp.modifierGroups) {
-          if (!mg.required) continue;
-          const mods = order.componentModifiers[group.id]?.[comp.id]?.[mg.id] || [];
-          if (mods.length < mg.minSelect) {
-            return `${group.id}:${comp.id}:${mg.id}`;
-          }
-        }
-      }
-    }
-
-    return null;
-  };
-
-  const anchorToFirstMissingForOrder = (order: ComboState) => {
-    const missingKey = getFirstMissingSectionKey(order);
-    if (!missingKey) return;
-
-    setTimeout(() => {
-      const target = sectionRefs.current[missingKey];
-      if (target) {
-        target.scrollIntoView({ behavior: "smooth", block: "start" });
-      }
-    }, 0);
-  };
-
   const handlePrimaryAction = () => {
     if (showNextAction) {
       const firstIncompleteIndex = orders.findIndex((order) => !isOrderComplete(order));
       if (firstIncompleteIndex >= 0) {
         setActiveOrderIndex(firstIncompleteIndex);
-        anchorToFirstMissingForOrder(orders[firstIncompleteIndex]);
       }
       return;
     }

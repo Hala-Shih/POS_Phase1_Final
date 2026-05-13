@@ -39,9 +39,8 @@ export default function ItemConfigSheet({
   const activeOrder = orders[activeOrderIndex] || orders[0];
   const quantity = orders.length;
 
-  // Refs for auto-scroll
+  // Refs for section elements
   const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
-  const prevCompleteRef = useRef<Record<string, boolean>>({});
 
   // Build initial orders from existing cart items (or one new empty order if none exist)
   useEffect(() => {
@@ -151,35 +150,6 @@ export default function ItemConfigSheet({
       .filter((g) => g.required && isGroupVisible(g, order.selections))
       .every((g) => (order.selections[g.id] || []).length >= g.minSelect);
 
-  // Auto-scroll to next incomplete modifier group when a selection completes one
-  useEffect(() => {
-    const visibleGroups = item.modifierGroups.filter((g) => isGroupVisible(g, activeOrder.selections));
-    const currentComplete: Record<string, boolean> = {};
-    visibleGroups.forEach((g) => {
-      const mods = activeOrder.selections[g.id] || [];
-      currentComplete[g.id] = !g.required || mods.length >= g.minSelect;
-    });
-
-    let justCompletedIdx = -1;
-    for (let i = 0; i < visibleGroups.length; i++) {
-      const gId = visibleGroups[i].id;
-      if (currentComplete[gId] && !prevCompleteRef.current[gId]) {
-        justCompletedIdx = i;
-      }
-    }
-
-    prevCompleteRef.current = currentComplete;
-
-    if (justCompletedIdx >= 0 && justCompletedIdx + 1 < visibleGroups.length) {
-      const nextGroup = visibleGroups[justCompletedIdx + 1];
-      const el = sectionRefs.current[nextGroup.id];
-      if (el) {
-        el.scrollIntoView({ behavior: "smooth", block: "start" });
-      }
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeOrder.selections]);
-
   // Check if current order has all required modifiers
   // Check if ALL orders are complete
   const allOrdersComplete = orders.every((order) => isOrderComplete(order));
@@ -258,29 +228,11 @@ export default function ItemConfigSheet({
     ? !isOrderComplete(activeOrder)
     : !allOrdersComplete || !hasNewOrChangedOrders;
 
-  const getFirstMissingGroupId = (order: OrderConfig) =>
-    item.modifierGroups
-      .filter((g) => g.required && isGroupVisible(g, order.selections))
-      .find((g) => (order.selections[g.id] || []).length < g.minSelect)?.id;
-
-  const anchorToFirstMissingForOrder = (order: OrderConfig) => {
-    const missingGroupId = getFirstMissingGroupId(order);
-    if (!missingGroupId) return;
-
-    setTimeout(() => {
-      const target = sectionRefs.current[missingGroupId];
-      if (target) {
-        target.scrollIntoView({ behavior: "smooth", block: "start" });
-      }
-    }, 0);
-  };
-
   const handlePrimaryAction = () => {
     if (showNextAction) {
       const firstIncompleteIndex = orders.findIndex((order) => !isOrderComplete(order));
       if (firstIncompleteIndex >= 0) {
         setActiveOrderIndex(firstIncompleteIndex);
-        anchorToFirstMissingForOrder(orders[firstIncompleteIndex]);
       }
       return;
     }
