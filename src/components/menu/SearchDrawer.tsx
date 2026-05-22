@@ -376,7 +376,7 @@ export default function SearchDrawer({ open, onClose }: SearchDrawerProps) {
       />
       <div
         className="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl z-50 flex flex-col overflow-hidden"
-        style={{ height: "calc(60% + 20px)", boxShadow: "0 -8px 32px -4px rgba(0,0,0,0.18)" }}
+        style={{ height: "50%", boxShadow: "0 -8px 32px -4px rgba(0,0,0,0.18)" }}
       >
         {/* Drag handle (tap or swipe-down to dismiss) */}
         <DragHandle onDismiss={configItem ? closeConfig : onClose} />

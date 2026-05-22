@@ -177,7 +177,6 @@ export default function App() {
           </div>
         )}
       </div>
-      {showFooter && !transferSheetOpen && <FooterNav activeTab={footerTab} onSelect={handleFooterSelect} />}
     </div>
   );
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { ArrowLeft, Users, MapPin, ArrowRightLeft, X, Ban, Check } from "lucide-react";
+import { ArrowLeft, Users, MapPin, ArrowRightLeft, X, Ban, Check, ClipboardList } from "lucide-react";
 import { motion, AnimatePresence, useDragControls } from "framer-motion";
 import { Staff, Table } from "@/lib/types";
 import { useOrderStore } from "@/store/order-store";
@@ -22,6 +22,7 @@ interface HeaderProps {
   tableList?: Table[];
   currentTableId?: string;
   onCollapseDrawers?: () => void;
+  checkTotal?: number;
 }
 
 export default function Header({
@@ -40,6 +41,7 @@ export default function Header({
   tableList,
   currentTableId,
   onCollapseDrawers,
+  checkTotal,
 }: HeaderProps) {
   const transferStaffDrag = useDragControls();
   const transferTableDrag = useDragControls();
@@ -105,6 +107,15 @@ export default function Header({
         )}
 
         <div className="flex items-center gap-[20px] ml-auto">
+          {checkTotal != null && (
+            <button
+              onClick={onCollapseDrawers}
+              className="flex items-center gap-1 text-sm text-[var(--outline)] active:opacity-70"
+            >
+              <ClipboardList size={14} />
+              <span>${checkTotal.toFixed(2)}</span>
+            </button>
+          )}
           {guestCount != null && guestCount > 0 && (
             <button
               onClick={onGuestCountTap}

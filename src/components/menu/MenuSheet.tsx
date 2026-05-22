@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect, useRef } from "react";
-import { X, ChevronLeft, ChevronRight, UtensilsCrossed, Minus, Plus, Check, Trash2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, UtensilsCrossed, Minus, Plus, Check, Trash2 } from "lucide-react";
 import { useOrderStore } from "@/store/order-store";
 import menuData from "@/data/menu.json";
 import { MenuBook, MenuItem, CartItemModifier, Modifier } from "@/lib/types";
@@ -13,6 +13,7 @@ const menuBooks = menuData as MenuBook[];
 interface MenuSheetProps {
   open: boolean;
   onClose: () => void;
+  actionButtons?: React.ReactNode;
 }
 
 interface OrderConfig {
@@ -24,7 +25,7 @@ function formatUpcharge(price: number) {
   return Number.isInteger(price) ? price.toString() : price.toFixed(2);
 }
 
-export default function MenuSheet({ open, onClose }: MenuSheetProps) {
+export default function MenuSheet({ open, onClose, actionButtons }: MenuSheetProps) {
   const { addItem, updateItemModifiers, updateComboSelections, updateQuantity, removeItem, cartItems } = useOrderStore();
 
   const [activeBookId, setActiveBookId] = useState<string | null>(null);
@@ -36,6 +37,11 @@ export default function MenuSheet({ open, onClose }: MenuSheetProps) {
   const [orders, setOrders] = useState<OrderConfig[]>([{ selections: {} }]);
   const [activeOrderIndex, setActiveOrderIndex] = useState(0);
   const [changedOrderIds, setChangedOrderIds] = useState<Set<string>>(new Set());
+
+  // Long-press amount editor
+  const [longPressItemId, setLongPressItemId] = useState<string | null>(null);
+  const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const longPressTriggeredRef = useRef(false);
 
   const activeBook = activeBookId ? menuBooks.find((b) => b.id === activeBookId) : null;
   const activeCategory = activeBook
@@ -282,6 +288,48 @@ export default function MenuSheet({ open, onClose }: MenuSheetProps) {
     }
   }, [addItem, comboItem, configItem]);
 
+  // Long-press handlers
+  const startLongPress = useCallback((itemId: string) => {
+    longPressTriggeredRef.current = false;
+    longPressTimerRef.current = setTimeout(() => {
+      longPressTriggeredRef.current = true;
+      setLongPressItemId(itemId);
+    }, 500);
+  }, []);
+
+  const cancelLongPress = useCallback(() => {
+    if (longPressTimerRef.current) {
+      clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    }
+  }, []);
+
+  const handleEditorAdd = useCallback((item: MenuItem) => {
+    const isCombo = item.isCombo && item.comboGroups && item.comboGroups.length > 0;
+    if (isCombo || item.modifierGroups.length > 0) {
+      setLongPressItemId(null);
+      handleItemTap(item);
+    } else {
+      addItem({ menuItemId: item.id, name: item.name, basePrice: item.price, modifiers: [] });
+    }
+  }, [addItem, handleItemTap]);
+
+  const handleEditorRemove = useCallback((menuItemId: string) => {
+    const matching = cartItems.filter(ci => ci.menuItemId === menuItemId);
+    if (matching.length > 0) {
+      const last = matching[matching.length - 1];
+      const totalCount = matching.reduce((s, ci) => s + ci.quantity, 0);
+      updateQuantity(last.id, -1);
+      if (totalCount <= 1) setLongPressItemId(null);
+    }
+  }, [cartItems, updateQuantity]);
+
+  // Clear long-press editor on navigation
+  useEffect(() => {
+    setLongPressItemId(null);
+    return () => { if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current); };
+  }, [activeBookId, activeCatId, configItem]);
+
   const level = configItem ? 3 : activeBookId == null ? 1 : 2;
 
   const headerTitle =
@@ -293,29 +341,28 @@ export default function MenuSheet({ open, onClose }: MenuSheetProps) {
         <>
           <div
             className="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl z-50 flex flex-col overflow-hidden"
-            style={{ height: "calc(60% + 20px)", boxShadow: "0 -8px 32px -4px rgba(0,0,0,0.18)" }}
+            style={{ height: "55%", boxShadow: "0 -8px 32px -4px rgba(0,0,0,0.18)" }}
           >
-            {/* Drag handle (tap or swipe-down to dismiss) */}
-            <DragHandle onDismiss={handleClose} />
-
-            {/* Header */}
-            <div className="flex items-center justify-between px-4 pb-3 border-b border-gray-100 shrink-0">
-              <div className="flex items-center gap-2 min-w-0">
-                {level > 1 && (
-                  <button onClick={goBack} className="w-8 h-8 flex items-center justify-center rounded-full active:bg-gray-100 shrink-0 -ml-2">
-                    <ChevronLeft size={20} />
-                  </button>
-                )}
-                <span className="text-[15px] font-semibold text-[#1D1B20] leading-tight break-words" style={{ display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{headerTitle}</span>
-              </div>
-              <div className="flex items-center gap-2 shrink-0">
-                {level !== 3 && (
-                  <button onClick={handleClose} className="w-8 h-8 flex items-center justify-center rounded-full active:bg-gray-100">
-                    <X size={18} />
-                  </button>
-                )}
-              </div>
+            {/* Action buttons banner */}
+            <div className="bg-[#F0EFF4] shrink-0 rounded-t-2xl">
+              {actionButtons}
             </div>
+
+            {/* Header — at Level 2 the header merges with category pills into one row */}
+            {level !== 2 && (
+              <div className="flex items-center justify-between pr-2 py-1.5 border-b border-gray-100 shrink-0" style={{ minHeight: 48, paddingLeft: 20 }}>
+                <div className="flex items-center gap-1 min-w-0">
+                  {level > 1 && (
+                    <button onClick={goBack} className="w-8 h-8 flex items-center justify-center rounded-full active:bg-gray-100 shrink-0">
+                      <ChevronLeft size={20} />
+                    </button>
+                  )}
+                  <span className="text-[15px] font-semibold text-[#1D1B20] leading-tight break-words" style={{ display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{headerTitle}</span>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                </div>
+              </div>
+            )}
 
             {/* Content area */}
             <div className="flex-1 min-h-0 relative overflow-hidden">
@@ -338,48 +385,105 @@ export default function MenuSheet({ open, onClose }: MenuSheetProps) {
                   </div>
                 )}
 
-                {/* Level 2 — Category pills + item grid */}
+                {/* Level 2 — Combined header + category pills row, then item grid */}
                 {activeBookId != null && activeBook && (
                   <div className="absolute inset-0 flex flex-col">
-                    <div className="flex gap-1.5 px-3 py-2 overflow-x-auto no-scrollbar border-b border-gray-100 shrink-0">
-                      {activeBook.categories.map((cat) => {
-                        const active = (activeCatId ?? activeBook.categories[0]?.id) === cat.id;
-                        return (
-                          <button
-                            key={cat.id}
-                            onClick={(e) => {
-                              setActiveCatId(cat.id);
-                              e.currentTarget.scrollIntoView({
-                                behavior: "smooth",
-                                inline: "center",
-                                block: "nearest",
-                              });
-                            }}
-                            className="shrink-0 px-3.5 h-11 rounded-full text-[13px] font-medium border transition-colors"
-                            style={
-                              active
-                                ? { background: "#6750A4", color: "white", borderColor: "#6750A4" }
-                                : { background: "white", color: "#1D1B20", borderColor: "#CAC4D0" }
-                            }
-                          >
-                            {cat.name}
-                          </button>
-                        );
-                      })}
+                    <div className="flex items-center gap-1 pl-2 py-1.5 border-b border-gray-100 shrink-0">
+                      <button onClick={goBack} className="w-8 h-8 flex items-center justify-center rounded-full active:bg-gray-100 shrink-0" style={{ marginRight: -6 }}>
+                        <ChevronLeft size={20} />
+                      </button>
+                      <span className="text-[14px] font-semibold text-[#1D1B20] shrink-0 mr-2.5">{activeBook.name}</span>
+                      <div className="flex-1 flex items-center gap-1.5 overflow-x-auto overflow-y-hidden no-scrollbar pr-2">
+                        {activeBook.categories.map((cat) => {
+                          const active = (activeCatId ?? activeBook.categories[0]?.id) === cat.id;
+                          return (
+                            <button
+                              key={cat.id}
+                              onClick={(e) => {
+                                setActiveCatId(cat.id);
+                                e.currentTarget.scrollIntoView({
+                                  behavior: "smooth",
+                                  inline: "center",
+                                  block: "nearest",
+                                });
+                              }}
+                              className="shrink-0 px-3 h-9 rounded-full text-[13px] font-medium border transition-colors"
+                              style={
+                                active
+                                  ? { background: "#6750A4", color: "white", borderColor: "#6750A4" }
+                                  : { background: "white", color: "#1D1B20", borderColor: "#CAC4D0" }
+                              }
+                            >
+                              {cat.name}
+                            </button>
+                          );
+                        })}
+                      </div>
                     </div>
 
-                    <div className="flex-1 overflow-y-auto thin-scrollbar p-3">
+                    <div className="flex-1 overflow-y-auto thin-scrollbar p-3" onClick={() => longPressItemId && setLongPressItemId(null)}>
                       {activeCategory && (
                         <div className="grid grid-cols-2 gap-2">
                           {activeCategory.items.map((item) => {
                             const count = getItemCount(item.id);
                             const isCombo = item.isCombo && item.comboGroups && item.comboGroups.length > 0;
                             const hasModifiers = !isCombo && item.modifierGroups.length > 0;
+                            const isEditing = longPressItemId === item.id;
+
+                            if (isEditing) {
+                              return (
+                                <div
+                                  key={item.id}
+                                  className="flex items-center justify-between px-2 rounded-xl"
+                                  style={{
+                                    height: 44,
+                                    border: "2px solid #6750A4",
+                                    background: "#F3EDF7",
+                                  }}
+                                  onClick={(e) => e.stopPropagation()}
+                                  onPointerDown={() => {
+                                    longPressTimerRef.current = setTimeout(() => setLongPressItemId(null), 500);
+                                  }}
+                                  onPointerUp={cancelLongPress}
+                                  onPointerCancel={cancelLongPress}
+                                  onContextMenu={(e) => e.preventDefault()}
+                                >
+                                  <button
+                                    onPointerDown={(e) => e.stopPropagation()}
+                                    onClick={() => handleEditorRemove(item.id)}
+                                    disabled={count === 0}
+                                    className="w-8 h-8 flex items-center justify-center rounded-full active:bg-white/60 disabled:opacity-30"
+                                  >
+                                    {count <= 1 ? <Trash2 size={16} style={{ color: "#B3261E" }} /> : <Minus size={18} style={{ color: "#6750A4" }} />}
+                                  </button>
+                                  <span className="text-[16px] font-bold text-[#6750A4] min-w-[24px] text-center">{count}</span>
+                                  <button
+                                    onPointerDown={(e) => e.stopPropagation()}
+                                    onClick={() => handleEditorAdd(item)}
+                                    className="w-8 h-8 flex items-center justify-center rounded-full active:bg-white/60"
+                                  >
+                                    <Plus size={18} style={{ color: "#6750A4" }} />
+                                  </button>
+                                </div>
+                              );
+                            }
 
                             return (
                               <button
                                 key={item.id}
-                                onClick={() => handleItemTap(item)}
+                                onPointerDown={() => { if (!item.soldOut) startLongPress(item.id); }}
+                                onPointerUp={cancelLongPress}
+                                onPointerCancel={cancelLongPress}
+                                onTouchMove={cancelLongPress}
+                                onContextMenu={(e) => e.preventDefault()}
+                                onClick={() => {
+                                  if (longPressTriggeredRef.current) {
+                                    longPressTriggeredRef.current = false;
+                                    return;
+                                  }
+                                  if (longPressItemId) setLongPressItemId(null);
+                                  handleItemTap(item);
+                                }}
                                 disabled={item.soldOut}
                                 className="flex items-center gap-1.5 px-3 rounded-xl border transition-colors active:opacity-80"
                                 style={{

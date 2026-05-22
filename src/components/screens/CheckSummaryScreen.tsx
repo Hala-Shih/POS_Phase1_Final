@@ -112,10 +112,12 @@ export default function CheckSummaryScreen({ menuOpen: externalMenuOpen, setMenu
   // App-shell drawers open at 60% + 20px (Rule 12). The combo configuration
   // sheet is taller (75%), so when it's open we reserve that height instead
   // so totals stay visible above it and the list can scroll fully.
+  // When a full-height drawer is open AND there are items, we add extra space
+  // for the quick action row which is now rendered inside the drawer.
   const drawerReservedHeight = comboSheetOpen
     ? "calc(var(--device-height) * 0.75)"
     : anyDrawerOpen
-    ? "calc(var(--device-height) * 0.6 + 20px)"
+    ? `calc(var(--device-height) * 0.55)`
     : undefined;
 
   const handlePay = () => {
@@ -149,6 +151,7 @@ export default function CheckSummaryScreen({ menuOpen: externalMenuOpen, setMenu
         tableList={tablesData as Table[]}
         currentTableId={selectedTable?.id}
         onCollapseDrawers={collapseToCheck}
+        checkTotal={grandTotal}
       />
 
       {/* Scrollable check body — viewport is reduced when a drawer is open
@@ -157,7 +160,7 @@ export default function CheckSummaryScreen({ menuOpen: externalMenuOpen, setMenu
         className="flex-1 overflow-y-auto thin-scrollbar min-h-0"
         style={
           anyDrawerOpen || comboSheetOpen
-            ? { maxHeight: `calc(100% - ${drawerReservedHeight})` }
+            ? { paddingBottom: drawerReservedHeight }
             : undefined
         }
       >
@@ -246,30 +249,83 @@ export default function CheckSummaryScreen({ menuOpen: externalMenuOpen, setMenu
         )}
       </div>
 
-      {/* Secondary chip row removed — actions are now inline with selected item */}
-
-      {/* Primary action bar — hidden while menu is open */}
-      <div className={`flex gap-2 px-3 pb-3 pt-2.5 bg-white border-t border-gray-200 shrink-0 ${menuOpen ? "hidden" : ""}`}>
-        <button
-          onClick={markAllSent}
-          disabled={unsentItems.length === 0}
-          className="flex-1 flex items-center justify-center gap-1.5 py-3.5 rounded-2xl border-2 text-[13px] font-semibold transition-colors active:opacity-70 disabled:opacity-40"
-          style={{ borderColor: "#6750A4", color: "#6750A4", background: "white" }}
-        >
-          <Send size={16} /> Send to kitchen
-        </button>
-        <button
-          onClick={handlePay}
-          disabled={isEmpty}
-          className="flex-1 flex items-center justify-center gap-1.5 py-3.5 rounded-2xl text-[13px] font-semibold text-white transition-colors active:opacity-80 disabled:opacity-40"
-          style={{ background: "#6750A4" }}
-        >
-          <CreditCard size={16} /> Pay
-        </button>
+      {/* Full action grid — visible on check summary (no drawer open) */}
+      <div className={`px-3 pb-3 pt-3 bg-[#F0EFF4] border-t border-gray-200 shrink-0 ${fullHeightDrawerOpen ? "hidden" : ""}`}>
+        <div className="grid grid-cols-2 gap-2">
+          <button
+            onClick={() => setMenuOpen(true)}
+            className="flex items-center justify-center py-3.5 rounded-xl border border-gray-800 text-[13px] font-medium bg-white transition-colors active:opacity-70"
+          >
+            Load
+          </button>
+          <button
+            onClick={() => { markAllSent(); }}
+            disabled={unsentItems.length === 0}
+            className="flex items-center justify-center py-3.5 rounded-xl border border-gray-800 text-[13px] font-medium bg-white transition-colors active:opacity-70 disabled:opacity-40"
+          >
+            Send
+          </button>
+          <button
+            className="flex items-center justify-center py-3.5 rounded-xl border border-gray-800 text-[13px] font-medium bg-white transition-colors active:opacity-70"
+          >
+            Print check
+          </button>
+          <button
+            onClick={handlePay}
+            disabled={isEmpty}
+            className="flex items-center justify-center py-3.5 rounded-xl border border-gray-800 text-[13px] font-medium bg-white transition-colors active:opacity-70 disabled:opacity-40"
+          >
+            Pay
+          </button>
+          <button
+            className="flex items-center justify-center py-3.5 rounded-xl border border-gray-800 text-[13px] font-medium bg-white transition-colors active:opacity-70"
+          >
+            Split check
+          </button>
+          <button
+            className="flex items-center justify-center py-3.5 rounded-xl border border-gray-800 text-[13px] font-medium bg-white transition-colors active:opacity-70"
+          >
+            Table actions
+          </button>
+        </div>
       </div>
 
       {/* Menu sheet */}
-      <MenuSheet open={menuOpen} onClose={() => setMenuOpen(false)} />
+      <MenuSheet
+        open={menuOpen}
+        onClose={() => setMenuOpen(false)}
+        actionButtons={
+            <div className="flex gap-2 px-3 py-3 border-b border-gray-200 shrink-0">
+              <button
+                onClick={() => { markAllSent(); }}
+                disabled={isEmpty || unsentItems.length === 0}
+                className="flex-1 flex items-center justify-center h-[44px] rounded-xl border border-gray-800 text-[13px] font-medium bg-white transition-colors active:opacity-70 disabled:opacity-40"
+              >
+                Send
+              </button>
+              <button
+                onClick={() => { setScreen("tables"); }}
+                disabled={isEmpty}
+                className="flex-1 flex items-center justify-center h-[44px] rounded-xl border border-gray-800 text-[13px] font-medium bg-white transition-colors active:opacity-70 disabled:opacity-40"
+              >
+                Hold
+              </button>
+              <button
+                onClick={handlePay}
+                disabled={isEmpty}
+                className="flex-1 flex items-center justify-center h-[44px] rounded-xl border border-gray-800 text-[13px] font-medium bg-white transition-colors active:opacity-70 disabled:opacity-40"
+              >
+                Pay
+              </button>
+              <button
+                disabled={isEmpty}
+                className="flex-1 flex items-center justify-center h-[44px] rounded-xl border border-gray-800 text-[13px] font-medium bg-white transition-colors active:opacity-70 disabled:opacity-40"
+              >
+                Note
+              </button>
+            </div>
+        }
+      />
 
       {/* Search drawer */}
       <SearchDrawer open={searchOpen} onClose={() => setSearchOpen(false)} />
@@ -313,17 +369,16 @@ function CheckItem({
       >
         <button
           onClick={() => {
-            // When a drawer is open, tapping the cart item should ONLY
-            // collapse the drawer (treat the cart area as "return to full
-            // check view") rather than also activating the item action.
+            // When a drawer is open, ignore taps on cart items entirely.
+            // The user must use the check button in the header to return
+            // to the full order-summary view.
             if (drawerOpen) {
-              onInteract?.();
               return;
             }
             onInteract?.();
             onTap();
           }}
-          className="w-full flex items-start gap-3 px-4 py-2.5 text-left active:bg-[var(--surface)] transition-colors"
+          className={`w-full flex items-start gap-3 px-4 py-2.5 text-left transition-colors ${drawerOpen ? "" : "active:bg-[var(--surface)]"}`}
         >
           {/* Qty badge */}
           <span

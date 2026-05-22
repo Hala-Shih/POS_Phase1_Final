@@ -92,9 +92,6 @@ export default function OrdersScreen() {
       orderStatus: order.status,
     });
     const isOpen = order.status === "editing";
-    if (isOpen) {
-      setOpenPaymentOnArrival(true);
-    }
     setScreen("check");
   };
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { X, ChevronRight, ChevronDown, Check, Minus, Plus, Pencil, MoreHorizontal, DollarSign, Percent } from "lucide-react";
+import { X, ChevronRight, ChevronDown, Check, Minus, Plus, Pencil, MoreHorizontal, DollarSign, Percent, Delete, MoreHorizontal as Ellipsis } from "lucide-react";
 import { motion, AnimatePresence, useDragControls } from "framer-motion";
 import { useOrderStore } from "@/store/order-store";
 import Header from "@/components/ui/Header";
@@ -111,6 +111,8 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
   const ccTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [showPaymentComplete, setShowPaymentComplete] = useState(false);
   const [showLeaveToast, setShowLeaveToast] = useState(false);
+  const [amountInput, setAmountInput] = useState("");
+  const [showMoreMenu, setShowMoreMenu] = useState(false);
   const [paidAmount, setPaidAmount] = useState(0);
   const [paidTotal, setPaidTotal] = useState(0);
   const [totalSettled, setTotalSettled] = useState(0);
@@ -440,6 +442,24 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
     : 0;
   const drawerTotal = payableTotal + previewTip;
 
+  // Amount input helpers for the numpad
+  const displayAmountValue = (parseInt(amountInput || "0") / 100).toFixed(2);
+  const handleNumpadKey = (key: string) => {
+    if (key === "backspace") {
+      setAmountInput((v) => v.slice(0, -1));
+    } else if (key === "00") {
+      setAmountInput((v) => {
+        const next = v + "00";
+        return next.length > 8 ? v : next;
+      });
+    } else {
+      setAmountInput((v) => {
+        const next = v + key;
+        return next.length > 8 ? v : next;
+      });
+    }
+  };
+
   return (
     <div className="h-full flex flex-col relative bg-white">
       {/* Header */}
@@ -461,36 +481,7 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
       />
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto">
-        {/* Payment title */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--outline-variant)]">
-          <h1 className="text-xl font-semibold">Payment</h1>
-          {externalClose && (
-            <button
-              onClick={handleClose}
-              aria-label="Close"
-              className="w-8 h-8 flex items-center justify-center rounded-full active:bg-gray-100"
-            >
-              <X size={20} />
-            </button>
-          )}
-        </div>
-
-        {/* View items (collapsible) */}
-        <button
-          onClick={() => setShowItems(!showItems)}
-          className="w-full flex items-center justify-between px-4 py-3 active:bg-[var(--surface)] transition-colors"
-        >
-          <span className="text-sm font-medium">View items</span>
-          <div className="flex items-center gap-1.5">
-            <span className="text-sm font-semibold">{itemCount}</span>
-            {showItems ? (
-              <ChevronDown size={18} className="text-[var(--outline)]" />
-            ) : (
-              <ChevronRight size={18} className="text-[var(--outline)]" />
-            )}
-          </div>
-        </button>
+      <div className="flex-1 overflow-y-auto min-h-0">
 
         {/* Expanded item list */}
         {showItems && (
@@ -666,19 +657,7 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
           <div className="h-px bg-gray-100 !mt-4" />
 
           <div className="flex justify-between items-center !mt-4">
-            <div className="flex items-center gap-2">
-              <span className="text-base font-semibold">Total</span>
-              <button
-                onClick={() => {
-                  setShowOrderActions(!showOrderActions);
-                  setShowOrderDiscountPanel(false);
-                  setShowOrderPriceOverridePanel(false);
-                }}
-                className="flex items-center justify-center active:opacity-50 transition-colors"
-              >
-                <MoreHorizontal size={16} className="text-[var(--foreground)]" />
-              </button>
-            </div>
+            <span className="text-base font-semibold">Total</span>
             <span className="text-base font-bold">${displayTotal.toFixed(2)}</span>
           </div>
 
@@ -914,301 +893,142 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
         </div>
 
         <div className="border-t border-[var(--outline-variant)]" />
-
-        {/* Remaining balance */}
-        <div className="px-4 py-3">
-          <div className="flex justify-between">
-            <span className="text-sm font-semibold">Remaining balance</span>
-            <span className="text-sm font-bold">${remainingBalance.toFixed(2)}</span>
-          </div>
-        </div>
       </div>
 
-      {/* Footer */}
-      <div className="shrink-0 bg-green-600 px-4 pt-4 pb-6">
-        {confirmedSplit && confirmedSplit.type === "even" ? (
-          <>
-            {/* Split active header */}
-            <div className="flex items-center gap-2 mb-3">
-              <span className="text-sm font-medium text-white">
-                Check split even by {confirmedSplit.guests} guests
-              </span>
-              <button
-                onClick={() => {
-                  setSplitType("even");
-                  setSplitGuestCount(confirmedSplit.guests);
-                  setShowSplitDrawer(true);
-                }}
-                className="active:opacity-70"
+      {/* Numpad + Payment Buttons Footer */}
+      <div className="shrink-0 bg-gray-200 px-3 pt-2 pb-3 relative">
+        {/* Balance + Amount input */}
+        <div className="bg-white rounded-xl px-3 py-1.5 mb-1.5">
+          <div className="flex justify-between">
+            <span className="text-sm font-semibold">Balance</span>
+            <span className="text-sm font-bold">${remainingBalance.toFixed(2)}</span>
+          </div>
+          <div className="border border-gray-800 rounded-md px-3 py-1 flex justify-end mt-1">
+            <span className="text-base font-medium">${displayAmountValue}</span>
+          </div>
+        </div>
+        {/* More menu popup */}
+        <AnimatePresence>
+          {showMoreMenu && (
+            <>
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 0.2 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setShowMoreMenu(false)}
+                className="fixed inset-0 bg-black z-40"
+              />
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 10 }}
+                className="absolute bottom-full right-3 mb-2 bg-white rounded-xl shadow-lg border border-gray-200 z-50 py-1 min-w-[180px]"
               >
-                <Pencil size={16} color="white" />
-              </button>
-            </div>
-
-            {/* Guest tabs */}
-            <div className="flex gap-2 mb-3 overflow-x-auto">
-              {Array.from({ length: confirmedSplit.guests }, (_, i) => {
-                const isPaid = paidGuests.has(i);
-                const isActive = activeGuestIdx === i;
-                return (
-                  <button
-                    key={i}
-                    onClick={() => !isPaid && setActiveGuestIdx(i)}
-                    className="shrink-0 h-9 px-4 rounded-full flex items-center gap-1.5 text-sm font-medium transition-colors"
-                    style={{
-                      background: isPaid ? "rgba(255,255,255,0.3)" : isActive ? "white" : "transparent",
-                      color: isPaid ? "rgba(255,255,255,0.7)" : isActive ? "#1D1B20" : "white",
-                      border: isActive && !isPaid ? "none" : "1px solid rgba(255,255,255,0.6)",
-                      textDecoration: isPaid ? "line-through" : "none",
-                      opacity: isPaid ? 0.7 : 1,
-                    }}
-                  >
-                    {(isActive && !isPaid) && <Check size={14} strokeWidth={2.5} />}
-                    {isPaid && <Check size={14} strokeWidth={2.5} />}
-                    Guest {i + 1}
-                  </button>
-                );
-              })}
-            </div>
-
-            {/* Per-guest total */}
-            <div className="flex items-center justify-between mb-4">
-              <span className="text-lg font-semibold text-white">Total</span>
-              <span className="text-2xl font-bold text-white">${splitEachPay.toFixed(2)}</span>
-            </div>
-
-            {/* Payment buttons */}
-            <div className="flex gap-3 mb-3">
-              <button
-                onClick={handleOpenCashDrawer}
-                className="flex-1 h-12 rounded-full bg-white text-gray-800 text-sm font-semibold active:bg-gray-100 transition-colors"
-              >
-                Cash
-              </button>
-              <button
-                onClick={() => { setCcStep("tap"); setCcTipIdx(null); setShowCreditCardDrawer(true); }}
-                className="flex-1 h-12 rounded-full bg-white text-gray-800 text-sm font-semibold active:bg-gray-100 transition-colors"
-              >
-                Credit Card
-              </button>
-            </div>
-            <div className="flex gap-3">
-              <button className="flex-1 h-11 rounded-full bg-white/90 text-gray-700 text-sm font-medium active:bg-white/70 transition-colors">
-                Print
-              </button>
-              <button
-                onClick={() => { setGcSerial(""); setGcPin(""); setGcStep("input"); setGcResult(null); setShowGiftCardDrawer(true); }}
-                className="flex-1 h-11 rounded-full bg-white/90 text-gray-700 text-sm font-medium active:bg-white/70 transition-colors"
-              >
-                Gift Card
-              </button>
-            </div>
-          </>
-        ) : confirmedSplit && confirmedSplit.type === "amount" ? (
-          <>
-            {/* Amount split active header */}
-            <div className="flex items-center gap-2 mb-3">
-              <span className="text-sm font-medium text-white">
-                Split by amount
-              </span>
-              <button
-                onClick={() => {
-                  setConfirmedSplit(null);
-                  setSplitAmountPayments([]);
-                  setSplitAmountCurrent(0);
-                  setSplitAmountInput("");
-                  setCumulativePaid(0);
-                  setTotalSettled(0);
-                }}
-                className="active:opacity-70"
-              >
-                <X size={16} color="white" />
-              </button>
-            </div>
-
-            {/* Amount summary */}
-            <div className="flex flex-col gap-1 mb-3">
-              <div className="flex justify-between">
-                <span className="text-sm text-white/80">Order total</span>
-                <span className="text-sm text-white/80">${orderBaseTotal.toFixed(2)}</span>
-              </div>
-              {splitAmountPaidSoFar > 0 && (
-                <div className="flex justify-between">
-                  <span className="text-sm text-white/80">Paid so far</span>
-                  <span className="text-sm text-white/80">${splitAmountPaidSoFar.toFixed(2)}</span>
-                </div>
-              )}
-              <div className="flex justify-between">
-                <span className="text-sm font-medium text-white">Remaining</span>
-                <span className="text-sm font-medium text-white">${splitAmountRemaining.toFixed(2)}</span>
-              </div>
-            </div>
-
-            {/* Current payment amount */}
-            <div className="flex items-center justify-between mb-4">
-              <span className="text-lg font-semibold text-white">Payment #{splitAmountPayments.length + 1}</span>
-              <span className="text-2xl font-bold text-white">${splitAmountCurrent.toFixed(2)}</span>
-            </div>
-
-            {/* Payment buttons */}
-            <div className="flex gap-3 mb-3">
-              <button
-                onClick={handleOpenCashDrawer}
-                className="flex-1 h-12 rounded-full bg-white text-gray-800 text-sm font-semibold active:bg-gray-100 transition-colors"
-              >
-                Cash
-              </button>
-              <button
-                onClick={() => { setCcStep("tap"); setCcTipIdx(null); setShowCreditCardDrawer(true); }}
-                className="flex-1 h-12 rounded-full bg-white text-gray-800 text-sm font-semibold active:bg-gray-100 transition-colors"
-              >
-                Credit Card
-              </button>
-            </div>
-            <div className="flex gap-3">
-              <button className="flex-1 h-11 rounded-full bg-white/90 text-gray-700 text-sm font-medium active:bg-white/70 transition-colors">
-                Print
-              </button>
-              <button
-                onClick={() => { setGcSerial(""); setGcPin(""); setGcStep("input"); setGcResult(null); setShowGiftCardDrawer(true); }}
-                className="flex-1 h-11 rounded-full bg-white/90 text-gray-700 text-sm font-medium active:bg-white/70 transition-colors"
-              >
-                Gift Card
-              </button>
-            </div>
-          </>
-        ) : confirmedSplit && confirmedSplit.type === "item" ? (
-          <>
-            <div className="flex items-center justify-between mb-3 gap-3">
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium text-white">Split by item</span>
                 <button
-                  onClick={() => {
-                    setSplitType("item");
-                    setShowSplitDrawer(true);
-                  }}
-                  className="active:opacity-70"
+                  onClick={() => { handleOpenTipDrawer(); setShowMoreMenu(false); }}
+                  className="w-full px-4 py-2.5 text-left text-sm font-medium active:bg-gray-50"
                 >
-                  <Pencil size={16} color="white" />
+                  Add tips
                 </button>
                 <button
                   onClick={() => {
-                    setConfirmedSplit(null);
-                    resetItemizedSplitState();
-                    setTip(0);
-                    setCumulativePaid(0);
-                    setTotalSettled(0);
+                    setOrderDiscountInput(orderDiscount ? String(orderDiscount.value) : "");
+                    setOrderDiscountMode(orderDiscount?.type || "percent");
+                    setShowOrderDiscountPanel(true);
+                    setShowOrderActions(true);
+                    setShowMoreMenu(false);
                   }}
-                  className="active:opacity-70"
+                  className="w-full px-4 py-2.5 text-left text-sm font-medium active:bg-gray-50"
                 >
-                  <X size={16} color="white" />
+                  Discount
                 </button>
-              </div>
-            </div>
+                <button
+                  onClick={() => { setTaxExempt(!taxExempt); setShowMoreMenu(false); }}
+                  className="w-full px-4 py-2.5 text-left text-sm font-medium active:bg-gray-50"
+                >
+                  {taxExempt ? "Remove Tax Exempt" : "Tax Exempt"}
+                </button>
+                <button
+                  onClick={() => {
+                    setOrderPriceOverrideInput(orderPriceOverride != null ? String(orderPriceOverride) : "");
+                    setShowOrderPriceOverridePanel(true);
+                    setShowOrderActions(true);
+                    setShowMoreMenu(false);
+                  }}
+                  className="w-full px-4 py-2.5 text-left text-sm font-medium active:bg-gray-50"
+                >
+                  Price Override
+                </button>
+                <button
+                  onClick={() => { setShowItems(!showItems); setShowMoreMenu(false); }}
+                  className="w-full px-4 py-2.5 text-left text-sm font-medium active:bg-gray-50"
+                >
+                  {showItems ? "Hide Items" : "View Items"}
+                </button>
+              </motion.div>
+            </>
+          )}
+        </AnimatePresence>
 
-            <div className="flex flex-col gap-1 mb-3">
-              <div className="flex justify-between">
-                <span className="text-sm text-white/80">Selected items</span>
-                <span className="text-sm text-white/80">{itemizedSelectedCount}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-sm text-white/80">Unpaid items left</span>
-                <span className="text-sm text-white/80">{itemizedRemainingCount}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-sm font-medium text-white">Remaining after this check</span>
-                <span className="text-sm font-medium text-white">
-                  ${Math.max(0, itemizedRemainingBaseTotal - itemizedSelectedBaseTotal).toFixed(2)}
-                </span>
-              </div>
-            </div>
+        {/* Numpad grid: 4 rows × 4 columns */}
+        <div className="grid grid-cols-4 gap-2 mb-2">
+          {/* Row 1 */}
+          <button onClick={() => handleNumpadKey("1")} className="h-14 rounded-2xl bg-white text-lg font-medium active:bg-gray-100 transition-colors">1</button>
+          <button onClick={() => handleNumpadKey("2")} className="h-14 rounded-2xl bg-white text-lg font-medium active:bg-gray-100 transition-colors">2</button>
+          <button onClick={() => handleNumpadKey("3")} className="h-14 rounded-2xl bg-white text-lg font-medium active:bg-gray-100 transition-colors">3</button>
+          <button className="h-14 rounded-2xl bg-green-100 text-sm font-semibold text-green-700 active:opacity-70 transition-colors">Print</button>
+          {/* Row 2 */}
+          <button onClick={() => handleNumpadKey("4")} className="h-14 rounded-2xl bg-white text-lg font-medium active:bg-gray-100 transition-colors">4</button>
+          <button onClick={() => handleNumpadKey("5")} className="h-14 rounded-2xl bg-white text-lg font-medium active:bg-gray-100 transition-colors">5</button>
+          <button onClick={() => handleNumpadKey("6")} className="h-14 rounded-2xl bg-white text-lg font-medium active:bg-gray-100 transition-colors">6</button>
+          <button
+            onClick={() => {
+              setSplitType(null);
+              setSplitGuestCount(Math.max(2, guestCount));
+              setShowSplitDrawer(true);
+            }}
+            className="h-14 rounded-2xl bg-green-100 text-sm font-semibold text-green-700 active:opacity-70 transition-colors"
+          >
+            Split
+          </button>
+          {/* Row 3 */}
+          <button onClick={() => handleNumpadKey("7")} className="h-14 rounded-2xl bg-white text-lg font-medium active:bg-gray-100 transition-colors">7</button>
+          <button onClick={() => handleNumpadKey("8")} className="h-14 rounded-2xl bg-white text-lg font-medium active:bg-gray-100 transition-colors">8</button>
+          <button onClick={() => handleNumpadKey("9")} className="h-14 rounded-2xl bg-white text-lg font-medium active:bg-gray-100 transition-colors">9</button>
+          <button onClick={handleClose} className="h-14 rounded-2xl bg-white border border-gray-300 text-sm font-medium text-gray-600 active:bg-gray-100 transition-colors">Load</button>
+          {/* Row 4 */}
+          <button onClick={() => handleNumpadKey("00")} className="h-14 rounded-2xl bg-white text-lg font-medium active:bg-gray-100 transition-colors">00</button>
+          <button onClick={() => handleNumpadKey("0")} className="h-14 rounded-2xl bg-white text-lg font-medium active:bg-gray-100 transition-colors">0</button>
+          <button onClick={() => handleNumpadKey("backspace")} className="h-14 rounded-2xl bg-red-100 flex items-center justify-center active:bg-red-200 transition-colors">
+            <Delete size={26} className="text-red-400" />
+          </button>
+          <button onClick={() => setShowMoreMenu(!showMoreMenu)} className="h-14 rounded-2xl bg-gray-300 text-lg font-bold active:bg-gray-400 transition-colors">•••</button>
+        </div>
 
-            <div className="flex items-center justify-between mb-4">
-              <span className="text-lg font-semibold text-white">Current check</span>
-              <span className="text-2xl font-bold text-white">${payableTotal.toFixed(2)}</span>
-            </div>
-
-            <div className="flex gap-3 mb-3">
-              <button
-                onClick={handleOpenCashDrawer}
-                disabled={itemizedSelectedCount === 0}
-                className="flex-1 h-12 rounded-full bg-white text-gray-800 text-sm font-semibold active:bg-gray-100 transition-colors disabled:opacity-40"
-              >
-                Cash
-              </button>
-              <button
-                onClick={() => { setCcStep("tap"); setCcTipIdx(null); setShowCreditCardDrawer(true); }}
-                disabled={itemizedSelectedCount === 0}
-                className="flex-1 h-12 rounded-full bg-white text-gray-800 text-sm font-semibold active:bg-gray-100 transition-colors disabled:opacity-40"
-              >
-                Credit Card
-              </button>
-            </div>
-            <div className="flex gap-3">
-              <button
-                onClick={() => {
-                  setSplitType("item");
-                  setShowSplitDrawer(true);
-                }}
-                className="flex-1 h-11 rounded-full bg-white/90 text-gray-700 text-sm font-medium active:bg-white/70 transition-colors"
-              >
-                Edit items
-              </button>
-              <button className="flex-1 h-11 rounded-full bg-white/90 text-gray-700 text-sm font-medium active:bg-white/70 transition-colors">
-                Print
-              </button>
-              <button
-                onClick={() => { setGcSerial(""); setGcPin(""); setGcStep("input"); setGcResult(null); setShowGiftCardDrawer(true); }}
-                disabled={itemizedSelectedCount === 0}
-                className="flex-1 h-11 rounded-full bg-white/90 text-gray-700 text-sm font-medium active:bg-white/70 transition-colors disabled:opacity-40"
-              >
-                Gift Card
-              </button>
-            </div>
-          </>
-        ) : (
-          <>
-            <div className="flex items-center justify-between mb-4">
-              <span className="text-lg font-semibold text-white">Order Total</span>
-              <span className="text-2xl font-bold text-white">${total.toFixed(2)}</span>
-            </div>
-            <div className="flex gap-3 mb-3">
-              <button
-                onClick={handleOpenCashDrawer}
-                className="flex-1 h-12 rounded-full bg-white text-gray-800 text-sm font-semibold active:bg-gray-100 transition-colors"
-              >
-                Cash
-              </button>
-              <button
-                onClick={() => { setCcStep("tap"); setCcTipIdx(null); setShowCreditCardDrawer(true); }}
-                className="flex-1 h-12 rounded-full bg-white text-gray-800 text-sm font-semibold active:bg-gray-100 transition-colors"
-              >
-                Credit Card
-              </button>
-            </div>
-            <div className="flex gap-3">
-              <button
-                onClick={() => {
-                  setSplitType(null);
-                  setSplitGuestCount(Math.max(2, guestCount));
-                  setShowSplitDrawer(true);
-                }}
-                className="flex-1 h-11 rounded-full bg-white/90 text-gray-700 text-sm font-medium active:bg-white/70 transition-colors"
-              >
-                Split
-              </button>
-              <button className="flex-1 h-11 rounded-full bg-white/90 text-gray-700 text-sm font-medium active:bg-white/70 transition-colors">
-                Print
-              </button>
-              <button
-                onClick={() => { setGcSerial(""); setGcPin(""); setGcStep("input"); setGcResult(null); setShowGiftCardDrawer(true); }}
-                className="flex-1 h-11 rounded-full bg-white/90 text-gray-700 text-sm font-medium active:bg-white/70 transition-colors"
-              >
-                Gift Card
-              </button>
-            </div>
-          </>
-        )}
+        {/* Payment method buttons */}
+        <div className="flex gap-2 mt-1">
+          <button
+            onClick={handleOpenCashDrawer}
+            className="flex-1 h-12 rounded-full text-sm font-semibold active:opacity-80 transition-colors"
+            style={{ background: "#dcfce7", color: "#15803d" }}
+          >
+            Cash
+          </button>
+          <button
+            onClick={() => { setCcStep("tap"); setCcTipIdx(null); setShowCreditCardDrawer(true); }}
+            className="flex-1 h-12 rounded-full text-sm font-semibold active:opacity-80 transition-colors"
+            style={{ background: "#dcfce7", color: "#15803d" }}
+          >
+            Credit Card
+          </button>
+          <button
+            onClick={() => { setGcSerial(""); setGcPin(""); setGcStep("input"); setGcResult(null); setShowGiftCardDrawer(true); }}
+            className="flex-1 h-12 rounded-full text-sm font-semibold active:opacity-80 transition-colors"
+            style={{ background: "#dcfce7", color: "#15803d" }}
+          >
+            Gift Card
+          </button>
+        </div>
       </div>
 
       {/* Gift Card Drawer */}

@@ -12,7 +12,6 @@ interface FooterNavProps {
 const tabs: { id: FooterTab; label: string; icon: typeof BookOpen }[] = [
   { id: "check", label: "Check", icon: ClipboardList },
   { id: "menu", label: "Menu", icon: BookOpen },
-  { id: "search", label: "Menu search", icon: Search },
   { id: "action", label: "Actions", icon: Zap },
 ];
 
