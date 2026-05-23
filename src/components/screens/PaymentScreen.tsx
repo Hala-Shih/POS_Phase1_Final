@@ -113,6 +113,9 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
   const [showLeaveToast, setShowLeaveToast] = useState(false);
   const [amountInput, setAmountInput] = useState("");
   const [showMoreMenu, setShowMoreMenu] = useState(false);
+  const [numpadMode, setNumpadMode] = useState<"pay" | "discount" | "tips" | "taxExempt" | "priceOverride">("pay");
+  const [discountUnit, setDiscountUnit] = useState<"percent" | "amount">("percent");
+  const [tipsUnit, setTipsUnit] = useState<"percent" | "amount">("percent");
   const [paidAmount, setPaidAmount] = useState(0);
   const [paidTotal, setPaidTotal] = useState(0);
   const [totalSettled, setTotalSettled] = useState(0);
@@ -896,79 +899,172 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
       </div>
 
       {/* Numpad + Payment Buttons Footer */}
-      <div className="shrink-0 bg-gray-200 px-3 pt-2 pb-3 relative">
+      <div className="shrink-0 bg-gray-100 px-3 pt-2 pb-3 relative">
         {/* Balance + Amount input */}
-        <div className="bg-white rounded-xl px-3 py-1.5 mb-1.5">
-          <div className="flex justify-between">
-            <span className="text-sm font-semibold">Balance</span>
-            <span className="text-sm font-bold">${remainingBalance.toFixed(2)}</span>
+        <div className="mb-1.5">
+          <div className="flex gap-2">
+            {/* Action button */}
+            <div className="relative shrink-0 flex flex-col justify-start pt-1">
+              <button onClick={() => setShowMoreMenu(!showMoreMenu)} className="h-14 w-14 rounded-2xl bg-gray-300 text-lg font-bold active:bg-gray-400 transition-colors">•••</button>
+              <AnimatePresence>
+                {showMoreMenu && (
+                  <>
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 0.2 }}
+                      exit={{ opacity: 0 }}
+                      onClick={() => setShowMoreMenu(false)}
+                      className="fixed inset-0 bg-black z-40"
+                    />
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 10 }}
+                      className="absolute bottom-full left-0 mb-2 bg-white rounded-xl shadow-lg border border-gray-200 z-50 py-1 min-w-[180px]"
+                    >
+                      {([
+                        { key: "pay" as const, label: "Pay" },
+                        { key: "discount" as const, label: "Discount" },
+                        { key: "tips" as const, label: "Add Tips" },
+                        { key: "taxExempt" as const, label: "Tax Exempt" },
+                        { key: "priceOverride" as const, label: "Price Override" },
+                      ]).map((mode) => (
+                        <button
+                          key={mode.key}
+                          onClick={() => { setNumpadMode(mode.key); setShowMoreMenu(false); }}
+                          className="w-full px-4 py-2.5 text-left text-sm font-medium active:bg-gray-50 flex items-center gap-2"
+                        >
+                          <span className="w-4 shrink-0">
+                            {numpadMode === mode.key && <Check size={16} className="text-green-600" />}
+                          </span>
+                          {mode.label}
+                        </button>
+                      ))}
+                    </motion.div>
+                  </>
+                )}
+              </AnimatePresence>
+            </div>
+            {/* Balance + input */}
+            <div className="flex-1 min-w-0">
+              <div className="flex justify-between">
+                <span className="text-sm font-semibold">Balance</span>
+                <span className="text-sm font-bold">${remainingBalance.toFixed(2)}</span>
+              </div>
+              <div className="border border-gray-800 rounded-md px-3 py-1 flex items-center justify-between mt-1">
+                <span className="text-sm text-gray-500">{{ pay: "Pay", discount: "Discount", tips: "Add Tips", taxExempt: "Tax Exempt", priceOverride: "Price Override" }[numpadMode]}</span>
+                <span className="text-base font-medium">${displayAmountValue}</span>
+              </div>
+            </div>
           </div>
-          <div className="border border-gray-800 rounded-md px-3 py-1 flex justify-end mt-1">
-            <span className="text-base font-medium">${displayAmountValue}</span>
-          </div>
-        </div>
-        {/* More menu popup */}
-        <AnimatePresence>
-          {showMoreMenu && (
-            <>
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 0.2 }}
-                exit={{ opacity: 0 }}
-                onClick={() => setShowMoreMenu(false)}
-                className="fixed inset-0 bg-black z-40"
-              />
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 10 }}
-                className="absolute bottom-full right-3 mb-2 bg-white rounded-xl shadow-lg border border-gray-200 z-50 py-1 min-w-[180px]"
+          {/* Mode-specific action buttons (full width) */}
+          {numpadMode === "discount" ? (
+            <div className="flex gap-2 mt-1.5">
+              <div className="h-12 rounded-full flex overflow-hidden border border-gray-300">
+                <button
+                  onClick={() => setDiscountUnit("percent")}
+                  className="px-4 h-full text-sm font-semibold transition-colors"
+                  style={{ background: discountUnit === "percent" ? "#1d4ed8" : "#fff", color: discountUnit === "percent" ? "#fff" : "#6b7280" }}
+                >
+                  %
+                </button>
+                <button
+                  onClick={() => setDiscountUnit("amount")}
+                  className="px-4 h-full text-sm font-semibold transition-colors"
+                  style={{ background: discountUnit === "amount" ? "#1d4ed8" : "#fff", color: discountUnit === "amount" ? "#fff" : "#6b7280" }}
+                >
+                  $
+                </button>
+              </div>
+              <button
+                onClick={() => setAmountInput(discountUnit === "percent" ? "5" : "500")}
+                className="flex-1 h-12 rounded-full text-sm font-semibold active:opacity-80 transition-colors"
+                style={{ background: "#f3e8ff", color: "#6b21a8" }}
               >
+                {discountUnit === "percent" ? "5%" : "$5"}
+              </button>
+              <button
+                onClick={() => setAmountInput(discountUnit === "percent" ? "10" : "1000")}
+                className="flex-1 h-12 rounded-full text-sm font-semibold active:opacity-80 transition-colors"
+                style={{ background: "#f3e8ff", color: "#6b21a8" }}
+              >
+                {discountUnit === "percent" ? "10%" : "$10"}
+              </button>
+              <button
+                onClick={() => setAmountInput(discountUnit === "percent" ? "20" : "2000")}
+                className="flex-1 h-12 rounded-full text-sm font-semibold active:opacity-80 transition-colors"
+                style={{ background: "#f3e8ff", color: "#6b21a8" }}
+              >
+                {discountUnit === "percent" ? "20%" : "$20"}
+              </button>
+            </div>
+          ) : numpadMode === "tips" ? (
+            <div className="flex gap-2 mt-1.5">
+              <div className="h-12 rounded-full flex overflow-hidden border border-gray-300">
                 <button
-                  onClick={() => { handleOpenTipDrawer(); setShowMoreMenu(false); }}
-                  className="w-full px-4 py-2.5 text-left text-sm font-medium active:bg-gray-50"
+                  onClick={() => setTipsUnit("percent")}
+                  className="px-4 h-full text-sm font-semibold transition-colors"
+                  style={{ background: tipsUnit === "percent" ? "#1d4ed8" : "#fff", color: tipsUnit === "percent" ? "#fff" : "#6b7280" }}
                 >
-                  Add tips
+                  %
                 </button>
                 <button
-                  onClick={() => {
-                    setOrderDiscountInput(orderDiscount ? String(orderDiscount.value) : "");
-                    setOrderDiscountMode(orderDiscount?.type || "percent");
-                    setShowOrderDiscountPanel(true);
-                    setShowOrderActions(true);
-                    setShowMoreMenu(false);
-                  }}
-                  className="w-full px-4 py-2.5 text-left text-sm font-medium active:bg-gray-50"
+                  onClick={() => setTipsUnit("amount")}
+                  className="px-4 h-full text-sm font-semibold transition-colors"
+                  style={{ background: tipsUnit === "amount" ? "#1d4ed8" : "#fff", color: tipsUnit === "amount" ? "#fff" : "#6b7280" }}
                 >
-                  Discount
+                  $
                 </button>
-                <button
-                  onClick={() => { setTaxExempt(!taxExempt); setShowMoreMenu(false); }}
-                  className="w-full px-4 py-2.5 text-left text-sm font-medium active:bg-gray-50"
-                >
-                  {taxExempt ? "Remove Tax Exempt" : "Tax Exempt"}
-                </button>
-                <button
-                  onClick={() => {
-                    setOrderPriceOverrideInput(orderPriceOverride != null ? String(orderPriceOverride) : "");
-                    setShowOrderPriceOverridePanel(true);
-                    setShowOrderActions(true);
-                    setShowMoreMenu(false);
-                  }}
-                  className="w-full px-4 py-2.5 text-left text-sm font-medium active:bg-gray-50"
-                >
-                  Price Override
-                </button>
-                <button
-                  onClick={() => { setShowItems(!showItems); setShowMoreMenu(false); }}
-                  className="w-full px-4 py-2.5 text-left text-sm font-medium active:bg-gray-50"
-                >
-                  {showItems ? "Hide Items" : "View Items"}
-                </button>
-              </motion.div>
-            </>
+              </div>
+              <button
+                onClick={() => setAmountInput(tipsUnit === "percent" ? "18" : "1000")}
+                className="flex-1 h-12 rounded-full text-sm font-semibold active:opacity-80 transition-colors"
+                style={{ background: "#fef3c7", color: "#92400e" }}
+              >
+                {tipsUnit === "percent" ? "18%" : "$10"}
+              </button>
+              <button
+                onClick={() => setAmountInput(tipsUnit === "percent" ? "20" : "2000")}
+                className="flex-1 h-12 rounded-full text-sm font-semibold active:opacity-80 transition-colors"
+                style={{ background: "#fef3c7", color: "#92400e" }}
+              >
+                {tipsUnit === "percent" ? "20%" : "$20"}
+              </button>
+              <button
+                onClick={() => setAmountInput(tipsUnit === "percent" ? "25" : "5000")}
+                className="flex-1 h-12 rounded-full text-sm font-semibold active:opacity-80 transition-colors"
+                style={{ background: "#fef3c7", color: "#92400e" }}
+              >
+                {tipsUnit === "percent" ? "25%" : "$50"}
+              </button>
+            </div>
+          ) : (
+            <div className="flex gap-2 mt-1.5">
+              <button
+                onClick={handleOpenCashDrawer}
+                className="flex-1 h-12 rounded-full text-sm font-semibold active:opacity-80 transition-colors"
+                style={{ background: "#dcfce7", color: "#15803d" }}
+              >
+                Cash
+              </button>
+              <button
+                onClick={() => { setCcStep("tap"); setCcTipIdx(null); setShowCreditCardDrawer(true); }}
+                className="flex-1 h-12 rounded-full text-sm font-semibold active:opacity-80 transition-colors"
+                style={{ background: "#dcfce7", color: "#15803d" }}
+              >
+                Credit Card
+              </button>
+              <button
+                onClick={() => { setGcSerial(""); setGcPin(""); setGcStep("input"); setGcResult(null); setShowGiftCardDrawer(true); }}
+                className="flex-1 h-12 rounded-full text-sm font-semibold active:opacity-80 transition-colors"
+                style={{ background: "#dcfce7", color: "#15803d" }}
+              >
+                Gift Card
+              </button>
+            </div>
           )}
-        </AnimatePresence>
+        </div>
+
 
         {/* Numpad grid: 4 rows × 4 columns */}
         <div className="grid grid-cols-4 gap-2 mb-2">
@@ -995,40 +1091,35 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
           <button onClick={() => handleNumpadKey("7")} className="h-14 rounded-2xl bg-white text-lg font-medium active:bg-gray-100 transition-colors">7</button>
           <button onClick={() => handleNumpadKey("8")} className="h-14 rounded-2xl bg-white text-lg font-medium active:bg-gray-100 transition-colors">8</button>
           <button onClick={() => handleNumpadKey("9")} className="h-14 rounded-2xl bg-white text-lg font-medium active:bg-gray-100 transition-colors">9</button>
-          <button onClick={handleClose} className="h-14 rounded-2xl bg-white border border-gray-300 text-sm font-medium text-gray-600 active:bg-gray-100 transition-colors">Load</button>
+          {(numpadMode === "discount" || numpadMode === "tips") ? (
+            <button
+              onClick={() => { setAmountInput(""); setNumpadMode("pay"); }}
+              className="h-14 rounded-2xl bg-red-100 text-sm font-semibold text-red-600 active:bg-red-200 transition-colors"
+            >
+              Cancel
+            </button>
+          ) : (
+            <button onClick={handleClose} className="h-14 rounded-2xl bg-white border border-gray-300 text-sm font-medium text-gray-600 active:bg-gray-100 transition-colors">Load</button>
+          )}
           {/* Row 4 */}
           <button onClick={() => handleNumpadKey("00")} className="h-14 rounded-2xl bg-white text-lg font-medium active:bg-gray-100 transition-colors">00</button>
           <button onClick={() => handleNumpadKey("0")} className="h-14 rounded-2xl bg-white text-lg font-medium active:bg-gray-100 transition-colors">0</button>
           <button onClick={() => handleNumpadKey("backspace")} className="h-14 rounded-2xl bg-red-100 flex items-center justify-center active:bg-red-200 transition-colors">
             <Delete size={26} className="text-red-400" />
           </button>
-          <button onClick={() => setShowMoreMenu(!showMoreMenu)} className="h-14 rounded-2xl bg-gray-300 text-lg font-bold active:bg-gray-400 transition-colors">•••</button>
+          {(numpadMode === "discount" || numpadMode === "tips") ? (
+            <button
+              onClick={() => { /* TODO: apply discount/tips */ setNumpadMode("pay"); }}
+              className="h-14 w-full rounded-2xl bg-green-600 text-sm font-bold text-white active:bg-green-700 transition-colors"
+            >
+              Pay
+            </button>
+          ) : (
+            <div />
+          )}
         </div>
 
-        {/* Payment method buttons */}
-        <div className="flex gap-2 mt-1">
-          <button
-            onClick={handleOpenCashDrawer}
-            className="flex-1 h-12 rounded-full text-sm font-semibold active:opacity-80 transition-colors"
-            style={{ background: "#dcfce7", color: "#15803d" }}
-          >
-            Cash
-          </button>
-          <button
-            onClick={() => { setCcStep("tap"); setCcTipIdx(null); setShowCreditCardDrawer(true); }}
-            className="flex-1 h-12 rounded-full text-sm font-semibold active:opacity-80 transition-colors"
-            style={{ background: "#dcfce7", color: "#15803d" }}
-          >
-            Credit Card
-          </button>
-          <button
-            onClick={() => { setGcSerial(""); setGcPin(""); setGcStep("input"); setGcResult(null); setShowGiftCardDrawer(true); }}
-            className="flex-1 h-12 rounded-full text-sm font-semibold active:opacity-80 transition-colors"
-            style={{ background: "#dcfce7", color: "#15803d" }}
-          >
-            Gift Card
-          </button>
-        </div>
+
       </div>
 
       {/* Gift Card Drawer */}
