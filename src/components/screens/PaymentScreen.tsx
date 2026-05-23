@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { X, ChevronRight, ChevronDown, Check, Minus, Plus, Pencil, MoreHorizontal, DollarSign, Percent, Delete, MoreHorizontal as Ellipsis } from "lucide-react";
+import { X, ChevronRight, ChevronDown, Check, Minus, Plus, Pencil, MoreHorizontal, DollarSign, Percent, Delete, MoreHorizontal as Ellipsis, Calculator } from "lucide-react";
 import { motion, AnimatePresence, useDragControls } from "framer-motion";
 import { useOrderStore } from "@/store/order-store";
 import Header from "@/components/ui/Header";
@@ -898,14 +898,43 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
         <div className="border-t border-[var(--outline-variant)]" />
       </div>
 
+      {/* Print / Split / Load row */}
+      <div className="shrink-0 px-3 pt-2 pb-3 grid grid-cols-3 gap-2">
+        <button className="h-12 rounded-2xl bg-green-100 text-sm font-semibold text-green-700 active:opacity-70 transition-colors">Print</button>
+        <button
+          onClick={() => {
+            setSplitType(null);
+            setSplitGuestCount(Math.max(2, guestCount));
+            setShowSplitDrawer(true);
+          }}
+          className="h-12 rounded-2xl bg-green-100 text-sm font-semibold text-green-700 active:opacity-70 transition-colors"
+        >
+          Split
+        </button>
+        {(numpadMode === "discount" || numpadMode === "tips") ? (
+          <button
+            onClick={() => { setAmountInput(""); setNumpadMode("pay"); }}
+            className="h-12 rounded-2xl bg-red-100 text-sm font-semibold text-red-600 active:bg-red-200 transition-colors"
+          >
+            Cancel
+          </button>
+        ) : (
+          <button onClick={handleClose} className="h-12 rounded-2xl bg-white border border-gray-300 text-sm font-medium text-gray-600 active:bg-gray-100 transition-colors">Load</button>
+        )}
+      </div>
+
       {/* Numpad + Payment Buttons Footer */}
-      <div className="shrink-0 bg-gray-100 px-3 pt-2 pb-3 relative">
+      <div className="shrink-0 bg-gray-100 px-3 pt-3 pb-3 relative">
         {/* Balance + Amount input */}
         <div className="mb-1.5">
+          <div className="flex justify-between mb-2">
+            <span className="text-sm font-semibold">Balance</span>
+            <span className="text-sm font-bold">${remainingBalance.toFixed(2)}</span>
+          </div>
           <div className="flex gap-2">
             {/* Action button */}
-            <div className="relative shrink-0 flex flex-col justify-start pt-1">
-              <button onClick={() => setShowMoreMenu(!showMoreMenu)} className="h-14 w-14 rounded-2xl bg-gray-300 text-lg font-bold active:bg-gray-400 transition-colors">•••</button>
+            <div className="relative shrink-0 flex flex-col justify-center">
+              <button onClick={() => setShowMoreMenu(!showMoreMenu)} className="h-10 w-14 rounded-xl bg-gray-300 flex items-center justify-center active:bg-gray-400 transition-colors"><Calculator size={20} /></button>
               <AnimatePresence>
                 {showMoreMenu && (
                   <>
@@ -945,13 +974,9 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
                 )}
               </AnimatePresence>
             </div>
-            {/* Balance + input */}
+            {/* Input field */}
             <div className="flex-1 min-w-0">
-              <div className="flex justify-between">
-                <span className="text-sm font-semibold">Balance</span>
-                <span className="text-sm font-bold">${remainingBalance.toFixed(2)}</span>
-              </div>
-              <div className="border border-gray-800 rounded-md px-3 py-1 flex items-center justify-between mt-1">
+              <div className="border border-gray-800 rounded-md px-3 py-1 flex items-center justify-between h-10">
                 <span className="text-sm text-gray-500">{{ pay: "Pay", discount: "Discount", tips: "Add Tips", taxExempt: "Tax Exempt", priceOverride: "Price Override" }[numpadMode]}</span>
                 <span className="text-base font-medium">${displayAmountValue}</span>
               </div>
@@ -1066,57 +1091,25 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
         </div>
 
 
-        {/* Numpad grid: 4 rows × 4 columns */}
+        {/* Numpad grid: 3 rows × 4 columns */}
         <div className="grid grid-cols-4 gap-2 mb-2">
           {/* Row 1 */}
           <button onClick={() => handleNumpadKey("1")} className="h-14 rounded-2xl bg-white text-lg font-medium active:bg-gray-100 transition-colors">1</button>
           <button onClick={() => handleNumpadKey("2")} className="h-14 rounded-2xl bg-white text-lg font-medium active:bg-gray-100 transition-colors">2</button>
           <button onClick={() => handleNumpadKey("3")} className="h-14 rounded-2xl bg-white text-lg font-medium active:bg-gray-100 transition-colors">3</button>
-          <button className="h-14 rounded-2xl bg-green-100 text-sm font-semibold text-green-700 active:opacity-70 transition-colors">Print</button>
+          <button onClick={() => handleNumpadKey("00")} className="h-14 rounded-2xl bg-white text-lg font-medium active:bg-gray-100 transition-colors">00</button>
           {/* Row 2 */}
           <button onClick={() => handleNumpadKey("4")} className="h-14 rounded-2xl bg-white text-lg font-medium active:bg-gray-100 transition-colors">4</button>
           <button onClick={() => handleNumpadKey("5")} className="h-14 rounded-2xl bg-white text-lg font-medium active:bg-gray-100 transition-colors">5</button>
           <button onClick={() => handleNumpadKey("6")} className="h-14 rounded-2xl bg-white text-lg font-medium active:bg-gray-100 transition-colors">6</button>
-          <button
-            onClick={() => {
-              setSplitType(null);
-              setSplitGuestCount(Math.max(2, guestCount));
-              setShowSplitDrawer(true);
-            }}
-            className="h-14 rounded-2xl bg-green-100 text-sm font-semibold text-green-700 active:opacity-70 transition-colors"
-          >
-            Split
-          </button>
+          <button onClick={() => handleNumpadKey("0")} className="h-14 rounded-2xl bg-white text-lg font-medium active:bg-gray-100 transition-colors">0</button>
           {/* Row 3 */}
           <button onClick={() => handleNumpadKey("7")} className="h-14 rounded-2xl bg-white text-lg font-medium active:bg-gray-100 transition-colors">7</button>
           <button onClick={() => handleNumpadKey("8")} className="h-14 rounded-2xl bg-white text-lg font-medium active:bg-gray-100 transition-colors">8</button>
           <button onClick={() => handleNumpadKey("9")} className="h-14 rounded-2xl bg-white text-lg font-medium active:bg-gray-100 transition-colors">9</button>
-          {(numpadMode === "discount" || numpadMode === "tips") ? (
-            <button
-              onClick={() => { setAmountInput(""); setNumpadMode("pay"); }}
-              className="h-14 rounded-2xl bg-red-100 text-sm font-semibold text-red-600 active:bg-red-200 transition-colors"
-            >
-              Cancel
-            </button>
-          ) : (
-            <button onClick={handleClose} className="h-14 rounded-2xl bg-white border border-gray-300 text-sm font-medium text-gray-600 active:bg-gray-100 transition-colors">Load</button>
-          )}
-          {/* Row 4 */}
-          <button onClick={() => handleNumpadKey("00")} className="h-14 rounded-2xl bg-white text-lg font-medium active:bg-gray-100 transition-colors">00</button>
-          <button onClick={() => handleNumpadKey("0")} className="h-14 rounded-2xl bg-white text-lg font-medium active:bg-gray-100 transition-colors">0</button>
           <button onClick={() => handleNumpadKey("backspace")} className="h-14 rounded-2xl bg-red-100 flex items-center justify-center active:bg-red-200 transition-colors">
             <Delete size={26} className="text-red-400" />
           </button>
-          {(numpadMode === "discount" || numpadMode === "tips") ? (
-            <button
-              onClick={() => { /* TODO: apply discount/tips */ setNumpadMode("pay"); }}
-              className="h-14 w-full rounded-2xl bg-green-600 text-sm font-bold text-white active:bg-green-700 transition-colors"
-            >
-              Pay
-            </button>
-          ) : (
-            <div />
-          )}
         </div>
 
 
