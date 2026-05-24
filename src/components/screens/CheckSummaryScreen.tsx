@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   ArrowLeft,
   CreditCard,
@@ -40,6 +40,10 @@ export default function CheckSummaryScreen({ menuOpen: externalMenuOpen, setMenu
     setTable,
     openMenuOnArrival,
     setOpenMenuOnArrival,
+    lastAddedItemId,
+    updateNote,
+    updatePriceAdjustment,
+    toggleBreakline,
   } = useOrderStore();
 
   const [internalMenuOpen, setInternalMenuOpen] = useState(false);
@@ -58,6 +62,15 @@ export default function CheckSummaryScreen({ menuOpen: externalMenuOpen, setMenu
     }
   }, [openMenuOnArrival, setOpenMenuOnArrival, setMenuOpen, setSearchOpen]);
   const [cartOpen, setCartOpen] = useState(false);
+  const [showNoteDrawer, setShowNoteDrawer] = useState(false);
+  const [orderNote, setOrderNote] = useState("");
+  const [noteDraft, setNoteDraft] = useState("");
+  // "general" = order-level note, item id = item-specific note
+  const [noteTarget, setNoteTarget] = useState<string>("general");
+  // Price adjustment draft: sign (+1 or -1) and value string
+  const [priceAdjSign, setPriceAdjSign] = useState<1 | -1>(1);
+  const [priceAdjValue, setPriceAdjValue] = useState("");
+  const [breaklineDraft, setBreaklineDraft] = useState(false);
   const selectedItemId: string | null = null;
 
   const collapseToCheck = () => {
@@ -222,6 +235,14 @@ export default function CheckSummaryScreen({ menuOpen: externalMenuOpen, setMenu
               </div>
             )}
 
+            {/* General order note */}
+            {orderNote && (
+              <div className="px-4 py-2.5 border-t border-gray-100 flex items-start gap-2">
+                <StickyNote size={14} className="text-[var(--outline)] shrink-0 mt-0.5" />
+                <p className="text-[12px] text-[var(--outline)] italic leading-snug">{orderNote}</p>
+              </div>
+            )}
+
             {/* Totals */}
             <div className="px-4 pt-3 pb-4 border-t border-gray-100 bg-[#FBFAFF]">
               <TotalsRow label="Subtotal" value={`$${subtotal.toFixed(2)}`} />
@@ -318,8 +339,30 @@ export default function CheckSummaryScreen({ menuOpen: externalMenuOpen, setMenu
                 Pay
               </button>
               <button
+                onClick={() => {
+                  // Default to the last added item, or "general" if none
+                  const defaultTarget = lastAddedItemId && cartItems.find(i => i.id === lastAddedItemId) ? lastAddedItemId : "general";
+                  setNoteTarget(defaultTarget);
+                  // Load the existing note for that target
+                  if (defaultTarget === "general") {
+                    setNoteDraft(orderNote);
+                    setPriceAdjSign(1);
+                    setPriceAdjValue("");
+                    setBreaklineDraft(false);
+                  } else {
+                    const item = cartItems.find(i => i.id === defaultTarget);
+                    setNoteDraft(item?.note || "");
+                    const adj = item?.priceAdjustment || 0;
+                    setPriceAdjSign(adj < 0 ? -1 : 1);
+                    setPriceAdjValue(adj !== 0 ? String(Math.abs(adj)) : "");
+                    setBreaklineDraft(!!item?.breaklineBelow);
+                  }
+                  setShowNoteDrawer(true);
+                }}
                 disabled={isEmpty}
-                className="flex-1 flex items-center justify-center h-[44px] rounded-xl border border-gray-800 text-[13px] font-medium bg-white transition-colors active:opacity-70 disabled:opacity-40"
+                className={`flex-1 flex items-center justify-center h-[44px] rounded-xl border text-[13px] font-medium bg-white transition-colors active:opacity-70 disabled:opacity-40 ${
+                  orderNote || cartItems.some(i => i.note) ? "border-[var(--primary)] text-[var(--primary)]" : "border-gray-800"
+                }`}
               >
                 Note
               </button>
@@ -332,6 +375,206 @@ export default function CheckSummaryScreen({ menuOpen: externalMenuOpen, setMenu
 
       {/* Cart drawer (for editing items) */}
       <CartDrawer open={cartOpen} onClose={() => setCartOpen(false)} />
+
+      {/* Note drawer with item selector */}
+      {showNoteDrawer && (
+        <>
+          <div className="absolute inset-0 bg-black/30 z-[200]" onClick={() => setShowNoteDrawer(false)} />
+          <div className="absolute bottom-0 left-0 right-0 z-[201] bg-white rounded-t-2xl shadow-2xl p-4 pb-6" style={{ maxHeight: "92%" }}>
+            <div className="w-10 h-1 rounded-full bg-gray-300 mx-auto mb-3" />
+            <p className="text-[13px] font-semibold mb-2">Add Note</p>
+
+            {/* Target selector - radio list */}
+            <div className="flex flex-col gap-1 mb-3 max-h-[220px] overflow-y-auto">
+              <label
+                className={`flex items-center gap-2.5 px-3 py-2 rounded-lg cursor-pointer transition-colors ${
+                  noteTarget === "general" ? "bg-[var(--primary)]/8" : "hover:bg-gray-50"
+                }`}
+                onClick={() => { setNoteTarget("general"); setNoteDraft(orderNote); setPriceAdjSign(1); setPriceAdjValue(""); setBreaklineDraft(false); }}
+              >
+                <span className={`w-[18px] h-[18px] shrink-0 rounded-full border-2 flex items-center justify-center transition-colors ${
+                  noteTarget === "general" ? "border-[var(--primary)] bg-[var(--primary)]" : "border-gray-300"
+                }`}>
+                  {noteTarget === "general" && <span className="w-2 h-2 rounded-full bg-white" />}
+                </span>
+                <span className="text-[13px] font-medium">General Note</span>
+                {orderNote && <span className="ml-auto text-[11px] text-gray-400 truncate max-w-[100px]">{orderNote}</span>}
+              </label>
+              {cartItems.map((item) => (
+                <label
+                  key={item.id}
+                  className={`flex items-center gap-2.5 px-3 py-2 rounded-lg cursor-pointer transition-colors ${
+                    noteTarget === item.id ? "bg-[var(--primary)]/8" : "hover:bg-gray-50"
+                  }`}
+                  onClick={() => {
+                    setNoteTarget(item.id);
+                    setNoteDraft(item.note || "");
+                    const adj = item.priceAdjustment || 0;
+                    setPriceAdjSign(adj < 0 ? -1 : 1);
+                    setPriceAdjValue(adj !== 0 ? String(Math.abs(adj)) : "");
+                    setBreaklineDraft(!!item.breaklineBelow);
+                  }}
+                >
+                  <span className={`w-[18px] h-[18px] shrink-0 rounded-full border-2 flex items-center justify-center transition-colors ${
+                    noteTarget === item.id ? "border-[var(--primary)] bg-[var(--primary)]" : "border-gray-300"
+                  }`}>
+                    {noteTarget === item.id && <span className="w-2 h-2 rounded-full bg-white" />}
+                  </span>
+                  <span className="text-[13px] truncate">{item.name}{item.quantity > 1 ? ` ×${item.quantity}` : ""}</span>
+                  {(item.note || item.priceAdjustment) && (
+                    <span className="ml-auto text-[11px] text-gray-400 truncate max-w-[100px]">
+                      {item.note || (item.priceAdjustment ? `${item.priceAdjustment > 0 ? "+" : ""}${item.priceAdjustment.toFixed(2)}` : "")}
+                    </span>
+                  )}
+                </label>
+              ))}
+            </div>
+
+            {/* Note + Price adjustment row */}
+            <div className={`flex gap-3 items-start ${noteTarget !== "general" ? "" : ""}`}>
+              <div className={noteTarget !== "general" ? "flex-1 min-w-0" : "w-full"}>
+                <p className="text-[12px] text-[var(--outline)] mb-2">Add a note for the kitchen</p>
+                <textarea
+                  autoFocus
+                  value={noteDraft}
+                  onChange={(e) => setNoteDraft(e.target.value)}
+                  placeholder="Add notes"
+                  rows={3}
+                  className="w-full rounded-xl border border-[var(--outline-variant)] px-3 py-2.5 text-[13px] outline-none resize-none focus:border-[var(--primary)]"
+                />
+              </div>
+              {noteTarget !== "general" && (
+                <div className="shrink-0">
+                  <p className="text-[12px] text-[var(--outline)] mb-2">Price adjustment</p>
+                  <div className="flex items-center gap-1.5">
+                    <div className="flex rounded-xl border border-[var(--outline-variant)] overflow-hidden shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => setPriceAdjSign(1)}
+                        className={`w-9 h-11 flex items-center justify-center text-[15px] font-semibold ${
+                          priceAdjSign === 1
+                            ? "bg-[var(--primary-light)] text-[var(--primary)]"
+                            : "text-[var(--outline)] active:bg-gray-50"
+                        }`}
+                        aria-pressed={priceAdjSign === 1}
+                        aria-label="Increase price"
+                      >+</button>
+                      <button
+                        type="button"
+                        onClick={() => setPriceAdjSign(-1)}
+                        className={`w-9 h-11 flex items-center justify-center text-[15px] font-semibold border-l border-[var(--outline-variant)] ${
+                          priceAdjSign === -1
+                            ? "bg-[var(--primary-light)] text-[var(--primary)]"
+                            : "text-[var(--outline)] active:bg-gray-50"
+                        }`}
+                        aria-pressed={priceAdjSign === -1}
+                        aria-label="Decrease price"
+                      >−</button>
+                    </div>
+                    <input
+                      type="number"
+                      inputMode="decimal"
+                      pattern="[0-9]*"
+                      min="0"
+                      step="0.01"
+                      placeholder="0.00"
+                      value={priceAdjValue}
+                      onChange={(e) => setPriceAdjValue(e.target.value)}
+                      className="w-16 h-11 rounded-xl border border-[var(--outline-variant)] px-2 text-[13px] outline-none focus:border-[var(--primary)]"
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Add breakline checkbox (item only) */}
+            {noteTarget !== "general" && (
+              <label className="flex items-center gap-2.5 mt-1 mb-1 cursor-pointer">
+                <span
+                  className={`w-[18px] h-[18px] shrink-0 rounded flex items-center justify-center border-2 transition-colors ${
+                    breaklineDraft ? "border-[var(--primary)] bg-[var(--primary)]" : "border-gray-300"
+                  }`}
+                  onClick={(e) => { e.preventDefault(); setBreaklineDraft(!breaklineDraft); }}
+                >
+                  {breaklineDraft && (
+                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2.5 6L5 8.5L9.5 3.5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                  )}
+                </span>
+                <span className="text-[13px] text-black">Add breakline below</span>
+              </label>
+            )}
+
+            <div className="flex gap-2 mt-3">
+              <button
+                onClick={() => setShowNoteDrawer(false)}
+                className="flex-1 h-10 rounded-xl border border-[var(--outline-variant)] text-[13px] font-medium active:bg-gray-50"
+                style={{ color: "#49454F" }}
+              >
+                Cancel
+              </button>
+              {((noteTarget === "general" && orderNote) || (noteTarget !== "general" && (cartItems.find(i => i.id === noteTarget)?.note || cartItems.find(i => i.id === noteTarget)?.priceAdjustment))) && (
+                <button
+                  onClick={() => {
+                    if (noteTarget === "general") {
+                      setOrderNote("");
+                    } else {
+                      updateNote(noteTarget, "");
+                      updatePriceAdjustment(noteTarget, 0);
+                      const currentItem = cartItems.find(i => i.id === noteTarget);
+                      if (currentItem?.breaklineBelow) {
+                        toggleBreakline(noteTarget, "below");
+                      }
+                    }
+                    setNoteDraft("");
+                    setPriceAdjValue("");
+                    setBreaklineDraft(false);
+                    setShowNoteDrawer(false);
+                  }}
+                  className="flex-1 h-10 rounded-xl border border-red-300 bg-red-50 text-[13px] font-medium text-red-600 active:bg-red-100"
+                >
+                  Remove
+                </button>
+              )}
+              <button
+                onClick={() => {
+                  const trimmed = noteDraft.trim();
+                  if (noteTarget === "general") {
+                    setOrderNote(trimmed);
+                  } else {
+                    updateNote(noteTarget, trimmed);
+                    const numVal = parseFloat(priceAdjValue);
+                    const adjAmount = !isNaN(numVal) && numVal > 0 ? numVal * priceAdjSign : 0;
+                    updatePriceAdjustment(noteTarget, adjAmount);
+                    // Sync breakline state
+                    const currentItem = cartItems.find(i => i.id === noteTarget);
+                    if (currentItem && !!currentItem.breaklineBelow !== breaklineDraft) {
+                      toggleBreakline(noteTarget, "below");
+                    }
+                  }
+                  setShowNoteDrawer(false);
+                }}
+                disabled={(() => {
+                  if (noteTarget === "general") {
+                    return noteDraft.trim() === orderNote;
+                  } else {
+                    const item = cartItems.find(i => i.id === noteTarget);
+                    const origNote = item?.note || "";
+                    const origAdj = item?.priceAdjustment || 0;
+                    const origBreakline = !!item?.breaklineBelow;
+                    const numVal = parseFloat(priceAdjValue);
+                    const newAdj = !isNaN(numVal) && numVal > 0 ? numVal * priceAdjSign : 0;
+                    return noteDraft.trim() === origNote && newAdj === origAdj && breaklineDraft === origBreakline;
+                  }
+                })()}
+                className="flex-1 h-10 rounded-xl text-[13px] font-semibold text-white active:opacity-80 disabled:opacity-40"
+                style={{ background: "#6750A4" }}
+              >
+                Save changes
+              </button>
+            </div>
+          </div>
+        </>
+      )}
 
     </div>
   );
@@ -354,7 +597,10 @@ function CheckItem({
   drawerOpen?: boolean;
   selected?: boolean;
 }) {
-  const { updateQuantity, removeItem } = useOrderStore();
+  const { updateQuantity, removeItem, updateNote } = useOrderStore();
+  const [showNoteFlyout, setShowNoteFlyout] = useState(false);
+  const [noteDraft, setNoteDraft] = useState(item.note || "");
+  const noteBtnRef = useRef<HTMLButtonElement>(null);
 
   return (
     <>
@@ -434,9 +680,65 @@ function CheckItem({
             </div>
             {/* Action buttons row */}
             <div className="flex gap-1.5 overflow-x-auto no-scrollbar">
-              <button className="flex items-center gap-1 px-2.5 h-[44px] rounded-lg border border-[var(--outline-variant)] text-[11px] font-medium shrink-0 active:bg-gray-100">
-                <StickyNote size={11} /> Notes
-              </button>
+              <div className="shrink-0">
+                <button
+                  ref={noteBtnRef}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setNoteDraft(item.note || "");
+                    setShowNoteFlyout(!showNoteFlyout);
+                  }}
+                  className={`flex items-center gap-1 px-2.5 h-[44px] rounded-lg border text-[11px] font-medium active:bg-gray-100 ${
+                    showNoteFlyout || item.note
+                      ? "border-[var(--primary)] bg-[var(--primary-light)]"
+                      : "border-[var(--outline-variant)]"
+                  }`}
+                >
+                  <StickyNote size={11} /> Notes
+                </button>
+                {showNoteFlyout && (() => {
+                  const rect = noteBtnRef.current?.getBoundingClientRect();
+                  const top = rect ? rect.top - 8 : 0;
+                  const left = rect ? rect.left : 16;
+                  return (
+                    <>
+                      <div className="fixed inset-0 z-[200]" onClick={() => setShowNoteFlyout(false)} />
+                      <div
+                        className="fixed z-[201] bg-white rounded-xl shadow-lg border border-gray-200 p-3 w-[260px]"
+                        style={{ bottom: `${window.innerHeight - top}px`, left: `${Math.min(left, window.innerWidth - 276)}px` }}
+                      >
+                        <p className="text-[12px] text-[var(--outline)] mb-1.5">Add a note for the kitchen</p>
+                        <textarea
+                          autoFocus
+                          value={noteDraft}
+                          onChange={(e) => setNoteDraft(e.target.value)}
+                          placeholder="Add notes"
+                          rows={2}
+                          className="w-full rounded-lg border border-[var(--outline-variant)] px-3 py-2 text-[13px] outline-none resize-none focus:border-[var(--primary)]"
+                        />
+                        <div className="flex gap-2 mt-2">
+                          <button
+                            onClick={() => setShowNoteFlyout(false)}
+                            className="flex-1 h-9 rounded-lg border border-[var(--outline-variant)] text-[12px] font-medium active:bg-gray-50"
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            onClick={() => {
+                              updateNote(item.id, noteDraft.trim());
+                              setShowNoteFlyout(false);
+                            }}
+                            className="flex-1 h-9 rounded-lg text-[12px] font-semibold text-white active:opacity-80"
+                            style={{ background: "#6750A4" }}
+                          >
+                            Save
+                          </button>
+                        </div>
+                      </div>
+                    </>
+                  );
+                })()}
+              </div>
               <button className="flex items-center gap-1 px-2.5 h-[44px] rounded-lg border border-[var(--outline-variant)] text-[11px] font-medium shrink-0 active:bg-gray-100">
                 <ArrowLeft size={11} className="rotate-90" /> Breakline
               </button>

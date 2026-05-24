@@ -226,6 +226,9 @@ interface OrderState {
   transferSheetOpen: boolean;
   setTransferSheetOpen: (val: boolean) => void;
 
+  // Last added item tracking (for note drawer default selection)
+  lastAddedItemId: string | null;
+
   // Reset all
   resetOrder: () => void;
   loadTableOrder: (table: Table) => void;
@@ -261,6 +264,7 @@ export const useOrderStore = create<OrderState>((set, get) => ({
   setGuestCount: (count) => set({ guestCount: count }),
 
   cartItems: [],
+  lastAddedItemId: null,
 
   addItem: ({ menuItemId, name, basePrice, modifiers, comboSelections }) => {
     const { cartItems } = get();
@@ -280,6 +284,7 @@ export const useOrderStore = create<OrderState>((set, get) => ({
     if (existing) {
       const newQty = existing.quantity + 1;
       set({
+        lastAddedItemId: existing.id,
         cartItems: cartItems.map((item) =>
           item.id === existing.id
             ? {
@@ -300,7 +305,7 @@ export const useOrderStore = create<OrderState>((set, get) => ({
         ),
       });
     } else {
-      set({ cartItems: [candidate, ...cartItems] });
+      set({ lastAddedItemId: candidate.id, cartItems: [candidate, ...cartItems] });
     }
   },
 

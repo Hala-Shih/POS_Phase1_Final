@@ -82,7 +82,7 @@ function buildItemizedUnits(items: CartItem[]): ItemizedUnit[] {
 }
 
 export default function PaymentScreen({ onClose: externalClose }: { onClose?: () => void } = {}) {
-  const { cartItems, cartTotal, cartCount, guestCount, selectedTable, currentStaff, setScreen, resetOrder, setStaff, setTable } =
+  const { cartItems, cartTotal, cartCount, guestCount, selectedTable, currentStaff, setScreen, resetOrder, setStaff, setTable, setOpenMenuOnArrival } =
     useOrderStore();
 
   const goBack = externalClose ?? (() => setScreen("check"));
@@ -119,6 +119,9 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
   const [paidAmount, setPaidAmount] = useState(0);
   const [paidTotal, setPaidTotal] = useState(0);
   const [totalSettled, setTotalSettled] = useState(0);
+  const [lastChangeDue, setLastChangeDue] = useState<number | null>(null);
+  // Partial pay: amount entered via numpad to charge for this payment method
+  const [partialPayAmount, setPartialPayAmount] = useState<number | null>(null);
   const [pendingCashAfterTip, setPendingCashAfterTip] = useState(false);
   const [selectedDiscountIdx, setSelectedDiscountIdx] = useState<number | null>(null);
   const [isCustomDiscount, setIsCustomDiscount] = useState(false);
@@ -237,8 +240,11 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
     ? roundCurrency(orderBaseTotal / splitGuestCount)
     : 0;
 
-  // The effective total for payment (per-guest when split, full otherwise)
-  const payableTotal = roundCurrency((confirmedSplit ? splitEachPay : orderBaseTotal) + tip);
+  // The effective total for payment (per-guest when split, full otherwise) — excludes tip
+  const payableTotal = roundCurrency(confirmedSplit ? splitEachPay : orderBaseTotal);
+
+  // Display total includes tip for the UI summary line
+  const displayTotalWithTip = roundCurrency(payableTotal + tip);
 
   // Per-guest subtotal base for tip calculation
   const tipBaseSubtotal = confirmedSplit
@@ -252,26 +258,27 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
     : subtotal;
   const displaySubtotal = confirmedSplit ? tipBaseSubtotal : subtotal;
   const displayTax = confirmedSplit ? roundCurrency(splitEachPay - tipBaseSubtotal) : tax;
-  const displayTotal = payableTotal;
+  const displayTotal = displayTotalWithTip;
   const remainingBalance = confirmedSplit?.type === "item"
     ? itemizedRemainingBaseTotal
     : Math.max(0, payableTotal - cumulativePaid);
 
-  // Tender presets computed from payable total
-  const tenderPreset1 = Math.ceil(payableTotal / 10) * 10;
-  const tenderPreset2Raw = Math.ceil(payableTotal / 20) * 20;
+  // Tender presets computed from payable total (including tip for cash)
+  const cashBaseTotal = payableTotal + tip;
+  const tenderPreset1 = Math.ceil(cashBaseTotal / 10) * 10;
+  const tenderPreset2Raw = Math.ceil(cashBaseTotal / 20) * 20;
   const tenderPreset2 = tenderPreset2Raw === tenderPreset1 ? tenderPreset1 + 20 : tenderPreset2Raw;
 
   // Cash drawer computed values
   const cashDiscountAmount =
     isCustomDiscount
       ? customDiscountMode === "%"
-        ? payableTotal * ((parseFloat(customDiscountValue) || 0) / 100)
+        ? cashBaseTotal * ((parseFloat(customDiscountValue) || 0) / 100)
         : (parseFloat(customDiscountValue) || 0)
       : selectedDiscountIdx !== null
-        ? payableTotal * DISCOUNT_PRESETS[selectedDiscountIdx].value
+        ? cashBaseTotal * DISCOUNT_PRESETS[selectedDiscountIdx].value
         : 0;
-  const discountedTotal = payableTotal - cashDiscountAmount;
+  const discountedTotal = cashBaseTotal - cashDiscountAmount;
 
   const cashTenderAmount =
     isCustomTender
@@ -286,7 +293,24 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
 
   const changeDue = cashTenderAmount > 0 ? cashTenderAmount - discountedTotal : null;
 
+  // Capture the numpad "pay" amount and store it for the payment drawer
+  const capturePartialPay = () => {
+    if (numpadMode === "pay" && amountInput) {
+      const entered = parseInt(amountInput || "0") / 100;
+      if (entered > 0 && entered < remainingBalance) {
+        setPartialPayAmount(entered);
+        setAmountInput("");
+        return;
+      }
+    }
+    setPartialPayAmount(null);
+  };
+
+  // The effective amount to charge in the current payment drawer
+  const drawerChargeAmount = partialPayAmount != null ? partialPayAmount : remainingBalance;
+
   const openCashDrawerDirect = () => {
+    capturePartialPay();
     setSelectedDiscountIdx(null);
     setIsCustomDiscount(false);
     setCustomDiscountValue("");
@@ -403,10 +427,11 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
     });
   };
 
-  const recordSuccessfulPayment = (amount: number, settledTotal: number) => {
+  const recordSuccessfulPayment = (amount: number, settledTotal: number, orderSettled?: number) => {
+    const orderAmount = orderSettled ?? settledTotal;
     setPaidAmount(amount);
     setPaidTotal(settledTotal);
-    setTotalSettled((prev) => prev + settledTotal);
+    setTotalSettled((prev) => prev + orderAmount);
 
     if (confirmedSplit?.type === "even") {
       setPaidGuests((prev) => {
@@ -431,7 +456,14 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
       });
     }
 
-    setShowPaymentComplete(true);
+    // Only show "Payment complete" when the entire order is settled (tips excluded from balance)
+    const newCumulativePaid = cumulativePaid + orderAmount;
+    if (newCumulativePaid >= payableTotal - 0.01) {
+      setShowPaymentComplete(true);
+    } else {
+      // Partial payment: update cumulative paid and return to payment screen
+      setCumulativePaid(newCumulativePaid);
+    }
   };
 
   // Compute preview tip for tip drawer total
@@ -562,11 +594,6 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
                       )}
                     </div>
                     <div className="flex flex-col items-end shrink-0 ml-2">
-                      {(item.comped || item.discount || item.priceOverride != null) && (
-                        <span className="text-[10px] line-through text-[var(--outline)]">
-                          ${((item.basePrice + item.modifiers.reduce((s, g) => s + g.modifiers.reduce((s2, m) => s2 + m.price, 0), 0)) * item.quantity).toFixed(2)}
-                        </span>
-                      )}
                       {item.comped ? (
                         <span className="text-xs font-semibold px-1.5 py-0.5 rounded-full bg-[#E8DEF8] text-[#6750A4]">COMP</span>
                       ) : item.discount ? (
@@ -592,23 +619,52 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
         <div className="border-t border-[var(--outline-variant)]" />
 
         {/* Price breakdown */}
-        <div className="px-4 py-3 space-y-3">
+        <div className="px-4 py-2 space-y-1">
           <div className="flex justify-between">
             <span className="text-sm">Subtotal</span>
-            <div className="flex items-center gap-1.5">
-              {(orderComped || orderDiscount || orderPriceOverride != null) && (
-                <span className="text-xs line-through text-[var(--outline)]">
-                  ${(confirmedSplit ? tipBaseSubtotal : rawSubtotal).toFixed(2)}
-                </span>
-              )}
-              <span className={`text-sm font-medium ${(orderComped || orderDiscount || orderPriceOverride != null) ? "text-[#6750A4]" : ""}`}>
-                ${displaySubtotal.toFixed(2)}
+            <span className={`text-sm font-medium ${(orderComped || orderDiscount || (orderPriceOverride != null)) ? "text-[#6750A4]" : ""}`}>
+              ${(orderPriceOverride != null && !orderComped
+                ? (confirmedSplit ? roundCurrency(rawSubtotal / (confirmedSplit.type === "even" ? confirmedSplit.guests : 1)) : rawSubtotal)
+                : displaySubtotal
+              ).toFixed(2)}
+            </span>
+          </div>
+          {orderPriceOverride != null && !orderComped && (
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-[#6750A4] font-medium">Price Override</span>
+              <span className="text-sm font-medium text-[#6750A4]">${displaySubtotal.toFixed(2)}</span>
+            </div>
+          )}
+          {orderComped && (
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-[#6750A4] font-medium">Order Comped</span>
+              <span className="text-xs font-semibold px-1.5 py-0.5 rounded-full bg-[#E8DEF8] text-[#6750A4]">COMP</span>
+            </div>
+          )}
+          {orderDiscount && !orderComped && (
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-[#6750A4] font-medium">Order Discount</span>
+              <span className="text-sm font-medium text-green-600">
+                {orderDiscount.type === "percent" ? `-${orderDiscount.value}%` : `-$${orderDiscount.value.toFixed(2)}`}
               </span>
             </div>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-sm">Tax{taxExempt ? " (Exempt)" : ""}</span>
-            <span className={`text-sm font-medium ${taxExempt ? "text-[#6750A4]" : ""}`}>${displayTax.toFixed(2)}</span>
+          )}
+          <div className="flex justify-between items-center">
+            <div className="flex items-center gap-2">
+              <span className="text-sm">Tax</span>
+              <button
+                onClick={() => setTaxExempt(!taxExempt)}
+                className="flex items-center h-5 rounded-full active:opacity-70 transition-colors overflow-hidden"
+              >
+                <span className={`text-[10px] font-bold px-1.5 h-full flex items-center rounded-full transition-colors ${
+                  !taxExempt ? "bg-gray-200 text-gray-600" : "bg-transparent text-gray-400"
+                }`}>ON</span>
+                <span className={`text-[10px] font-bold px-1.5 h-full flex items-center rounded-full transition-colors ${
+                  taxExempt ? "bg-[#E8DEF8] text-[#6750A4]" : "bg-transparent text-gray-400"
+                }`}>OFF</span>
+              </button>
+            </div>
+            <span className={`text-sm font-medium ${taxExempt ? "text-[#6750A4] line-through" : ""}`}>${displayTax.toFixed(2)}</span>
           </div>
           <div className="flex justify-between items-center">
             <span className="text-sm">Tip</span>
@@ -629,39 +685,9 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
             )}
           </div>
 
-          {/* Order-level adjustments display */}
-          {orderComped && (
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-[#6750A4] font-medium">Order Comped</span>
-              <span className="text-xs font-semibold px-1.5 py-0.5 rounded-full bg-[#E8DEF8] text-[#6750A4]">COMP</span>
-            </div>
-          )}
-          {orderDiscount && !orderComped && (
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-[#6750A4] font-medium">Order Discount</span>
-              <span className="text-sm font-medium text-green-600">
-                {orderDiscount.type === "percent" ? `-${orderDiscount.value}%` : `-$${orderDiscount.value.toFixed(2)}`}
-              </span>
-            </div>
-          )}
-          {orderPriceOverride != null && !orderComped && (
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-[#6750A4] font-medium">Price Override</span>
-              <span className="text-sm font-medium text-[#6750A4]">${orderPriceOverride.toFixed(2)}</span>
-            </div>
-          )}
-          {taxExempt && (
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-[#6750A4] font-medium">Tax Exempt</span>
-              <span className="text-xs font-semibold px-1.5 py-0.5 rounded-full bg-[#E8DEF8] text-[#6750A4]">EXEMPT</span>
-            </div>
-          )}
-
-          <div className="h-px bg-gray-100 !mt-4" />
-
-          <div className="flex justify-between items-center !mt-4">
-            <span className="text-base font-semibold">Total</span>
-            <span className="text-base font-bold">${displayTotal.toFixed(2)}</span>
+          <div className="flex justify-between items-center !mt-2">
+            <span className="text-lg font-semibold">Total</span>
+            <span className="text-lg font-bold">${displayTotal.toFixed(2)}</span>
           </div>
 
           {/* Order-level action buttons */}
@@ -722,17 +748,29 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
             const savings = rawSubtotal - previewTotal;
             return (
               <div ref={orderActionPanelRef} className="!mt-2 p-3 rounded-xl bg-[var(--surface)] border border-[var(--outline-variant)]">
+                {/* Current value display */}
+                <div className="flex items-center justify-between mb-2 px-2 py-2 rounded-lg bg-white">
+                  <span className="text-xs text-[var(--outline)]">
+                    {orderDiscount ? "Current discount" : "Discount"}
+                  </span>
+                  <span className={`text-base font-semibold ${orderDiscountInput ? "text-[#6750A4]" : "text-gray-400"}`}>
+                    {orderDiscountMode === "percent"
+                      ? `${orderDiscountInput || "0"}%`
+                      : `$${orderDiscountInput || "0.00"}`
+                    }
+                  </span>
+                </div>
                 <div className="flex items-center gap-1.5 mb-2">
                   <div className="flex rounded-lg border border-[var(--outline-variant)] overflow-hidden shrink-0">
                     <button
-                      onClick={() => { setOrderDiscountMode("percent"); setOrderDiscountInput(""); }}
+                      onClick={() => { setOrderDiscountMode("percent"); }}
                       className="w-9 h-9 flex items-center justify-center transition-colors"
                       style={orderDiscountMode === "percent" ? { background: "#E8DEF8", color: "#6750A4" } : {}}
                     >
                       <Percent size={14} />
                     </button>
                     <button
-                      onClick={() => { setOrderDiscountMode("amount"); setOrderDiscountInput(""); }}
+                      onClick={() => { setOrderDiscountMode("amount"); }}
                       className="w-9 h-9 flex items-center justify-center border-l border-[var(--outline-variant)] transition-colors"
                       style={orderDiscountMode === "amount" ? { background: "#E8DEF8", color: "#6750A4" } : {}}
                     >
@@ -800,16 +838,28 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
                   ))}
                 </div>
                 <div className="flex gap-1.5">
+                  {orderDiscount && (
+                    <button
+                      onClick={() => {
+                        setOrderDiscount(null);
+                        setOrderDiscountInput("");
+                        setShowOrderDiscountPanel(false);
+                        setShowOrderActions(false);
+                      }}
+                      className="flex-1 h-10 rounded-xl text-xs font-medium text-red-600 border border-red-300 bg-red-50 active:bg-red-100"
+                    >
+                      Remove
+                    </button>
+                  )}
                   <button
                     onClick={() => {
-                      setOrderDiscount(null);
                       setOrderDiscountInput("");
                       setShowOrderDiscountPanel(false);
                       setShowOrderActions(false);
                     }}
                     className="flex-1 h-10 rounded-xl text-xs font-medium border border-[var(--outline-variant)] active:bg-white"
                   >
-                    {orderDiscount ? "RESET" : "Cancel"}
+                    Cancel
                   </button>
                   <button
                     onClick={() => {
@@ -900,27 +950,18 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
 
       {/* Print / Split / Load row */}
       <div className="shrink-0 px-3 pt-2 pb-3 grid grid-cols-3 gap-2">
-        <button className="h-12 rounded-2xl bg-green-100 text-sm font-semibold text-green-700 active:opacity-70 transition-colors">Print</button>
+        <button className="h-12 rounded-2xl bg-white border border-gray-300 text-sm font-medium text-gray-600 active:bg-gray-100 transition-colors">Print</button>
         <button
           onClick={() => {
             setSplitType(null);
             setSplitGuestCount(Math.max(2, guestCount));
             setShowSplitDrawer(true);
           }}
-          className="h-12 rounded-2xl bg-green-100 text-sm font-semibold text-green-700 active:opacity-70 transition-colors"
+          className="h-12 rounded-2xl bg-white border border-gray-300 text-sm font-medium text-gray-600 active:bg-gray-100 transition-colors"
         >
           Split
         </button>
-        {(numpadMode === "discount" || numpadMode === "tips") ? (
-          <button
-            onClick={() => { setAmountInput(""); setNumpadMode("pay"); }}
-            className="h-12 rounded-2xl bg-red-100 text-sm font-semibold text-red-600 active:bg-red-200 transition-colors"
-          >
-            Cancel
-          </button>
-        ) : (
-          <button onClick={handleClose} className="h-12 rounded-2xl bg-white border border-gray-300 text-sm font-medium text-gray-600 active:bg-gray-100 transition-colors">Load</button>
-        )}
+        <button onClick={() => { setOpenMenuOnArrival(true); if (externalClose) externalClose(); setScreen("check"); }} className="h-12 rounded-2xl bg-white border border-gray-300 text-sm font-medium text-gray-600 active:bg-gray-100 transition-colors">Load</button>
       </div>
 
       {/* Numpad + Payment Buttons Footer */}
@@ -929,12 +970,12 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
         <div className="mb-1.5">
           <div className="flex justify-between mb-2">
             <span className="text-sm font-semibold">Balance</span>
-            <span className="text-sm font-bold">${remainingBalance.toFixed(2)}</span>
+            <span className="text-sm font-bold">${(remainingBalance + tip).toFixed(2)}</span>
           </div>
           <div className="flex gap-2">
             {/* Action button */}
             <div className="relative shrink-0 flex flex-col justify-center">
-              <button onClick={() => setShowMoreMenu(!showMoreMenu)} className="h-10 w-14 rounded-xl bg-gray-300 flex items-center justify-center active:bg-gray-400 transition-colors"><Calculator size={20} /></button>
+              <button onClick={() => setShowMoreMenu(!showMoreMenu)} className="h-10 w-14 rounded-xl bg-white flex items-center justify-center active:bg-gray-100 transition-colors"><Calculator size={20} /></button>
               <AnimatePresence>
                 {showMoreMenu && (
                   <>
@@ -955,12 +996,25 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
                         { key: "pay" as const, label: "Pay" },
                         { key: "discount" as const, label: "Discount" },
                         { key: "tips" as const, label: "Add Tips" },
-                        { key: "taxExempt" as const, label: "Tax Exempt" },
                         { key: "priceOverride" as const, label: "Price Override" },
                       ]).map((mode) => (
                         <button
                           key={mode.key}
-                          onClick={() => { setNumpadMode(mode.key); setShowMoreMenu(false); }}
+                          onClick={() => {
+                            if (mode.key === "discount" && orderDiscount) {
+                              setDiscountUnit(orderDiscount.type === "percent" ? "percent" : "amount");
+                              setAmountInput(String(Math.round(orderDiscount.value * 100)));
+                            }
+                            if (mode.key === "tips" && tip > 0) {
+                              setTipsUnit("amount");
+                              setAmountInput(String(Math.round(tip * 100)));
+                            }
+                            if (mode.key === "priceOverride" && orderPriceOverride != null) {
+                              setAmountInput(String(Math.round(orderPriceOverride * 100)));
+                            }
+                            setNumpadMode(mode.key);
+                            setShowMoreMenu(false);
+                          }}
                           className="w-full px-4 py-2.5 text-left text-sm font-medium active:bg-gray-50 flex items-center gap-2"
                         >
                           <span className="w-4 shrink-0">
@@ -978,139 +1032,238 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
             <div className="flex-1 min-w-0">
               <div className="border border-gray-800 rounded-md px-3 py-1 flex items-center justify-between h-10">
                 <span className="text-sm text-gray-500">{{ pay: "Pay", discount: "Discount", tips: "Add Tips", taxExempt: "Tax Exempt", priceOverride: "Price Override" }[numpadMode]}</span>
-                <span className="text-base font-medium">${displayAmountValue}</span>
+                <span className="text-base font-medium">{((numpadMode === "discount" && discountUnit === "percent") || (numpadMode === "tips" && tipsUnit === "percent")) ? `${displayAmountValue}%` : `$${displayAmountValue}`}</span>
               </div>
             </div>
           </div>
-          {/* Mode-specific action buttons (full width) */}
-          {numpadMode === "discount" ? (
-            <div className="flex gap-2 mt-1.5">
-              <div className="h-12 rounded-full flex overflow-hidden border border-gray-300">
-                <button
-                  onClick={() => setDiscountUnit("percent")}
-                  className="px-4 h-full text-sm font-semibold transition-colors"
-                  style={{ background: discountUnit === "percent" ? "#1d4ed8" : "#fff", color: discountUnit === "percent" ? "#fff" : "#6b7280" }}
-                >
-                  %
-                </button>
-                <button
-                  onClick={() => setDiscountUnit("amount")}
-                  className="px-4 h-full text-sm font-semibold transition-colors"
-                  style={{ background: discountUnit === "amount" ? "#1d4ed8" : "#fff", color: discountUnit === "amount" ? "#fff" : "#6b7280" }}
-                >
-                  $
-                </button>
-              </div>
-              <button
-                onClick={() => setAmountInput(discountUnit === "percent" ? "5" : "500")}
-                className="flex-1 h-12 rounded-full text-sm font-semibold active:opacity-80 transition-colors"
-                style={{ background: "#f3e8ff", color: "#6b21a8" }}
-              >
-                {discountUnit === "percent" ? "5%" : "$5"}
-              </button>
-              <button
-                onClick={() => setAmountInput(discountUnit === "percent" ? "10" : "1000")}
-                className="flex-1 h-12 rounded-full text-sm font-semibold active:opacity-80 transition-colors"
-                style={{ background: "#f3e8ff", color: "#6b21a8" }}
-              >
-                {discountUnit === "percent" ? "10%" : "$10"}
-              </button>
-              <button
-                onClick={() => setAmountInput(discountUnit === "percent" ? "20" : "2000")}
-                className="flex-1 h-12 rounded-full text-sm font-semibold active:opacity-80 transition-colors"
-                style={{ background: "#f3e8ff", color: "#6b21a8" }}
-              >
-                {discountUnit === "percent" ? "20%" : "$20"}
-              </button>
-            </div>
-          ) : numpadMode === "tips" ? (
-            <div className="flex gap-2 mt-1.5">
-              <div className="h-12 rounded-full flex overflow-hidden border border-gray-300">
-                <button
-                  onClick={() => setTipsUnit("percent")}
-                  className="px-4 h-full text-sm font-semibold transition-colors"
-                  style={{ background: tipsUnit === "percent" ? "#1d4ed8" : "#fff", color: tipsUnit === "percent" ? "#fff" : "#6b7280" }}
-                >
-                  %
-                </button>
-                <button
-                  onClick={() => setTipsUnit("amount")}
-                  className="px-4 h-full text-sm font-semibold transition-colors"
-                  style={{ background: tipsUnit === "amount" ? "#1d4ed8" : "#fff", color: tipsUnit === "amount" ? "#fff" : "#6b7280" }}
-                >
-                  $
-                </button>
-              </div>
-              <button
-                onClick={() => setAmountInput(tipsUnit === "percent" ? "18" : "1000")}
-                className="flex-1 h-12 rounded-full text-sm font-semibold active:opacity-80 transition-colors"
-                style={{ background: "#fef3c7", color: "#92400e" }}
-              >
-                {tipsUnit === "percent" ? "18%" : "$10"}
-              </button>
-              <button
-                onClick={() => setAmountInput(tipsUnit === "percent" ? "20" : "2000")}
-                className="flex-1 h-12 rounded-full text-sm font-semibold active:opacity-80 transition-colors"
-                style={{ background: "#fef3c7", color: "#92400e" }}
-              >
-                {tipsUnit === "percent" ? "20%" : "$20"}
-              </button>
-              <button
-                onClick={() => setAmountInput(tipsUnit === "percent" ? "25" : "5000")}
-                className="flex-1 h-12 rounded-full text-sm font-semibold active:opacity-80 transition-colors"
-                style={{ background: "#fef3c7", color: "#92400e" }}
-              >
-                {tipsUnit === "percent" ? "25%" : "$50"}
-              </button>
-            </div>
-          ) : (
-            <div className="flex gap-2 mt-1.5">
-              <button
-                onClick={handleOpenCashDrawer}
-                className="flex-1 h-12 rounded-full text-sm font-semibold active:opacity-80 transition-colors"
-                style={{ background: "#dcfce7", color: "#15803d" }}
-              >
-                Cash
-              </button>
-              <button
-                onClick={() => { setCcStep("tap"); setCcTipIdx(null); setShowCreditCardDrawer(true); }}
-                className="flex-1 h-12 rounded-full text-sm font-semibold active:opacity-80 transition-colors"
-                style={{ background: "#dcfce7", color: "#15803d" }}
-              >
-                Credit Card
-              </button>
-              <button
-                onClick={() => { setGcSerial(""); setGcPin(""); setGcStep("input"); setGcResult(null); setShowGiftCardDrawer(true); }}
-                className="flex-1 h-12 rounded-full text-sm font-semibold active:opacity-80 transition-colors"
-                style={{ background: "#dcfce7", color: "#15803d" }}
-              >
-                Gift Card
-              </button>
-            </div>
-          )}
+          {/* Mode-specific action buttons moved below numpad */}
         </div>
 
+        {/* Mode-specific action buttons */}
+        {numpadMode === "discount" ? (
+          <div className="flex gap-2 mb-2">
+            <div className="h-12 rounded-full flex overflow-hidden border border-gray-300">
+              <button
+                onClick={() => setDiscountUnit("percent")}
+                className="px-4 h-full text-sm font-semibold transition-colors"
+                style={{ background: discountUnit === "percent" ? "#7c3aed" : "#fff", color: discountUnit === "percent" ? "#fff" : "#6b7280" }}
+              >
+                %
+              </button>
+              <button
+                onClick={() => setDiscountUnit("amount")}
+                className="px-4 h-full text-sm font-semibold transition-colors"
+                style={{ background: discountUnit === "amount" ? "#7c3aed" : "#fff", color: discountUnit === "amount" ? "#fff" : "#6b7280" }}
+              >
+                $
+              </button>
+            </div>
+            <button
+              onClick={() => setAmountInput(discountUnit === "percent" ? "500" : "500")}
+              className="flex-1 h-12 rounded-full text-sm font-semibold active:opacity-80 transition-colors"
+              style={{ background: "#f3e8ff", color: "#6b21a8" }}
+            >
+              {discountUnit === "percent" ? "5%" : "$5"}
+            </button>
+            <button
+              onClick={() => setAmountInput(discountUnit === "percent" ? "1000" : "1000")}
+              className="flex-1 h-12 rounded-full text-sm font-semibold active:opacity-80 transition-colors"
+              style={{ background: "#f3e8ff", color: "#6b21a8" }}
+            >
+              {discountUnit === "percent" ? "10%" : "$10"}
+            </button>
+            <button
+              onClick={() => setAmountInput(discountUnit === "percent" ? "2000" : "2000")}
+              className="flex-1 h-12 rounded-full text-sm font-semibold active:opacity-80 transition-colors"
+              style={{ background: "#f3e8ff", color: "#6b21a8" }}
+            >
+              {discountUnit === "percent" ? "20%" : "$20"}
+            </button>
+          </div>
+        ) : numpadMode === "tips" ? (
+          <div className="flex gap-2 mb-2">
+            <div className="h-12 rounded-full flex overflow-hidden border border-gray-300">
+              <button
+                onClick={() => setTipsUnit("percent")}
+                className="px-4 h-full text-sm font-semibold transition-colors"
+                style={{ background: tipsUnit === "percent" ? "#f59e0b" : "#fff", color: tipsUnit === "percent" ? "#fff" : "#6b7280" }}
+              >
+                %
+              </button>
+              <button
+                onClick={() => setTipsUnit("amount")}
+                className="px-4 h-full text-sm font-semibold transition-colors"
+                style={{ background: tipsUnit === "amount" ? "#f59e0b" : "#fff", color: tipsUnit === "amount" ? "#fff" : "#6b7280" }}
+              >
+                $
+              </button>
+            </div>
+            <button
+              onClick={() => setAmountInput(tipsUnit === "percent" ? "1800" : "1000")}
+              className="flex-1 h-12 rounded-full text-sm font-semibold active:opacity-80 transition-colors"
+              style={{ background: "#fef3c7", color: "#92400e" }}
+            >
+              {tipsUnit === "percent" ? "18%" : "$10"}
+            </button>
+            <button
+              onClick={() => setAmountInput(tipsUnit === "percent" ? "2000" : "2000")}
+              className="flex-1 h-12 rounded-full text-sm font-semibold active:opacity-80 transition-colors"
+              style={{ background: "#fef3c7", color: "#92400e" }}
+            >
+              {tipsUnit === "percent" ? "20%" : "$20"}
+            </button>
+            <button
+              onClick={() => setAmountInput(tipsUnit === "percent" ? "2500" : "5000")}
+              className="flex-1 h-12 rounded-full text-sm font-semibold active:opacity-80 transition-colors"
+              style={{ background: "#fef3c7", color: "#92400e" }}
+            >
+              {tipsUnit === "percent" ? "25%" : "$50"}
+            </button>
+          </div>
+        ) : numpadMode === "pay" ? null : null}
 
         {/* Numpad grid: 3 rows × 4 columns */}
         <div className="grid grid-cols-4 gap-2 mb-2">
           {/* Row 1 */}
-          <button onClick={() => handleNumpadKey("1")} className="h-14 rounded-2xl bg-white text-lg font-medium active:bg-gray-100 transition-colors">1</button>
-          <button onClick={() => handleNumpadKey("2")} className="h-14 rounded-2xl bg-white text-lg font-medium active:bg-gray-100 transition-colors">2</button>
-          <button onClick={() => handleNumpadKey("3")} className="h-14 rounded-2xl bg-white text-lg font-medium active:bg-gray-100 transition-colors">3</button>
-          <button onClick={() => handleNumpadKey("00")} className="h-14 rounded-2xl bg-white text-lg font-medium active:bg-gray-100 transition-colors">00</button>
+          <button onClick={() => handleNumpadKey("1")} className="h-11 rounded-2xl bg-white text-lg font-medium active:bg-gray-100 transition-colors">1</button>
+          <button onClick={() => handleNumpadKey("2")} className="h-11 rounded-2xl bg-white text-lg font-medium active:bg-gray-100 transition-colors">2</button>
+          <button onClick={() => handleNumpadKey("3")} className="h-11 rounded-2xl bg-white text-lg font-medium active:bg-gray-100 transition-colors">3</button>
+          <button onClick={() => handleNumpadKey("00")} className="h-11 rounded-2xl bg-white text-lg font-medium active:bg-gray-100 transition-colors">00</button>
           {/* Row 2 */}
-          <button onClick={() => handleNumpadKey("4")} className="h-14 rounded-2xl bg-white text-lg font-medium active:bg-gray-100 transition-colors">4</button>
-          <button onClick={() => handleNumpadKey("5")} className="h-14 rounded-2xl bg-white text-lg font-medium active:bg-gray-100 transition-colors">5</button>
-          <button onClick={() => handleNumpadKey("6")} className="h-14 rounded-2xl bg-white text-lg font-medium active:bg-gray-100 transition-colors">6</button>
-          <button onClick={() => handleNumpadKey("0")} className="h-14 rounded-2xl bg-white text-lg font-medium active:bg-gray-100 transition-colors">0</button>
+          <button onClick={() => handleNumpadKey("4")} className="h-11 rounded-2xl bg-white text-lg font-medium active:bg-gray-100 transition-colors">4</button>
+          <button onClick={() => handleNumpadKey("5")} className="h-11 rounded-2xl bg-white text-lg font-medium active:bg-gray-100 transition-colors">5</button>
+          <button onClick={() => handleNumpadKey("6")} className="h-11 rounded-2xl bg-white text-lg font-medium active:bg-gray-100 transition-colors">6</button>
+          <button onClick={() => handleNumpadKey("0")} className="h-11 rounded-2xl bg-white text-lg font-medium active:bg-gray-100 transition-colors">0</button>
           {/* Row 3 */}
-          <button onClick={() => handleNumpadKey("7")} className="h-14 rounded-2xl bg-white text-lg font-medium active:bg-gray-100 transition-colors">7</button>
-          <button onClick={() => handleNumpadKey("8")} className="h-14 rounded-2xl bg-white text-lg font-medium active:bg-gray-100 transition-colors">8</button>
-          <button onClick={() => handleNumpadKey("9")} className="h-14 rounded-2xl bg-white text-lg font-medium active:bg-gray-100 transition-colors">9</button>
-          <button onClick={() => handleNumpadKey("backspace")} className="h-14 rounded-2xl bg-red-100 flex items-center justify-center active:bg-red-200 transition-colors">
+          <button onClick={() => handleNumpadKey("7")} className="h-11 rounded-2xl bg-white text-lg font-medium active:bg-gray-100 transition-colors">7</button>
+          <button onClick={() => handleNumpadKey("8")} className="h-11 rounded-2xl bg-white text-lg font-medium active:bg-gray-100 transition-colors">8</button>
+          <button onClick={() => handleNumpadKey("9")} className="h-11 rounded-2xl bg-white text-lg font-medium active:bg-gray-100 transition-colors">9</button>
+          <button onClick={() => handleNumpadKey("backspace")} className="h-11 rounded-2xl bg-red-100 flex items-center justify-center active:bg-red-200 transition-colors">
             <Delete size={26} className="text-red-400" />
           </button>
         </div>
+
+        {numpadMode === "discount" && (
+          <div className="flex gap-2">
+            <button
+              onClick={() => { setAmountInput(""); setNumpadMode("pay"); }}
+              className="flex-1 h-12 rounded-full text-sm font-semibold active:opacity-80 transition-colors bg-gray-100 text-gray-600"
+            >
+              Cancel
+            </button>
+            {orderDiscount && (
+              <button
+                onClick={() => { setOrderDiscount(null); setAmountInput(""); setNumpadMode("pay"); }}
+                className="flex-1 h-12 rounded-full text-sm font-semibold active:opacity-80 transition-colors bg-red-100 text-red-600"
+              >
+                Remove
+              </button>
+            )}
+            <button
+              onClick={() => {
+                const val = parseInt(amountInput || "0") / 100;
+                if (val > 0) {
+                  setOrderDiscount({ type: discountUnit === "percent" ? "percent" : "amount", value: val });
+                }
+                setAmountInput("");
+                setNumpadMode("pay");
+              }}
+              className="flex-1 h-12 rounded-full text-sm font-semibold active:opacity-80 transition-colors bg-purple-600 text-white"
+            >
+              Apply
+            </button>
+          </div>
+        )}
+
+        {numpadMode === "tips" && (
+          <div className="flex gap-2">
+            <button
+              onClick={() => { setAmountInput(""); setNumpadMode("pay"); }}
+              className="flex-1 h-12 rounded-full text-sm font-semibold active:opacity-80 transition-colors bg-gray-100 text-gray-600"
+            >
+              Cancel
+            </button>
+            {tip > 0 && (
+              <button
+                onClick={() => { setTip(0); setAmountInput(""); setNumpadMode("pay"); }}
+                className="flex-1 h-12 rounded-full text-sm font-semibold active:opacity-80 transition-colors bg-red-100 text-red-600"
+              >
+                Remove
+              </button>
+            )}
+            <button
+              onClick={() => {
+                const val = parseInt(amountInput || "0") / 100;
+                if (val > 0) {
+                  setTip(tipsUnit === "percent" ? payableTotal * (val / 100) : val);
+                }
+                setAmountInput("");
+                setNumpadMode("pay");
+              }}
+              className="flex-1 h-12 rounded-full text-sm font-semibold active:opacity-80 transition-colors bg-amber-500 text-white"
+            >
+              Apply
+            </button>
+          </div>
+        )}
+
+        {numpadMode === "priceOverride" && (
+          <div className="flex gap-2">
+            <button
+              onClick={() => { setAmountInput(""); setNumpadMode("pay"); }}
+              className="flex-1 h-12 rounded-full text-sm font-semibold active:opacity-80 transition-colors bg-gray-100 text-gray-600"
+            >
+              Cancel
+            </button>
+            {orderPriceOverride != null && (
+              <button
+                onClick={() => { setOrderPriceOverride(null); setAmountInput(""); setNumpadMode("pay"); }}
+                className="flex-1 h-12 rounded-full text-sm font-semibold active:opacity-80 transition-colors bg-red-100 text-red-600"
+              >
+                Remove
+              </button>
+            )}
+            <button
+              onClick={() => {
+                const val = parseInt(amountInput || "0") / 100;
+                if (val > 0) {
+                  setOrderPriceOverride(val);
+                }
+                setAmountInput("");
+                setNumpadMode("pay");
+              }}
+              className="flex-1 h-12 rounded-full text-sm font-semibold active:opacity-80 transition-colors bg-blue-600 text-white"
+            >
+              Apply
+            </button>
+          </div>
+        )}
+
+        {numpadMode === "pay" && (
+          <div className="flex gap-2">
+            <button
+              onClick={handleOpenCashDrawer}
+              className="flex-1 h-12 rounded-full text-sm font-semibold active:opacity-80 transition-colors"
+              style={{ background: "#dcfce7", color: "#15803d" }}
+            >
+              Cash
+            </button>
+            <button
+              onClick={() => { capturePartialPay(); setLastChangeDue(null); setCcStep("tap"); setCcTipIdx(null); setShowCreditCardDrawer(true); }}
+              className="flex-1 h-12 rounded-full text-sm font-semibold active:opacity-80 transition-colors"
+              style={{ background: "#dcfce7", color: "#15803d" }}
+            >
+              Credit Card
+            </button>
+            <button
+              onClick={() => { capturePartialPay(); setLastChangeDue(null); setGcSerial(""); setGcPin(""); setGcStep("input"); setGcResult(null); setShowGiftCardDrawer(true); }}
+              className="flex-1 h-12 rounded-full text-sm font-semibold active:opacity-80 transition-colors"
+              style={{ background: "#dcfce7", color: "#15803d" }}
+            >
+              Gift Card
+            </button>
+          </div>
+        )}
 
 
       </div>
@@ -1123,7 +1276,7 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
               initial={{ opacity: 0 }}
               animate={{ opacity: 0.4 }}
               exit={{ opacity: 0 }}
-              onClick={() => setShowGiftCardDrawer(false)}
+              onClick={() => { setShowGiftCardDrawer(false); setPartialPayAmount(null); }}
               className="absolute inset-0 bg-black z-40"
             />
             <motion.div
@@ -1139,6 +1292,7 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
               onDragEnd={(_, info) => {
                 if (info.offset.y > 100 || info.velocity.y > 500) {
                   setShowGiftCardDrawer(false);
+                  setPartialPayAmount(null);
                 }
               }}
               className="absolute bottom-0 left-0 right-0 bg-white z-50 flex flex-col"
@@ -1163,9 +1317,9 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
 
               {/* Total row */}
               <div className="flex justify-between items-baseline px-5 pt-4">
-                <span className="font-medium text-black" style={{ fontSize: 36, lineHeight: "44px" }}>Total</span>
+                <span className="font-medium text-black" style={{ fontSize: 36, lineHeight: "44px" }}>{partialPayAmount != null ? "Amount" : "Total"}</span>
                 <span className="font-medium text-black" style={{ fontSize: 36, lineHeight: "44px" }}>
-                  ${payableTotal.toFixed(2)}
+                  ${drawerChargeAmount.toFixed(2)}
                 </span>
               </div>
 
@@ -1241,8 +1395,8 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
               {/* Step 3: Balance screen — tip + amount to apply */}
               {gcStep === "balance" && gcResult?.success && (() => {
                 const cardBalance = gcResult.balance || 0;
-                const gcTipAmount = gcTipIdx !== null ? payableTotal * TIP_PRESETS[gcTipIdx].value : 0;
-                const totalWithTip = payableTotal + gcTipAmount;
+                const gcTipAmount = gcTipIdx !== null ? drawerChargeAmount * TIP_PRESETS[gcTipIdx].value : 0;
+                const totalWithTip = drawerChargeAmount + gcTipAmount;
                 const maxApply = Math.min(cardBalance, totalWithTip);
                 const applyValue = gcApplyAmount ? parseFloat(gcApplyAmount) || 0 : maxApply;
                 const effectiveApply = Math.min(applyValue, maxApply);
@@ -1313,9 +1467,6 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
                           style={{ border: "1px solid #515151" }}
                         />
                       </div>
-                      <span className="text-xs" style={{ color: "#49454F" }}>
-                        Max: ${maxApply.toFixed(2)}
-                      </span>
                     </div>
 
                     {/* Summary */}
@@ -1337,8 +1488,8 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
 
               {/* Step 4: Done */}
               {gcStep === "done" && gcResult?.success && (() => {
-                const gcTipAmount = gcTipIdx !== null ? payableTotal * TIP_PRESETS[gcTipIdx].value : 0;
-                const totalWithTip = payableTotal + gcTipAmount;
+                const gcTipAmount = gcTipIdx !== null ? drawerChargeAmount * TIP_PRESETS[gcTipIdx].value : 0;
+                const totalWithTip = drawerChargeAmount + gcTipAmount;
                 const cardBalance = gcResult.balance || 0;
                 const maxApply = Math.min(cardBalance, totalWithTip);
                 const applyValue = gcApplyAmount ? parseFloat(gcApplyAmount) || 0 : maxApply;
@@ -1403,8 +1554,8 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
                 )}
                 {gcStep === "balance" && gcResult?.success && (() => {
                   const cardBalance = gcResult.balance || 0;
-                  const gcTipAmount = gcTipIdx !== null ? payableTotal * TIP_PRESETS[gcTipIdx].value : 0;
-                  const totalWithTip = payableTotal + gcTipAmount;
+                  const gcTipAmount = gcTipIdx !== null ? drawerChargeAmount * TIP_PRESETS[gcTipIdx].value : 0;
+                  const totalWithTip = drawerChargeAmount + gcTipAmount;
                   const maxApply = Math.min(cardBalance, totalWithTip);
                   const applyValue = gcApplyAmount ? parseFloat(gcApplyAmount) || 0 : maxApply;
                   const effectiveApply = Math.min(applyValue, maxApply);
@@ -1429,8 +1580,8 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
                 })()}
                 {gcStep === "done" && gcResult?.success && (() => {
                   const cardBalance = gcResult.balance || 0;
-                  const gcTipAmount = gcTipIdx !== null ? payableTotal * TIP_PRESETS[gcTipIdx].value : 0;
-                  const totalWithTip = payableTotal + gcTipAmount;
+                  const gcTipAmount = gcTipIdx !== null ? drawerChargeAmount * TIP_PRESETS[gcTipIdx].value : 0;
+                  const totalWithTip = drawerChargeAmount + gcTipAmount;
                   const maxApply = Math.min(cardBalance, totalWithTip);
                   const applyValue = gcApplyAmount ? parseFloat(gcApplyAmount) || 0 : maxApply;
                   const effectiveApply = Math.min(applyValue, maxApply);
@@ -1440,14 +1591,12 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
                   return (
                     <button
                       onClick={() => {
-                        setCumulativePaid(prev => prev + effectiveApply);
                         if (gcTipAmount > 0) setTip(gcTipAmount);
                         setShowGiftCardDrawer(false);
+                        setPartialPayAmount(null);
 
-                        if (coversFullAmount) {
-                          recordSuccessfulPayment(effectiveApply, totalWithTip);
-                        }
-                        // If partial, just close drawer — remaining balance updates automatically
+                        const gcOrderSettled = Math.min(effectiveApply, drawerChargeAmount);
+                        recordSuccessfulPayment(effectiveApply, totalWithTip, gcOrderSettled);
                       }}
                       className="w-full h-14 rounded-full flex items-center justify-center active:opacity-80 transition-colors"
                       style={{ background: "#00B618" }}
@@ -1785,7 +1934,7 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
               initial={{ opacity: 0 }}
               animate={{ opacity: 0.4 }}
               exit={{ opacity: 0 }}
-              onClick={() => setShowCreditCardDrawer(false)}
+              onClick={() => { setShowCreditCardDrawer(false); setPartialPayAmount(null); }}
               className="absolute inset-0 bg-black z-40"
             />
             <motion.div
@@ -1801,6 +1950,7 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
               onDragEnd={(_, info) => {
                 if (info.offset.y > 100 || info.velocity.y > 500) {
                   setShowCreditCardDrawer(false);
+                  setPartialPayAmount(null);
                 }
               }}
               className="absolute bottom-0 left-0 right-0 bg-white z-50 flex flex-col"
@@ -1821,9 +1971,9 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
 
               {/* Total row */}
               <div className="flex justify-between items-baseline px-5 pt-4">
-                <span className="font-medium text-black" style={{ fontSize: 36, lineHeight: "44px" }}>Total</span>
+                <span className="font-medium text-black" style={{ fontSize: 36, lineHeight: "44px" }}>{partialPayAmount != null ? "Amount" : "Total"}</span>
                 <span className="font-medium text-black" style={{ fontSize: 36, lineHeight: "44px" }}>
-                  ${payableTotal.toFixed(2)}
+                  ${drawerChargeAmount.toFixed(2)}
                 </span>
               </div>
 
@@ -1908,8 +2058,8 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
 
               {/* Step: Tip */}
               {ccStep === "tip" && (() => {
-                const ccTipAmount = ccTipIdx !== null ? payableTotal * TIP_PRESETS[ccTipIdx].value : 0;
-                const ccTotalWithTip = payableTotal + ccTipAmount;
+                const ccTipAmount = ccTipIdx !== null ? drawerChargeAmount * TIP_PRESETS[ccTipIdx].value : 0;
+                const ccTotalWithTip = drawerChargeAmount + ccTipAmount;
                 return (
                   <div className="flex flex-col flex-1 pb-5">
                     {/* Tip section */}
@@ -1970,10 +2120,12 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
                       <button
                         className="w-full h-14 rounded-full flex items-center justify-center bg-[#00B618] active:opacity-80"
                         onClick={() => {
-                          setTip(ccTipIdx !== null ? payableTotal * TIP_PRESETS[ccTipIdx].value : 0);
+                          const tipAmount = ccTipIdx !== null ? drawerChargeAmount * TIP_PRESETS[ccTipIdx].value : 0;
+                          setTip(tipAmount);
                           setShowCreditCardDrawer(false);
-                          const ccChargeTotal = payableTotal + (ccTipIdx !== null ? payableTotal * TIP_PRESETS[ccTipIdx].value : 0);
-                          recordSuccessfulPayment(ccChargeTotal, ccChargeTotal);
+                          setPartialPayAmount(null);
+                          const ccChargeTotal = drawerChargeAmount + tipAmount;
+                          recordSuccessfulPayment(ccChargeTotal, ccChargeTotal, drawerChargeAmount);
                         }}
                       >
                         <span className="text-base font-medium text-white" style={{ letterSpacing: "0.15px" }}>
@@ -1985,7 +2137,8 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
                         onClick={() => {
                           setTip(0);
                           setShowCreditCardDrawer(false);
-                          recordSuccessfulPayment(payableTotal, payableTotal);
+                          setPartialPayAmount(null);
+                          recordSuccessfulPayment(drawerChargeAmount, drawerChargeAmount);
                         }}
                       >
                         <span className="text-base font-semibold text-black" style={{ letterSpacing: "0.15px" }}>
@@ -2180,7 +2333,7 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
               initial={{ opacity: 0 }}
               animate={{ opacity: 0.4 }}
               exit={{ opacity: 0 }}
-              onClick={() => setShowCashDrawer(false)}
+              onClick={() => { setShowCashDrawer(false); setPartialPayAmount(null); }}
               className="absolute inset-0 bg-black z-40"
             />
 
@@ -2198,6 +2351,7 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
               onDragEnd={(_, info) => {
                 if (info.offset.y > 100 || info.velocity.y > 500) {
                   setShowCashDrawer(false);
+                  setPartialPayAmount(null);
                 }
               }}
               className="absolute bottom-0 left-0 right-0 bg-white z-50 flex flex-col"
@@ -2219,10 +2373,10 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
               <div className="px-5 pt-4 pb-3">
                 <div className="flex items-baseline justify-between">
                   <span className="font-medium text-black" style={{ fontSize: 36, lineHeight: "44px" }}>
-                    Total
+                    {partialPayAmount != null ? "Amount" : "Total"}
                   </span>
                   <span className="font-medium text-black" style={{ fontSize: 36, lineHeight: "44px" }}>
-                    ${discountedTotal.toFixed(2)}
+                    ${(partialPayAmount != null ? partialPayAmount : discountedTotal).toFixed(2)}
                   </span>
                 </div>
                 {cashDiscountAmount > 0 && (
@@ -2452,7 +2606,12 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
                   }
                   onClick={() => {
                     setShowCashDrawer(false);
-                    recordSuccessfulPayment(cashTenderAmount, discountedTotal);
+                    setPartialPayAmount(null);
+                    const settledAmount = partialPayAmount != null ? partialPayAmount : discountedTotal;
+                    const orderAmount = partialPayAmount != null ? partialPayAmount : (discountedTotal - tip);
+                    const change = cashTenderAmount > settledAmount ? cashTenderAmount - settledAmount : null;
+                    setLastChangeDue(change);
+                    recordSuccessfulPayment(cashTenderAmount, settledAmount, orderAmount);
                   }}
                   className="w-full h-14 rounded-full flex items-center justify-center active:opacity-80 disabled:opacity-40 transition-colors"
                   style={{ background: "#00B618" }}
@@ -2537,6 +2696,16 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
                     ${Math.max(0, paidTotal - paidAmount).toFixed(2)}
                   </span>
                 </div>
+                {lastChangeDue != null && lastChangeDue > 0 && (
+                  <div className="flex justify-between">
+                    <span className="text-base font-medium" style={{ color: "#00B618", letterSpacing: "0.15px" }}>
+                      Change due
+                    </span>
+                    <span className="text-base font-medium" style={{ color: "#00B618", letterSpacing: "0.15px" }}>
+                      ${lastChangeDue.toFixed(2)}
+                    </span>
+                  </div>
+                )}
               </div>
 
               {/* Guest label when in even split mode */}
@@ -2594,6 +2763,9 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
                   <button
                     onClick={() => {
                       setShowPaymentComplete(false);
+                      setTip(0);
+                      setCumulativePaid(0);
+                      setPartialPayAmount(null);
                       // Auto-advance to next unpaid guest
                       for (let i = 0; i < confirmedSplit.guests; i++) {
                         if (!paidGuests.has(i)) {
@@ -2613,6 +2785,9 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
                   <button
                     onClick={() => {
                       setShowPaymentComplete(false);
+                      setTip(0);
+                      setCumulativePaid(0);
+                      setPartialPayAmount(null);
                       // Record current payment and reset current
                       const prevCurrent = splitAmountCurrent;
                       setSplitAmountPayments(prev => [...prev, prevCurrent]);
@@ -2650,8 +2825,14 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
                   <button
                     onClick={() => {
                       setShowPaymentComplete(false);
+                      setTip(0);
+                      setCumulativePaid(0);
+                      setTotalSettled(0);
+                      setPartialPayAmount(null);
+                      setLastChangeDue(null);
                       resetOrder();
-                      setScreen("login");
+                      if (externalClose) externalClose();
+                      setScreen("home");
                     }}
                     className="w-full h-14 rounded-full flex items-center justify-center active:opacity-80 transition-colors"
                     style={{ background: "#00B618" }}
