@@ -389,11 +389,6 @@ export default function ComboConfigSheet({
               return (
                 <button
                   key={i}
-                  ref={(el) => {
-                    if (i === activeOrderIndex && el) {
-                      el.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
-                    }
-                  }}
                   onClick={() => {
                     setActiveOrderIndex(i);
                   }}

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { ArrowLeft, Users, MapPin, ArrowRightLeft, X, Ban, Check, ClipboardList } from "lucide-react";
+import { ArrowLeft, Users, MapPin, ArrowRightLeft, X, Ban, Check, ClipboardList, Share2, Repeat, Trash2, Merge } from "lucide-react";
 import { motion, AnimatePresence, useDragControls } from "framer-motion";
 import { Staff, Table } from "@/lib/types";
 import { useOrderStore } from "@/store/order-store";
@@ -144,20 +144,40 @@ export default function Header({
               {/* Table dropdown menu */}
               {showTableMenu && (
                 <div className="absolute right-0 top-full mt-1 w-44 bg-white rounded-xl shadow-lg border border-[var(--outline-variant)] overflow-hidden z-50">
-                  {onTransferTable && (
-                    <button
-                      onClick={() => {
-                        setShowTableMenu(false);
-                        setShowTableTransfer(true);
-                        onCollapseDrawers?.();
-                      }}
-                      className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-[var(--foreground)] hover:bg-gray-50 active:bg-gray-100"
-                    >
-                      <ArrowRightLeft size={16} className="text-[var(--outline)]" />
-                      Transfer table
-                    </button>
-                  )}
+                  <button
+                    onClick={() => setShowTableMenu(false)}
+                    className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-[var(--foreground)] hover:bg-gray-50 active:bg-gray-100"
+                  >
+                    <Share2 size={16} className="text-[var(--outline)]" />
+                    Share Table
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowTableMenu(false);
+                      setShowTableTransfer(true);
+                      onCollapseDrawers?.();
+                    }}
+                    className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-[var(--foreground)] hover:bg-gray-50 active:bg-gray-100"
+                  >
+                    <Repeat size={16} className="text-[var(--outline)]" />
+                    Switch Table
+                  </button>
+                  <button
+                    onClick={() => setShowTableMenu(false)}
+                    className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-[var(--foreground)] hover:bg-gray-50 active:bg-gray-100"
+                  >
+                    <Trash2 size={16} className="text-[var(--outline)]" />
+                    Clear Table
+                  </button>
+                  <button
+                    onClick={() => setShowTableMenu(false)}
+                    className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-[var(--foreground)] hover:bg-gray-50 active:bg-gray-100"
+                  >
+                    <Merge size={16} className="text-[var(--outline)]" />
+                    Combine Table
+                  </button>
                   {onVoidOrder && (
+                    <div className="border-t border-[var(--outline-variant)]">
                     <button
                       onClick={() => {
                         setShowTableMenu(false);
@@ -168,6 +188,7 @@ export default function Header({
                       <Ban size={16} />
                       Void order
                     </button>
+                    </div>
                   )}
                 </div>
               )}
@@ -363,7 +384,7 @@ export default function Header({
                 style={{ touchAction: "none" }}
                 className="flex items-center justify-between px-4 py-3 border-b border-[var(--outline-variant)] shrink-0"
               >
-                <span className="text-base font-medium">Transfer to table</span>
+                <span className="text-base font-medium">Switch to table</span>
                 <button
                   onClick={() => { setShowTableTransfer(false); setSelectedTransferTableId(null); setTransferArea("All"); }}
                   className="w-8 h-8 flex items-center justify-center rounded-full active:bg-gray-100"

@@ -4,10 +4,12 @@ import { useState } from "react";
 import Header from "@/components/ui/Header";
 import NumPad from "@/components/ui/NumPad";
 import { useOrderStore } from "@/store/order-store";
+import staffData from "@/data/staff.json";
+import type { Staff } from "@/lib/types";
 
 export default function GuestCountScreen() {
   const [count, setCount] = useState("");
-  const { currentStaff, selectedTable, setGuestCount, setScreen } = useOrderStore();
+  const { currentStaff, setStaff, selectedTable, setGuestCount, setScreen } = useOrderStore();
 
   const handleSave = () => {
     const num = parseInt(count, 10);
@@ -23,6 +25,9 @@ export default function GuestCountScreen() {
         onBack={() => setScreen("tables")}
         serverName={currentStaff?.name}
         tableName={selectedTable?.name}
+        onTransfer={(staff) => setStaff(staff)}
+        staffList={staffData as Staff[]}
+        currentStaffId={currentStaff?.id}
       />
 
       <div className="flex-1 flex flex-col items-center justify-center">

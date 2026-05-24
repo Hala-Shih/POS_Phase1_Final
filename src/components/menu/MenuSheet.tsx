@@ -340,17 +340,17 @@ export default function MenuSheet({ open, onClose, actionButtons }: MenuSheetPro
       {open && (
         <>
           <div
-            className="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl z-50 flex flex-col overflow-hidden"
-            style={{ height: "55%", boxShadow: "0 -8px 32px -4px rgba(0,0,0,0.18)" }}
+            className="absolute bottom-0 left-0 right-0 bg-white z-50 flex flex-col overflow-hidden"
+            style={{ height: "55%" }}
           >
             {/* Action buttons banner */}
-            <div className="bg-[#F0EFF4] shrink-0 rounded-t-2xl">
+            <div className="bg-[#F0EFF4] shrink-0 border-t border-gray-300">
               {actionButtons}
             </div>
 
             {/* Header — at Level 2 the header merges with category pills into one row */}
             {level !== 2 && (
-              <div className="flex items-center justify-between pr-2 py-1.5 border-b border-gray-100 shrink-0" style={{ minHeight: 48, paddingLeft: 20 }}>
+              <div className="flex items-center justify-between pr-2 py-1.5 border-b border-gray-100 shrink-0 bg-[#F5F5F5]" style={{ minHeight: 48, paddingLeft: 20 }}>
                 <div className="flex items-center gap-1 min-w-0">
                   {level > 1 && (
                     <button onClick={goBack} className="w-8 h-8 flex items-center justify-center rounded-full active:bg-gray-100 shrink-0">
@@ -365,7 +365,7 @@ export default function MenuSheet({ open, onClose, actionButtons }: MenuSheetPro
             )}
 
             {/* Content area */}
-            <div className="flex-1 min-h-0 relative overflow-hidden">
+            <div className="flex-1 min-h-0 relative overflow-hidden bg-[#F5F5F5]">
 
                 {/* Level 1 — Book grid */}
                 {activeBookId == null && (
@@ -407,7 +407,7 @@ export default function MenuSheet({ open, onClose, actionButtons }: MenuSheetPro
                                   block: "nearest",
                                 });
                               }}
-                              className="shrink-0 px-3 h-9 rounded-full text-[13px] font-medium border transition-colors"
+                              className="shrink-0 px-3 h-[44px] rounded-full text-[13px] font-medium border transition-colors"
                               style={
                                 active
                                   ? { background: "#6750A4", color: "white", borderColor: "#6750A4" }

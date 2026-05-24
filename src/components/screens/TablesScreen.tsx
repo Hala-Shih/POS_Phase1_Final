@@ -5,7 +5,8 @@ import Header from "@/components/ui/Header";
 import TabBar from "@/components/ui/TabBar";
 import { useOrderStore } from "@/store/order-store";
 import tablesData from "@/data/tables.json";
-import { Table } from "@/lib/types";
+import staffData from "@/data/staff.json";
+import { Table, Staff } from "@/lib/types";
 import { Map, Keyboard } from "lucide-react";
 
 const tables = tablesData as Table[];
@@ -26,7 +27,7 @@ export default function TablesScreen() {
   const [keypadValue, setKeypadValue] = useState("");
   const [keypadPrefix, setKeypadPrefix] = useState("");
   const [keypadError, setKeypadError] = useState(false);
-  const { currentStaff, setTable, resetOrder, setScreen, loadTableOrder, setOpenMenuOnArrival } = useOrderStore();
+  const { currentStaff, setStaff, setTable, resetOrder, setScreen, loadTableOrder, setOpenMenuOnArrival } = useOrderStore();
 
   // Group tables by area for map rendering
   const areasToShow = activeArea === "All"
@@ -312,6 +313,9 @@ export default function TablesScreen() {
           setScreen("home");
         }}
         serverName={currentStaff?.name}
+        onTransfer={(staff) => setStaff(staff)}
+        staffList={staffData as Staff[]}
+        currentStaffId={currentStaff?.id}
       />
 
       {!showKeypad && (

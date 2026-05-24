@@ -503,6 +503,7 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
         serverName={currentStaff?.name}
         tableName={selectedTable?.name}
         guestCount={guestCount}
+        checkTotal={orderBaseTotal}
         onGuestCountTap={() => setScreen("guest-count")}
         onTableTap={() => setScreen("tables")}
         onLogout={() => { resetOrder(); setScreen("login"); }}
@@ -616,8 +617,6 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
           </div>
         )}
 
-        <div className="border-t border-[var(--outline-variant)]" />
-
         {/* Price breakdown */}
         <div className="px-4 py-2 space-y-1">
           <div className="flex justify-between">
@@ -654,12 +653,12 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
               <span className="text-sm">Tax</span>
               <button
                 onClick={() => setTaxExempt(!taxExempt)}
-                className="flex items-center h-5 rounded-full active:opacity-70 transition-colors overflow-hidden"
+                className="flex items-center h-7 rounded-full active:opacity-70 transition-colors overflow-hidden"
               >
-                <span className={`text-[10px] font-bold px-1.5 h-full flex items-center rounded-full transition-colors ${
+                <span className={`text-[11px] font-bold px-2 h-full flex items-center rounded-full transition-colors ${
                   !taxExempt ? "bg-gray-200 text-gray-600" : "bg-transparent text-gray-400"
                 }`}>ON</span>
-                <span className={`text-[10px] font-bold px-1.5 h-full flex items-center rounded-full transition-colors ${
+                <span className={`text-[11px] font-bold px-2 h-full flex items-center rounded-full transition-colors ${
                   taxExempt ? "bg-[#E8DEF8] text-[#6750A4]" : "bg-transparent text-gray-400"
                 }`}>OFF</span>
               </button>
@@ -945,23 +944,22 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
           )}
         </div>
 
-        <div className="border-t border-[var(--outline-variant)]" />
       </div>
 
       {/* Print / Split / Load row */}
-      <div className="shrink-0 px-3 pt-2 pb-3 grid grid-cols-3 gap-2">
-        <button className="h-12 rounded-2xl bg-white border border-gray-300 text-sm font-medium text-gray-600 active:bg-gray-100 transition-colors">Print</button>
+      <div className="shrink-0 px-3 pt-2 pb-3 grid grid-cols-3 gap-2 border-t border-gray-300">
+        <button className="h-[48px] rounded-xl bg-white border border-gray-800 text-[13px] font-medium active:opacity-70 transition-colors">Print</button>
         <button
           onClick={() => {
             setSplitType(null);
             setSplitGuestCount(Math.max(2, guestCount));
             setShowSplitDrawer(true);
           }}
-          className="h-12 rounded-2xl bg-white border border-gray-300 text-sm font-medium text-gray-600 active:bg-gray-100 transition-colors"
+          className="h-[48px] rounded-xl bg-white border border-gray-800 text-[13px] font-medium active:opacity-70 transition-colors"
         >
           Split
         </button>
-        <button onClick={() => { setOpenMenuOnArrival(true); if (externalClose) externalClose(); setScreen("check"); }} className="h-12 rounded-2xl bg-white border border-gray-300 text-sm font-medium text-gray-600 active:bg-gray-100 transition-colors">Load</button>
+        <button onClick={() => { setOpenMenuOnArrival(true); if (externalClose) externalClose(); setScreen("check"); }} className="h-[48px] rounded-xl bg-white border border-gray-800 text-[13px] font-medium active:opacity-70 transition-colors">Load menu</button>
       </div>
 
       {/* Numpad + Payment Buttons Footer */}

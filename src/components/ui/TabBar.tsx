@@ -74,7 +74,7 @@ export default function TabBar({
           key={tab.id}
           ref={activeId === tab.id ? activeTabRef : undefined}
           onClick={() => onSelect(tab.id)}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium whitespace-nowrap shrink-0 border transition-colors ${
+          className={`flex items-center gap-1.5 px-3 h-[44px] rounded-full text-sm font-medium whitespace-nowrap shrink-0 border transition-colors ${
             activeId === tab.id
               ? "bg-[var(--primary-light)] border-[var(--primary)] text-[var(--primary)]"
               : "border-[var(--outline-variant)] text-[var(--outline)]"

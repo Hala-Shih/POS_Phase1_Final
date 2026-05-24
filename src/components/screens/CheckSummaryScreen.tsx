@@ -71,6 +71,7 @@ export default function CheckSummaryScreen({ menuOpen: externalMenuOpen, setMenu
   const [priceAdjSign, setPriceAdjSign] = useState<1 | -1>(1);
   const [priceAdjValue, setPriceAdjValue] = useState("");
   const [breaklineDraft, setBreaklineDraft] = useState(false);
+  const [showTableActions, setShowTableActions] = useState(false);
   const selectedItemId: string | null = null;
 
   const collapseToCheck = () => {
@@ -271,43 +272,64 @@ export default function CheckSummaryScreen({ menuOpen: externalMenuOpen, setMenu
       </div>
 
       {/* Full action grid — visible on check summary (no drawer open) */}
-      <div className={`px-3 pb-3 pt-3 bg-[#F0EFF4] border-t border-gray-200 shrink-0 ${fullHeightDrawerOpen ? "hidden" : ""}`}>
+      <div className={`px-3 pb-3 pt-3 bg-[#F0EFF4] shrink-0 ${fullHeightDrawerOpen ? "hidden" : ""}`} style={{ boxShadow: '0 -4px 12px rgba(0,0,0,0.08)' }}>
         <div className="grid grid-cols-2 gap-2">
           <button
             onClick={() => setMenuOpen(true)}
-            className="flex items-center justify-center py-3.5 rounded-xl border border-gray-800 text-[13px] font-medium bg-white transition-colors active:opacity-70"
+            className="flex items-center justify-center h-[48px] rounded-xl border border-gray-800 text-[13px] font-medium bg-white transition-colors active:opacity-70"
           >
-            Load
+            Load menu
           </button>
           <button
             onClick={() => { markAllSent(); }}
             disabled={unsentItems.length === 0}
-            className="flex items-center justify-center py-3.5 rounded-xl border border-gray-800 text-[13px] font-medium bg-white transition-colors active:opacity-70 disabled:opacity-40"
+            className="flex items-center justify-center h-[48px] rounded-xl border border-gray-800 text-[13px] font-medium bg-white transition-colors active:opacity-70 disabled:opacity-40"
           >
             Send
           </button>
           <button
-            className="flex items-center justify-center py-3.5 rounded-xl border border-gray-800 text-[13px] font-medium bg-white transition-colors active:opacity-70"
+            disabled={isEmpty}
+            className="flex items-center justify-center h-[48px] rounded-xl border border-gray-800 text-[13px] font-medium bg-white transition-colors active:opacity-70 disabled:opacity-40"
           >
             Print check
           </button>
           <button
             onClick={handlePay}
             disabled={isEmpty}
-            className="flex items-center justify-center py-3.5 rounded-xl border border-gray-800 text-[13px] font-medium bg-white transition-colors active:opacity-70 disabled:opacity-40"
+            className="flex items-center justify-center h-[48px] rounded-xl border border-gray-800 text-[13px] font-medium bg-white transition-colors active:opacity-70 disabled:opacity-40"
           >
             Pay
           </button>
           <button
-            className="flex items-center justify-center py-3.5 rounded-xl border border-gray-800 text-[13px] font-medium bg-white transition-colors active:opacity-70"
+            disabled={isEmpty}
+            className="flex items-center justify-center h-[48px] rounded-xl border border-gray-800 text-[13px] font-medium bg-white transition-colors active:opacity-70 disabled:opacity-40"
           >
             Split check
           </button>
-          <button
-            className="flex items-center justify-center py-3.5 rounded-xl border border-gray-800 text-[13px] font-medium bg-white transition-colors active:opacity-70"
-          >
-            Table actions
-          </button>
+          <div className="relative">
+            <button
+              onClick={() => setShowTableActions(!showTableActions)}
+              className="w-full flex items-center justify-center h-[48px] rounded-xl border border-gray-800 text-[13px] font-medium bg-white transition-colors active:opacity-70"
+            >
+              Table actions
+            </button>
+            {showTableActions && (
+              <>
+                <div className="fixed inset-0 z-[60]" onClick={() => setShowTableActions(false)} />
+                <div className="absolute bottom-full left-0 right-0 mb-1 bg-white rounded-xl shadow-lg border border-gray-200 z-[61] py-1 overflow-hidden">
+                  {["Share Table", "Switch Table", "Clear Table", "Combine Table"].map((action) => (
+                    <button
+                      key={action}
+                      onClick={() => setShowTableActions(false)}
+                      className="w-full px-4 py-3 text-left text-[13px] font-medium active:bg-gray-50 transition-colors"
+                    >
+                      {action}
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
         </div>
       </div>
 
@@ -316,25 +338,25 @@ export default function CheckSummaryScreen({ menuOpen: externalMenuOpen, setMenu
         open={menuOpen}
         onClose={() => setMenuOpen(false)}
         actionButtons={
-            <div className="flex gap-2 px-3 py-3 border-b border-gray-200 shrink-0">
+            <div className="flex gap-2 px-3 py-3 border-b border-gray-200 shrink-0 bg-white">
               <button
                 onClick={() => { markAllSent(); }}
                 disabled={isEmpty || unsentItems.length === 0}
-                className="flex-1 flex items-center justify-center h-[44px] rounded-xl border border-gray-800 text-[13px] font-medium bg-white transition-colors active:opacity-70 disabled:opacity-40"
+                className="flex-1 flex items-center justify-center h-[48px] rounded-xl border border-gray-800 text-[13px] font-medium bg-white transition-colors active:opacity-70 disabled:opacity-40"
               >
                 Send
               </button>
               <button
                 onClick={() => { setScreen("tables"); }}
                 disabled={isEmpty}
-                className="flex-1 flex items-center justify-center h-[44px] rounded-xl border border-gray-800 text-[13px] font-medium bg-white transition-colors active:opacity-70 disabled:opacity-40"
+                className="flex-1 flex items-center justify-center h-[48px] rounded-xl border border-gray-800 text-[13px] font-medium bg-white transition-colors active:opacity-70 disabled:opacity-40"
               >
                 Hold
               </button>
               <button
                 onClick={handlePay}
                 disabled={isEmpty}
-                className="flex-1 flex items-center justify-center h-[44px] rounded-xl border border-gray-800 text-[13px] font-medium bg-white transition-colors active:opacity-70 disabled:opacity-40"
+                className="flex-1 flex items-center justify-center h-[48px] rounded-xl border border-gray-800 text-[13px] font-medium bg-white transition-colors active:opacity-70 disabled:opacity-40"
               >
                 Pay
               </button>
@@ -360,7 +382,7 @@ export default function CheckSummaryScreen({ menuOpen: externalMenuOpen, setMenu
                   setShowNoteDrawer(true);
                 }}
                 disabled={isEmpty}
-                className={`flex-1 flex items-center justify-center h-[44px] rounded-xl border text-[13px] font-medium bg-white transition-colors active:opacity-70 disabled:opacity-40 ${
+                className={`flex-1 flex items-center justify-center h-[48px] rounded-xl border text-[13px] font-medium bg-white transition-colors active:opacity-70 disabled:opacity-40 ${
                   orderNote || cartItems.some(i => i.note) ? "border-[var(--primary)] text-[var(--primary)]" : "border-gray-800"
                 }`}
               >
@@ -930,14 +952,9 @@ function PriceColumn({
   }
 
   return (
-    <div className="shrink-0 mt-0.5 text-right leading-tight">
-      <div className="text-[12px] text-[var(--outline)] line-through">
-        {formatCurrency(breakdown.basePrice)}
-      </div>
-      <div className="text-[14px] font-semibold text-[var(--primary)]">
-        {formatCurrency(breakdown.effectiveUnitPrice)}
-      </div>
-    </div>
+    <span className={`text-[13px] font-medium shrink-0 mt-0.5 ${baseTone}`}>
+      {formatCurrency(breakdown.effectiveUnitPrice)}
+    </span>
   );
 }
 

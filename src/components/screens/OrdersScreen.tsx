@@ -5,7 +5,8 @@ import { Check, Users, MapPin, Plus } from "lucide-react";
 import { useOrderStore } from "@/store/order-store";
 import Header from "@/components/ui/Header";
 import ordersData from "@/data/orders.json";
-import type { Order, OrderStatus } from "@/lib/types";
+import staffData from "@/data/staff.json";
+import type { Order, OrderStatus, Staff } from "@/lib/types";
 
 const mockOrders = ordersData as Order[];
 
@@ -53,7 +54,7 @@ function timeAgo(dateString: string): string {
 }
 
 export default function OrdersScreen() {
-  const { currentStaff, setScreen, loadTableOrder } = useOrderStore();
+  const { currentStaff, setStaff, setScreen, loadTableOrder } = useOrderStore();
   const [activeFilter, setActiveFilter] = useState<FilterKey>("all");
 
   const filtered = mockOrders.filter((order) => {
@@ -100,10 +101,13 @@ export default function OrdersScreen() {
   };
 
   return (
-    <div className="h-full flex flex-col bg-[var(--surface)]">
+    <div className="h-full flex flex-col bg-white">
       <Header
         onBack={() => setScreen("home")}
         serverName={currentStaff?.name}
+        onTransfer={(staff) => setStaff(staff)}
+        staffList={staffData as Staff[]}
+        currentStaffId={currentStaff?.id}
       />
 
       {/* Filter tabs */}

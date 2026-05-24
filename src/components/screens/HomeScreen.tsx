@@ -25,7 +25,7 @@ export default function HomeScreen() {
   const t = labels[language];
 
   return (
-    <div className="h-full flex flex-col bg-[var(--surface)]">
+    <div className="h-full flex flex-col bg-white">
       {/* Header */}
       <div className="h-12 flex items-center justify-between px-3 bg-white border-b border-[var(--outline-variant)]">
         <button
