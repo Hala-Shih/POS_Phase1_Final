@@ -8,33 +8,20 @@ import { useOrderStore } from "@/store/order-store";
 import menuData from "@/data/menu.json";
 import staffData from "@/data/staff.json";
 import tablesData from "@/data/tables.json";
-import { MenuBook, MenuItem, Staff, Table } from "@/lib/types";
+import { MenuBook, MenuItem, Staff, Table, Language } from "@/lib/types";
 import CartBar from "@/components/cart/CartBar";
 import CartDrawer from "@/components/cart/CartDrawer";
 import ItemConfigSheet from "@/components/menu/ItemConfigSheet";
 import ComboConfigSheet from "@/components/menu/ComboConfigSheet";
-import { Pencil, Check, Search, X, Trash2, Plus, Minus } from "lucide-react";
+import { Search, X, Trash2, Plus, Minus } from "lucide-react";
 
 const categories = menuData as MenuBook[];
-
-const menuBooks = [
-  "Breakfast",
-  "Lunch",
-  "Brunch",
-  "Afternoon Tea",
-  "Dinner",
-  "Seasonal Menu",
-  "After Night",
-  "Happy Hour",
-];
 
 export default function OrderScreen() {
   const {
     currentStaff,
     selectedTable,
     guestCount,
-    activeMenuBook,
-    setActiveMenuBook,
     activeBookId,
     activeCategoryId,
     setActiveBook,
@@ -49,13 +36,19 @@ export default function OrderScreen() {
     resetOrder,
     setStaff,
     setTable,
+    language,
   } = useOrderStore();
+
+  const n = (item: { name: string; nameCn?: string }) =>
+    language === "zh" && item.nameCn ? item.nameCn : item.name;
+  const L = language === "zh"
+    ? { menu: "菜單", searchItem: "搜尋菜品", popularItems: "熱門菜品", noItems: "找不到菜品", soldOut: "售罄", customizable: "可客製化", combo: "套餐", close: "關閉" }
+    : { menu: "Menu", searchItem: "Search item", popularItems: "Popular Items", noItems: "No items found", soldOut: "Sold out", customizable: "Customizable", combo: "Combo", close: "Close" };
 
   const [cartOpen, setCartOpen] = useState(false);
   const [configItem, setConfigItem] = useState<MenuItem | null>(null);
   const [comboItem, setComboItem] = useState<MenuItem | null>(null);
   const [addedItemId, setAddedItemId] = useState<string | null>(null);
-  const [bookDropdownOpen, setBookDropdownOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -172,7 +165,7 @@ export default function OrderScreen() {
   const getItemCartCount = (menuItemId: string) =>
     cartItems.filter((ci) => ci.menuItemId === menuItemId).reduce((sum, ci) => sum + ci.quantity, 0);
 
-  const menuBookLabel = activeMenuBook || "Menu";
+  const menuBookLabel = L.menu;
 
   // Flatten all items for search
   const allItems = categories.flatMap((b) =>
@@ -181,7 +174,8 @@ export default function OrderScreen() {
   const popularItems = allItems.filter((i) => !i.soldOut).slice(0, 5);
   const searchResults = searchQuery.trim()
     ? allItems.filter((i) =>
-        i.name.toLowerCase().includes(searchQuery.toLowerCase())
+        i.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (i.nameCn && i.nameCn.includes(searchQuery))
       )
     : [];
 
@@ -223,13 +217,7 @@ export default function OrderScreen() {
       />
 
       <div className="flex items-center justify-between px-3 pt-2 pb-1">
-        <button
-          onClick={() => setBookDropdownOpen(true)}
-          className="flex items-center gap-2 active:opacity-70"
-        >
-          <span className="text-base font-semibold">{menuBookLabel}</span>
-          <Pencil size={14} className="text-[var(--outline)]" />
-        </button>
+        <span className="text-base font-semibold">{menuBookLabel}</span>
         <button
           onClick={openSearch}
           className="w-9 h-9 flex items-center justify-center rounded-full active:bg-gray-100"
@@ -238,16 +226,9 @@ export default function OrderScreen() {
         </button>
       </div>
 
-      <TabBar
-        tabs={categories.map((b) => ({ id: b.id, label: b.name }))}
-        activeId={activeBookId || categories[0]?.id}
-        onSelect={handleCategoryChange}
-        showCheckmark
-      />
-
       {activeCategory && (
         <TabBar
-          tabs={activeCategory.categories.map((c) => ({ id: c.id, label: c.name }))}
+          tabs={activeCategory.categories.map((c) => ({ id: c.id, label: n(c) }))}
           activeId={activeCategoryId || activeCategory.categories[0]?.id}
           onSelect={handleCategoryTap}
           variant="underline"
@@ -265,7 +246,7 @@ export default function OrderScreen() {
             {/* Section header */}
             <div className="sticky top-0 z-10 px-4 py-2 bg-gray-50 border-b border-gray-100">
               <span className="text-xs font-semibold text-[var(--outline)] uppercase tracking-wider">
-                {category.name}
+                {n(category)}
               </span>
             </div>
 
@@ -293,7 +274,7 @@ export default function OrderScreen() {
                     <div className="flex justify-between items-start gap-2">
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium leading-snug">
-                          {item.name}
+                          {n(item)}
                         </p>
                       </div>
                       <span className="text-sm font-medium shrink-0">
@@ -310,12 +291,12 @@ export default function OrderScreen() {
                         )}
                         {item.soldOut && (
                           <span className="text-xs text-[var(--error)] font-medium">
-                            Sold out
+                            {L.soldOut}
                           </span>
                         )}
                         {needsConfig && !item.soldOut && (
                           <span className="text-[10px] text-[var(--outline)] block">
-                            {isCombo ? "Combo" : "Customizable"}
+                            {isCombo ? L.combo : L.customizable}
                           </span>
                         )}
                       </div>
@@ -456,7 +437,7 @@ export default function OrderScreen() {
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search item"
+                  placeholder={L.searchItem}
                   className="flex-1 bg-transparent text-base outline-none placeholder:text-[var(--outline-variant)]"
                 />
                 {searchQuery && (
@@ -472,7 +453,7 @@ export default function OrderScreen() {
                 onClick={() => setSearchOpen(false)}
                 className="shrink-0 text-sm font-medium text-[var(--primary)] active:opacity-70 px-1"
               >
-                Close
+                {L.close}
               </button>
             </div>
 
@@ -500,7 +481,7 @@ export default function OrderScreen() {
                       >
                         <div className="flex justify-between items-start gap-2">
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium leading-snug">{item.name}</p>
+                            <p className="text-sm font-medium leading-snug">{n(item)}</p>
                           </div>
                           <span className="text-sm font-medium shrink-0">${item.price.toFixed(2)}</span>
                         </div>
@@ -551,12 +532,12 @@ export default function OrderScreen() {
                     );
                   })
                 ) : (
-                  <p className="text-sm text-[var(--outline)] text-center mt-8">No items found</p>
+                  <p className="text-sm text-[var(--outline)] text-center mt-8">{L.noItems}</p>
                 )
               ) : (
                 // Popular items
                 <>
-                  <h3 className="text-sm font-semibold mb-2">Popular Items</h3>
+                  <h3 className="text-sm font-semibold mb-2">{L.popularItems}</h3>
                   {popularItems.map((item) => {
                     const cartItem = getCartItem(item.id);
                     const hasRequiredMods = item.modifierGroups.some((g) => g.required);
@@ -576,7 +557,7 @@ export default function OrderScreen() {
                       >
                         <div className="flex justify-between items-start gap-2">
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium leading-snug">{item.name}</p>
+                            <p className="text-sm font-medium leading-snug">{n(item)}</p>
                           </div>
                           <span className="text-sm font-medium shrink-0">${item.price.toFixed(2)}</span>
                         </div>
@@ -634,52 +615,6 @@ export default function OrderScreen() {
             <CartBar onOpen={() => { setSearchOpen(false); setConfigItem(null); setComboItem(null); setCartOpen(true); }} />
 
           </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Menu book dropdown overlay */}
-      <AnimatePresence>
-        {bookDropdownOpen && (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 0.4 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setBookDropdownOpen(false)}
-              className="absolute inset-0 bg-black z-40"
-            />
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: -10 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: -10 }}
-              transition={{ duration: 0.15 }}
-              className="absolute left-4 right-4 top-[88px] z-50 bg-[var(--surface)] rounded-2xl shadow-xl overflow-hidden"
-            >
-              <div className="py-2">
-                {menuBooks.map((book) => (
-                  <button
-                    key={book}
-                    onClick={() => {
-                      setActiveMenuBook(book);
-                      setBookDropdownOpen(false);
-                    }}
-                    className={`w-full text-left px-5 py-4 text-base font-medium transition-colors ${
-                      book === activeMenuBook
-                        ? "bg-[var(--primary-light)] text-[var(--foreground)]"
-                        : "text-[var(--foreground)] active:bg-gray-100"
-                    }`}
-                  >
-                    <span className="flex items-center gap-2">
-                      {book === activeMenuBook && (
-                        <Check size={16} className="text-[var(--primary)] shrink-0" />
-                      )}
-                      {book}
-                    </span>
-                  </button>
-                ))}
-              </div>
-            </motion.div>
-          </>
         )}
       </AnimatePresence>
     </div>

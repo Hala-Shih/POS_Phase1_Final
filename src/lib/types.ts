@@ -2,12 +2,14 @@
 export interface Modifier {
   id: string;
   name: string;
+  nameCn?: string;
   price: number; // additional price
 }
 
 export interface ModifierGroup {
   id: string;
   name: string;
+  nameCn?: string;
   required: boolean;
   minSelect: number;
   maxSelect: number;
@@ -21,6 +23,7 @@ export interface ModifierGroup {
 export interface ComboComponent {
   id: string;
   name: string;
+  nameCn?: string;
   price: number; // 0 = included, positive = upcharge
   modifierGroups: ModifierGroup[]; // nested modifiers (e.g. steak temperature)
 }
@@ -28,6 +31,7 @@ export interface ComboComponent {
 export interface ComboGroup {
   id: string;
   name: string; // "Choose Your Steak", "Choose Your Side"
+  nameCn?: string;
   required: boolean;
   minSelect: number;
   maxSelect: number;
@@ -37,6 +41,7 @@ export interface ComboGroup {
 export interface MenuItem {
   id: string;
   name: string;
+  nameCn?: string;
   price: number;
   description?: string;
   modifierGroups: ModifierGroup[];
@@ -48,6 +53,7 @@ export interface MenuItem {
 export interface Category {
   id: string;
   name: string;
+  nameCn?: string;
   items: MenuItem[];
 }
 

@@ -174,8 +174,13 @@ function NoteEditIcon({ size = 16, className = "" }: { size?: number; className?
 }
 import { useOrderStore } from "@/store/order-store";
 import { getPriceBreakdown, formatCurrency, formatSignedCurrency } from "@/lib/pricing";
-import type { CartItem } from "@/lib/types";
-import { useState, useRef, useEffect } from "react";
+import type { CartItem, MenuBook } from "@/lib/types";
+import { useState, useRef, useEffect, useMemo } from "react";
+import menuData from "@/data/menu.json";
+
+const menuItems = (menuData as MenuBook[]).flatMap((b) =>
+  b.categories.flatMap((c) => c.items)
+);
 
 interface CartDrawerProps {
   open: boolean;
@@ -184,8 +189,20 @@ interface CartDrawerProps {
 
 export default function CartDrawer({ open, onClose }: CartDrawerProps) {
   const dragControls = useDragControls();
-  const { cartItems, cartTotal, cartCount, updateQuantity, removeItem, updateNote, updatePriceAdjustment, setItemDiscount, setItemComped, setItemPriceOverride, toggleBreakline, markAllSent, setScreen } =
+  const { cartItems, cartTotal, cartCount, updateQuantity, removeItem, updateNote, updatePriceAdjustment, setItemDiscount, setItemComped, setItemPriceOverride, toggleBreakline, markAllSent, setScreen, language } =
     useOrderStore();
+
+  const L = language === "zh"
+    ? { cart: "購物車", editing: "編輯中", sentToKitchen: "已送廚房", newItems: "新品項", noItems: "購物車是空的", discount: "折扣", comp: "招待", priceOverride: "改價", reset: "重設", confirm: "確認", saves: "節省", send: "送單", hold: "保留", pay: "結帳", note: "備註", override: "改價", newPrice: "新價格（每項）" }
+    : { cart: "Cart", editing: "Editing", sentToKitchen: "Sent to Kitchen", newItems: "New Items", noItems: "No items in cart", discount: "Discount", comp: "Comp", priceOverride: "Price Override", reset: "RESET", confirm: "Confirm", saves: "Saves", send: "Send", hold: "Hold", pay: "Pay", note: "Note", override: "Override", newPrice: "New price (per item)" };
+
+  const cartItemName = (item: CartItem) => {
+    if (language === "zh") {
+      const mi = menuItems.find((m) => m.id === item.menuItemId);
+      if (mi?.nameCn) return mi.nameCn;
+    }
+    return item.name;
+  };
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [noteEditId, setNoteEditId] = useState<string | null>(null);
   const [noteValue, setNoteValue] = useState("");
@@ -313,16 +330,16 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
               </div>
               <div className="flex items-center justify-between px-4 pb-3 border-b border-gray-100">
                 <div className="flex items-center gap-2 min-w-0">
-                  <h2 className="text-[15px] font-semibold text-[#1D1B20] leading-tight truncate">Cart ({count})</h2>
+                  <h2 className="text-[15px] font-semibold text-[#1D1B20] leading-tight truncate">{L.cart} ({count})</h2>
                   {unsentItems.length > 0 ? (
                     <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-50 border border-amber-200 shrink-0">
                       <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
-                      <span className="text-[10px] font-medium text-amber-600 leading-none">Editing</span>
+                      <span className="text-[10px] font-medium text-amber-600 leading-none">{L.editing}</span>
                     </span>
                   ) : sentItems.length > 0 ? (
                     <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-green-50 border border-green-200 shrink-0">
                       <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
-                      <span className="text-[10px] font-medium text-green-600 leading-none">Sent to Kitchen</span>
+                      <span className="text-[10px] font-medium text-green-600 leading-none">{L.sentToKitchen}</span>
                     </span>
                   ) : null}
                 </div>
@@ -339,7 +356,7 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
             <div ref={scrollContainerRef} className="flex-1 overflow-y-auto thin-scrollbar">
               {cartItems.length === 0 ? (
                 <div className="flex items-center justify-center h-32 text-sm text-[var(--outline)]">
-                  No items in cart
+                  {L.noItems}
                 </div>
               ) : (
                 <>
@@ -348,7 +365,7 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
                     <div>
                       {sentItems.length > 0 && (
                         <div className="px-4 py-1.5 bg-gray-50 text-xs font-medium text-[var(--outline)]">
-                          New Items
+                          {L.newItems}
                         </div>
                       )}
                       {unsentItems.map((item) => (
@@ -374,7 +391,7 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
                             {/* Item info */}
                             <div className="flex-1 min-w-0">
                               <p className="text-sm font-medium">
-                                {item.name}
+                                {cartItemName(item)}
                               </p>
                               <CartItemDescription item={item} />
                               {/* Action icons */}
@@ -481,7 +498,7 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
                                     : { background: "transparent", borderColor: "var(--outline-variant)", color: "inherit" }
                                 }
                               >
-                                Discount
+                                {L.discount}
                               </button>
                               <button
                                 onClick={(e) => {
@@ -499,7 +516,7 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
                                     : { background: "transparent", borderColor: "var(--outline-variant)", color: "inherit" }
                                 }
                               >
-                                Comp
+                                {L.comp}
                               </button>
                               <button
                                 onClick={(e) => {
@@ -514,7 +531,7 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
                                     : { background: "transparent", borderColor: "var(--outline-variant)", color: "inherit" }
                                 }
                               >
-                                Price Override
+                                {L.priceOverride}
                               </button>
                             </div>
                           )}
@@ -524,7 +541,7 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
                             <div className="px-4 pb-3" onClick={(e) => e.stopPropagation()}>
                               {/* Live price display */}
                               <div className="flex items-center justify-between mb-2 px-2 py-2 rounded-lg bg-[var(--surface)]">
-                                <span className="text-xs text-[var(--outline)]">New price (per item)</span>
+                                <span className="text-xs text-[var(--outline)]">{L.newPrice}</span>
                                 <span className="text-base font-semibold text-[var(--primary)]">
                                   ${priceOverrideInput === "" ? "0.00" : parseFloat(priceOverrideInput || "0").toFixed(2)}
                                 </span>
@@ -565,7 +582,7 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
                                   }}
                                   className="flex-1 h-10 rounded-xl text-xs font-medium border border-[var(--outline-variant)] active:bg-[var(--surface)] disabled:opacity-40"
                                 >
-                                  RESET
+                                  {L.reset}
                                 </button>
                                 <button
                                   onClick={() => {
@@ -578,7 +595,7 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
                                   className="flex-[2] h-10 rounded-xl text-xs font-medium text-white active:opacity-80"
                                   style={{ background: "#6750A4" }}
                                 >
-                                  Confirm
+                                  {L.confirm}
                                 </button>
                               </div>
                             </div>
@@ -654,7 +671,7 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
                               <div className="flex items-center justify-between mb-2 px-2 py-2 rounded-lg bg-[var(--surface)]">
                                 <div className="flex flex-col">
                                   <span className="text-[10px] text-[var(--outline)]">
-                                    {discountMode === "percent" ? "Discount %" : "Discount $"}
+                                    {discountMode === "percent" ? `${L.discount} %` : `${L.discount} $`}
                                   </span>
                                   <span className="text-base font-semibold text-[var(--primary)]">
                                     {discountMode === "percent"
@@ -663,7 +680,7 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
                                   </span>
                                 </div>
                                 <div className="flex flex-col items-end">
-                                  <span className="text-[10px] text-[var(--outline)]">Saves</span>
+                                  <span className="text-[10px] text-[var(--outline)]">{L.saves}</span>
                                   <span className="text-sm font-medium text-green-600">
                                     -${savings.toFixed(2)}
                                   </span>
@@ -712,7 +729,7 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
                                   }}
                                   className="flex-1 h-10 rounded-xl text-xs font-medium border border-[var(--outline-variant)] active:bg-[var(--surface)] disabled:opacity-40"
                                 >
-                                  RESET
+                                  {L.reset}
                                 </button>
                                 <button
                                   onClick={() => {
@@ -729,7 +746,7 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
                                   className="flex-[2] h-10 rounded-xl text-xs font-medium text-white active:opacity-80"
                                   style={{ background: "#6750A4" }}
                                 >
-                                  Apply Discount
+                                  {L.confirm}
                                 </button>
                               </div>
                             </div>
@@ -780,7 +797,7 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
                     <div>
                       {unsentItems.length > 0 && (
                         <div className="px-4 py-1.5 bg-green-50 text-xs font-medium text-green-600">
-                          Sent to Kitchen
+                          {L.sentToKitchen}
                         </div>
                       )}
                       {sentItems.map((item) => (
@@ -803,10 +820,10 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-1.5">
                               <p className="text-sm font-medium text-[var(--outline)]">
-                                {item.name}
+                                {cartItemName(item)}
                               </p>
                               <span className="px-1.5 py-px rounded text-[9px] font-medium bg-green-50 text-green-600 border border-green-200 leading-tight shrink-0">
-                                Sent
+                                {L.sent}
                               </span>
                             </div>
                             {item.modifiers.length > 0 || (item.comboSelections && item.comboSelections.length > 0) || item.note || item.priceAdjustment ? (
@@ -881,7 +898,7 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
                                   : { background: "transparent", borderColor: "var(--outline-variant)", color: "inherit" }
                               }
                             >
-                              Discount
+                              {L.discount}
                             </button>
                             <button
                               onClick={(e) => {
@@ -899,7 +916,7 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
                                   : { background: "transparent", borderColor: "var(--outline-variant)", color: "inherit" }
                               }
                             >
-                              Comp
+                              {L.comp}
                             </button>
                             <button
                               onClick={(e) => {
@@ -914,7 +931,7 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
                                   : { background: "transparent", borderColor: "var(--outline-variant)", color: "inherit" }
                               }
                             >
-                              Price Override
+                              {L.priceOverride}
                             </button>
                           </div>
                         )}
@@ -923,7 +940,7 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
                         {priceOverrideId === item.id && (
                           <div className="px-4 pb-3" onClick={(e) => e.stopPropagation()}>
                             <div className="flex items-center justify-between mb-2 px-2 py-2 rounded-lg bg-[var(--surface)]">
-                              <span className="text-xs text-[var(--outline)]">New price (per item)</span>
+                              <span className="text-xs text-[var(--outline)]">{L.newPrice}</span>
                               <span className="text-base font-semibold text-[var(--primary)]">
                                 ${priceOverrideInput === "" ? "0.00" : parseFloat(priceOverrideInput || "0").toFixed(2)}
                               </span>
@@ -953,7 +970,7 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
                                   setTimeout(() => { setPriceOverrideId(null); setExpandedId(null); }, 1000);
                                 }}
                                 className="flex-1 h-10 rounded-xl text-xs font-medium border border-[var(--outline-variant)] active:bg-[var(--surface)] disabled:opacity-40"
-                              >RESET</button>
+                              >{L.reset}</button>
                               <button
                                 onClick={() => {
                                   const val = parseFloat(priceOverrideInput);
@@ -962,7 +979,7 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
                                 }}
                                 className="flex-[2] h-10 rounded-xl text-xs font-medium text-white active:opacity-80"
                                 style={{ background: "#6750A4" }}
-                              >Confirm</button>
+                              >{L.confirm}</button>
                             </div>
                           </div>
                         )}
@@ -1007,13 +1024,13 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
                             </div>
                             <div className="flex items-center justify-between mb-2 px-2 py-2 rounded-lg bg-[var(--surface)]">
                               <div className="flex flex-col">
-                                <span className="text-[10px] text-[var(--outline)]">{discountMode === "percent" ? "Discount %" : "Discount $"}</span>
+                                <span className="text-[10px] text-[var(--outline)]">{discountMode === "percent" ? `${L.discount} %` : `${L.discount} $`}</span>
                                 <span className="text-base font-semibold text-[var(--primary)]">
                                   {discountMode === "percent" ? `${discountInput || "0"}%` : `$${discountInput === "" ? "0.00" : parseFloat(discountInput || "0").toFixed(2)}`}
                                 </span>
                               </div>
                               <div className="flex flex-col items-end">
-                                <span className="text-[10px] text-[var(--outline)]">Saves</span>
+                                <span className="text-[10px] text-[var(--outline)]">{L.saves}</span>
                                 <span className="text-sm font-medium text-green-600">-${savings.toFixed(2)}</span>
                               </div>
                             </div>
@@ -1041,7 +1058,7 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
                                   setTimeout(() => { setDiscountId(null); setExpandedId(null); }, 1000);
                                 }}
                                 className="flex-1 h-10 rounded-xl text-xs font-medium border border-[var(--outline-variant)] active:bg-[var(--surface)] disabled:opacity-40"
-                              >RESET</button>
+                              >{L.reset}</button>
                               <button
                                 onClick={() => {
                                   const val = parseFloat(discountInput);
@@ -1051,7 +1068,7 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
                                 }}
                                 className="flex-[2] h-10 rounded-xl text-xs font-medium text-white active:opacity-80"
                                 style={{ background: "#6750A4" }}
-                              >Apply Discount</button>
+                              >{L.confirm}</button>
                             </div>
                           </div>
                           );
@@ -1111,7 +1128,7 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
                 <div className="flex gap-2">
                   <button className="flex-1 h-11 rounded-xl border border-[var(--outline-variant)] flex items-center justify-center gap-2 text-sm font-medium active:bg-[var(--surface)]">
                     <Pause size={16} />
-                    Hold
+                    {L.hold}
                   </button>
                   <button
                     onClick={handleSend}
@@ -1119,7 +1136,7 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
                     className="flex-1 h-11 rounded-xl bg-[var(--primary)] text-white flex items-center justify-center gap-2 text-sm font-medium disabled:opacity-40 active:opacity-80"
                   >
                     <Send size={16} />
-                    Send
+                    {L.send}
                   </button>
                 </div>
                 <button
@@ -1128,7 +1145,7 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
                   className="w-full h-12 mt-2 rounded-xl bg-green-600 text-white flex items-center justify-center gap-2 text-sm font-semibold disabled:opacity-40 active:opacity-80"
                 >
                   <DollarSign size={16} />
-                  Pay
+                  {L.pay}
                 </button>
               </div>
             )}
@@ -1173,7 +1190,7 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
             className="w-full h-12 rounded-md flex items-center justify-center active:opacity-80"
             style={{ background: "#6750A4" }}
           >
-            <span className="text-sm font-medium text-white tracking-wide">Send now and pay</span>
+            <span className="text-sm font-medium text-white tracking-wide">{language === "zh" ? "立即送出並結帳" : "Send now and pay"}</span>
           </button>
           <button
             onClick={() => {
@@ -1182,7 +1199,7 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
             className="w-full h-12 rounded-md flex items-center justify-center active:opacity-80"
             style={{ background: "#E8DEF8" }}
           >
-            <span className="text-sm font-medium tracking-wide" style={{ color: "#6750A4" }}>Dismiss</span>
+            <span className="text-sm font-medium tracking-wide" style={{ color: "#6750A4" }}>{language === "zh" ? "取消" : "Dismiss"}</span>
           </button>
         </div>
       </div>

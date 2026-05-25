@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { motion, useDragControls } from "framer-motion";
 import { Minus, Plus, Check, Trash2 } from "lucide-react";
 import { MenuItem, CartItemModifier, Modifier, CartItem } from "@/lib/types";
+import { useOrderStore } from "@/store/order-store";
 
 interface ItemConfigSheetProps {
   item: MenuItem;
@@ -32,6 +33,13 @@ export default function ItemConfigSheet({
   onDeleteItem,
 }: ItemConfigSheetProps) {
   const dragControls = useDragControls();
+  const language = useOrderStore((s) => s.language);
+  const displayName = language === "zh" && item.nameCn ? item.nameCn : item.name;
+  const cn = (o: { name: string; nameCn?: string }) =>
+    language === "zh" && o.nameCn ? o.nameCn : o.name;
+  const L = language === "zh"
+    ? { required: "必選", optional: "可選", order: "份", addToCart: "加入購物車", saveChanges: "保存修改", nextOrder: "下一份" }
+    : { required: "Required", optional: "Optional", order: "Order", addToCart: "Add to cart", saveChanges: "Save changes", nextOrder: "Next Order" };
   const [orders, setOrders] = useState<OrderConfig[]>([{ selections: {} }]);
   const [activeOrderIndex, setActiveOrderIndex] = useState(0);
   const [changedOrderIds, setChangedOrderIds] = useState<Set<string>>(new Set());
@@ -281,7 +289,7 @@ export default function ItemConfigSheet({
 
         {/* Header: item name */}
         <div className="flex items-center justify-between px-4 pb-2">
-          <h2 className="text-base font-semibold flex-1">{item.name}</h2>
+          <h2 className="text-base font-semibold flex-1">{displayName}</h2>
         </div>
 
         {/* Order tabs — always visible */}
@@ -309,7 +317,7 @@ export default function ItemConfigSheet({
                   }`}
                 >
                   {orderComplete && <Check size={12} className="text-[var(--primary)]" />}
-                  Order {i + 1}
+                  {L.order} {i + 1}
                 </button>
               );
             })}
@@ -327,11 +335,11 @@ export default function ItemConfigSheet({
               return (
               <div key={group.id} ref={(el) => { sectionRefs.current[group.id] = el; }} className="mb-4">
                 <h3 className="text-sm font-semibold mb-2">
-                  {group.name}
+                  {cn(group)}
                   {group.required ? (
-                    <span className={`text-[12px] font-normal ml-1 ${isSkipped ? "text-[var(--error)]" : "text-[var(--outline)]"}`}>Required</span>
+                    <span className={`text-[12px] font-normal ml-1 ${isSkipped ? "text-[var(--error)]" : "text-[var(--outline)]"}`}>{L.required}</span>
                   ) : (
-                    <span className="text-[12px] font-normal ml-1 text-[var(--outline)]">Optional</span>
+                    <span className="text-[12px] font-normal ml-1 text-[var(--outline)]">{L.optional}</span>
                   )}
                 </h3>
 
@@ -348,7 +356,7 @@ export default function ItemConfigSheet({
                             : "border-[var(--outline-variant)]"
                         }`}
                       >
-                        <span className="text-xs leading-snug">{option.name}</span>
+                        <span className="text-xs leading-snug">{cn(option)}</span>
                         <div className="flex items-center gap-1 shrink-0 ml-1">
                           {option.price > 0 && (
                             <span className="text-[10px] text-[var(--outline)]">
@@ -387,7 +395,7 @@ export default function ItemConfigSheet({
             disabled={primaryDisabled}
             className="flex-1 h-11 rounded-xl bg-[var(--primary)] text-white flex items-center justify-center gap-2 text-sm font-semibold disabled:opacity-40 active:opacity-80 transition-opacity"
           >
-            {showNextAction ? "Next Order" : (activeOrder.cartItemId ? "Save changes" : "Add to cart")}
+            {showNextAction ? L.nextOrder : (activeOrder.cartItemId ? L.saveChanges : L.addToCart)}
           </button>
         </div>
       </motion.div>

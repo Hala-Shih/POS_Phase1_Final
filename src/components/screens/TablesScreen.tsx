@@ -21,13 +21,21 @@ const areaPrefixes = [
   { label: "T", prefix: "T" },
 ];
 
+const AREA_CN: Record<string, string> = { All: "全部", Main: "大廳", Bar: "吧台", Patio: "露台" };
+
 export default function TablesScreen() {
   const [activeArea, setActiveArea] = useState("All");
   const [showKeypad, setShowKeypad] = useState(false);
   const [keypadValue, setKeypadValue] = useState("");
   const [keypadPrefix, setKeypadPrefix] = useState("");
   const [keypadError, setKeypadError] = useState(false);
-  const { currentStaff, setStaff, setTable, resetOrder, setScreen, loadTableOrder, setOpenMenuOnArrival } = useOrderStore();
+  const { currentStaff, setStaff, setTable, resetOrder, setScreen, loadTableOrder, setOpenMenuOnArrival, language } = useOrderStore();
+
+  const L = language === "zh"
+    ? { enterTable: "輸入桌號", refresh: "清除", select: "選擇", tableNotFound: "找不到桌位", guests: "位客人",
+        occupied: "使用中", checkout: "結帳中", closed: "已關閉", available: "空桌" }
+    : { enterTable: "Enter table", refresh: "Refresh", select: "Select", tableNotFound: "Table not found", guests: "guests",
+        occupied: "Occupied", checkout: "Checkout", closed: "Closed", available: "Available" };
 
   // Group tables by area for map rendering
   const areasToShow = activeArea === "All"
@@ -289,10 +297,10 @@ export default function TablesScreen() {
 
   const getStatusLabel = (table: Table) => {
     switch (table.status) {
-      case "occupied": return "Occupied";
-      case "checkout": return "Checkout";
-      case "unavailable": return "Closed";
-      default: return "Available";
+      case "occupied": return L.occupied;
+      case "checkout": return L.checkout;
+      case "unavailable": return L.closed;
+      default: return L.available;
     }
   };
 
@@ -320,7 +328,7 @@ export default function TablesScreen() {
 
       {!showKeypad && (
         <TabBar
-          tabs={areas.map((a) => ({ id: a, label: a }))}
+          tabs={areas.map((a) => ({ id: a, label: language === "zh" ? (AREA_CN[a] || a) : a }))}
           activeId={activeArea}
           onSelect={setActiveArea}
           showCheckmark
@@ -330,7 +338,7 @@ export default function TablesScreen() {
       {/* Content area: toggles between floor map and keypad */}
       {showKeypad ? (
         <div className="flex-1 flex flex-col items-center pt-4">
-          <h2 className="text-lg font-medium mb-1">Enter table</h2>
+          <h2 className="text-lg font-medium mb-1">{L.enterTable}</h2>
 
           {/* Display */}
           <div className="h-14 flex items-center justify-center">
@@ -343,7 +351,7 @@ export default function TablesScreen() {
 
           {keypadError && (
             <p className="text-xs text-[var(--error)] mb-1">
-              Table not found
+              {L.tableNotFound}
             </p>
           )}
 
@@ -388,7 +396,7 @@ export default function TablesScreen() {
                 onClick={handleKeypadClear}
                 className="w-[72px] h-[72px] rounded-full flex items-center justify-center text-sm text-[var(--outline)] active:bg-gray-100 transition-colors"
               >
-                Refresh
+                {L.refresh}
               </button>
               <button
                 onClick={() => handleKeypadDigit("0")}
@@ -401,7 +409,7 @@ export default function TablesScreen() {
                 disabled={!keypadValue}
                 className="w-[72px] h-[72px] rounded-full flex items-center justify-center text-sm font-medium bg-[var(--primary)] text-white disabled:opacity-40 active:opacity-80 transition-all"
               >
-                Select
+                {L.select}
               </button>
             </div>
           </div>
@@ -418,7 +426,7 @@ export default function TablesScreen() {
               </span>
               {matchedTable.guestCount && (
                 <span className="text-sm text-[var(--outline)]">
-                  · {matchedTable.guestCount} guests
+                  · {matchedTable.guestCount} {L.guests}
                 </span>
               )}
             </div>

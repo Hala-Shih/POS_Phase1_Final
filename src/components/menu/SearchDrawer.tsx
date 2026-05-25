@@ -25,7 +25,14 @@ function formatUpcharge(price: number) {
 }
 
 export default function SearchDrawer({ open, onClose }: SearchDrawerProps) {
-  const { addItem, removeItem, updateQuantity, updateItemModifiers, updateComboSelections, cartItems } = useOrderStore();
+  const { addItem, removeItem, updateQuantity, updateItemModifiers, updateComboSelections, cartItems, language } = useOrderStore();
+
+  const n = (item: { name: string; nameCn?: string }) =>
+    language === "zh" && item.nameCn ? item.nameCn : item.name;
+
+  const L = language === "zh"
+    ? { required: "必選", optional: "可選", addToOrder: "加入訂單", saveChanges: "儲存修改", nextOrder: "下一份", order: "份", searchPlaceholder: "搜尋菜單..." }
+    : { required: "Required", optional: "Optional", addToOrder: "Add to order", saveChanges: "Save changes", nextOrder: "Next Order", order: "Order", searchPlaceholder: "Search menu..." };
 
   const [searchQuery, setSearchQuery] = useState("");
   const [configItem, setConfigItem] = useState<MenuItem | null>(null);
@@ -59,7 +66,8 @@ export default function SearchDrawer({ open, onClose }: SearchDrawerProps) {
   );
   const searchResults = searchQuery.trim()
     ? allItems.filter((i) =>
-        i.name.toLowerCase().includes(searchQuery.toLowerCase())
+        i.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (i.nameCn && i.nameCn.includes(searchQuery))
       )
     : [];
 
@@ -311,7 +319,7 @@ export default function SearchDrawer({ open, onClose }: SearchDrawerProps) {
       >
         <div className="flex items-center gap-2">
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-normal leading-snug">{item.name}</p>
+            <p className="text-sm font-normal leading-snug">{n(item)}</p>
           </div>
 
           {needsConfig && modItemCount > 0 && (
@@ -396,7 +404,7 @@ export default function SearchDrawer({ open, onClose }: SearchDrawerProps) {
               className="text-[15px] font-semibold text-[#1D1B20] leading-tight break-words"
               style={{ display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden" }}
             >
-              {configItem ? configItem.name : "Menu search"}
+              {configItem ? n(configItem) : "Menu search"}
             </span>
           </div>
           <div className="flex items-center gap-2 shrink-0">
@@ -490,13 +498,13 @@ export default function SearchDrawer({ open, onClose }: SearchDrawerProps) {
                       className="mb-3"
                     >
                       <p className="text-xs font-semibold mb-1.5 text-[#1D1B20]">
-                        {group.name}
+                        {n(group)}
                         <span
                           className={`font-normal ml-1 text-[12px] ${
                             isSkipped ? "text-[var(--error)]" : "text-[var(--outline)]"
                           }`}
                         >
-                          {group.required ? "Required" : "Optional"}
+                          {group.required ? L.required : L.optional}
                         </span>
                       </p>
 
@@ -513,7 +521,7 @@ export default function SearchDrawer({ open, onClose }: SearchDrawerProps) {
                                   : "border-[var(--outline-variant)]"
                               }`}
                             >
-                              <span className="text-xs leading-snug">{option.name}</span>
+                              <span className="text-xs leading-snug">{n(option)}</span>
                               <div className="flex items-center gap-1 shrink-0 ml-1">
                                 {option.price > 0 && (
                                   <span className="text-[10px] text-[var(--outline)]">
@@ -554,10 +562,10 @@ export default function SearchDrawer({ open, onClose }: SearchDrawerProps) {
                 className="w-full h-10 rounded-xl bg-[var(--primary)] text-white flex items-center justify-center gap-2 text-sm font-semibold disabled:opacity-40 active:opacity-80 transition-opacity"
               >
                 {showNextOrder
-                  ? "Next Order"
+                  ? L.nextOrder
                   : activeOrder?.cartItemId
-                  ? "Save changes"
-                  : "Add to order"}
+                  ? L.saveChanges
+                  : L.addToOrder}
               </button>
             </div>
           </div>

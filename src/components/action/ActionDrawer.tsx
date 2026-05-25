@@ -29,7 +29,63 @@ interface ActionDrawerProps {
 }
 
 export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMultiplePayment, itemContext }: ActionDrawerProps) {
-  const { cartItems, cartTotal, checkTip, checkDiscount, setCheckTip, markAllSent, resetOrder, setItemDiscount, setCheckDiscount, removeItem, updateQuantity, updateNote, updatePriceAdjustment, setItemPriceOverride, toggleBreakline, updateItemModifiers, updateComboSelections, splitAndUpdateNotes, splitCartItemToSingleItems, splitOneAndUpdateModifiers, consolidateCart, addItem } = useOrderStore();
+  const { cartItems, cartTotal, checkTip, checkDiscount, setCheckTip, markAllSent, resetOrder, setItemDiscount, setCheckDiscount, removeItem, updateQuantity, updateNote, updatePriceAdjustment, setItemPriceOverride, toggleBreakline, updateItemModifiers, updateComboSelections, splitAndUpdateNotes, splitCartItemToSingleItems, splitOneAndUpdateModifiers, consolidateCart, addItem, language } = useOrderStore();
+
+
+
+  // Localisation helpers
+  const n = (item: { name: string; nameCn?: string }) => language === "zh" && item.nameCn ? item.nameCn : item.name;
+  const L = language === "zh" ? {
+    order: "訂單", cancel: "取消", saveNote: "儲存備註", saveChanges: "儲存修改",
+    addToOrder: "加入訂單", addNoteForKitchen: "新增廚房備註", addNotes: "輸入備註",
+    priceAdj: "價格調整", enterNewPrice: "輸入此品項新價格", apply: "套用",
+    required: "必選", optional: "選填", custom: "自訂", back: "返回",
+    selectPreset: "選擇預設折扣", removeDiscount: "移除折扣",
+    modify: "修改", notes: "備註", addBreakline: "加分隔線", off: "關閉",
+    applyDiscount: "套用折扣", priceOverride: "覆蓋價格", removeItem: "刪除品項",
+    applyDiscountTitle: "套用折扣", addTip: "新增小費", voidOrder: "取消訂單", actions: "操作",
+    applyToFullCheck: "套用至整張帳單",
+    sendToKitchen: "送至廚房", sent: "已送出", unsent: "未送出", allItemsSent: "全部已送出",
+    splitCheck: "分帳", divideBill: "將帳單分給客人",
+    hold: "保留", pauseFiring: "暫停出餐",
+    multiPay: "多方付款", collectSeparately: "分開收款",
+    applyToAllItems: "套用至所有品項",
+    print: "列印", sentToPrinter: "已送至印表機", printCheckReceipt: "列印帳單收據",
+    addTipLabel: "新增小費", tipAmount: "小費", prePaymentGratuity: "付款前小費",
+    voidOrderAction: "取消訂單", cancelEntireOrder: "取消整張訂單",
+    pay: "結帳", thisWillErase: "此操作將清除所有品項且無法復原。",
+    tipDesc: "小費將在付款前加入帳單總額。",
+    currentTip: "目前小費",
+    selectPresetTip: "選擇預設或輸入自訂小費",
+    selectPresetDiscount: "選擇預設或輸入自訂折扣",
+    removeTip: "移除小費",
+    customPercent: "自訂 %", customDollar: "自訂 $",
+  } : {
+    order: "Order", cancel: "Cancel", saveNote: "Save note", saveChanges: "Save changes",
+    addToOrder: "Add to order", addNoteForKitchen: "Add a note for the kitchen", addNotes: "Add notes",
+    priceAdj: "Price adjustment", enterNewPrice: "Enter new price for this item", apply: "Apply",
+    required: "Required", optional: "Optional", custom: "Custom", back: "Back",
+    selectPreset: "Select a preset discount", removeDiscount: "Remove discount",
+    modify: "Modify", notes: "Notes", addBreakline: "Add breakline", off: "Off",
+    applyDiscount: "Apply discount", priceOverride: "Price override", removeItem: "Remove item",
+    applyDiscountTitle: "Apply Discount", addTip: "Add Tip", voidOrder: "Void Order", actions: "Actions",
+    applyToFullCheck: "Apply to full check",
+    sendToKitchen: "Send to kitchen", sent: "Sent!", unsent: "unsent", allItemsSent: "All items sent",
+    splitCheck: "Split check", divideBill: "Divide bill among guests",
+    hold: "Hold", pauseFiring: "Pause firing course",
+    multiPay: "Multi-pay", collectSeparately: "Collect separately",
+    applyToAllItems: "Apply to all items",
+    print: "Print", sentToPrinter: "Sent to printer", printCheckReceipt: "Print check receipt",
+    addTipLabel: "Add tip", tipAmount: "Tip", prePaymentGratuity: "Pre-payment gratuity",
+    voidOrderAction: "Void order", cancelEntireOrder: "Cancel entire order",
+    pay: "Pay", thisWillErase: "This will erase all items and cannot be undone.",
+    tipDesc: "Tip is added to the check total before sending to payment.",
+    currentTip: "Current tip",
+    selectPresetTip: "Select a preset or enter a custom discount",
+    selectPresetDiscount: "Select a preset or enter a custom discount",
+    removeTip: "Remove tip",
+    customPercent: "Custom %", customDollar: "Custom $",
+  };
 
   // Check-level states
   const [showVoidConfirm, setShowVoidConfirm] = useState(false);
@@ -88,10 +144,10 @@ export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMul
         ? Array.from({ length: cartItem.quantity }, (_, idx) => ({
             key: `${cartItem.id}-${idx}`,
             cartItemId: cartItem.id,
-            label: `Order ${idx + 1}`,
+            label: `${L.order} ${idx + 1}`,
             note: cartItem.note || "",
           }))
-        : [{ key: cartItem.id, cartItemId: cartItem.id, label: "Order 1", note: cartItem.note || "" }]
+        : [{ key: cartItem.id, cartItemId: cartItem.id, label: `${L.order} 1`, note: cartItem.note || "" }]
     : [];
   const selectedNoteTab = noteOrderTabs.find((t) => t.key === activeNoteOrderKey) || noteOrderTabs[0] || null;
   const hasModifiers = cartItem
@@ -494,7 +550,7 @@ export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMul
                           }`}
                         >
                           {showCheck && <Check size={12} className="text-[var(--primary)]" />}
-                          Order {i + 1}
+                          {L.order} {i + 1}
                         </button>
                       );
                     })}
@@ -577,7 +633,7 @@ export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMul
                 <div className="flex gap-3 items-start">
                   {/* Note column */}
                   <div className="flex-1 min-w-0">
-                    <p className="text-[12px] text-[var(--outline)] mb-2">Add a note for the kitchen</p>
+                    <p className="text-[12px] text-[var(--outline)] mb-2">{L.addNoteForKitchen}</p>
                     <textarea
                       autoFocus
                       value={selectedNoteTab ? (noteDrafts[selectedNoteTab.key] ?? "") : ""}
@@ -587,7 +643,7 @@ export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMul
                         setNoteText(next);
                         setNoteDrafts((prev) => ({ ...prev, [selectedNoteTab.key]: next }));
                       }}
-                      placeholder="Add notes"
+                      placeholder={L.addNotes}
                       rows={1}
                       className="w-full h-11 rounded-xl border border-[var(--outline-variant)] px-3 py-2 text-[13px] outline-none resize-none focus:border-[var(--primary)]"
                     />
@@ -597,7 +653,7 @@ export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMul
                       input — `inputMode="decimal"` triggers the Android numeric
                       keypad. Leave blank for no adjustment. */}
                   <div className="shrink-0">
-                    <p className="text-[12px] text-[var(--outline)] mb-2">Price adjustment</p>
+                    <p className="text-[12px] text-[var(--outline)] mb-2">{L.priceAdj}</p>
                     <div className="flex items-center gap-1.5">
                       <div className="flex rounded-xl border border-[var(--outline-variant)] overflow-hidden shrink-0">
                         <button
@@ -654,7 +710,7 @@ export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMul
                     className="flex-1 h-10 rounded-xl border border-[var(--outline-variant)] text-[13px] font-medium active:bg-gray-50"
                     style={{ color: "#49454F" }}
                   >
-                    Cancel
+                    {L.cancel}
                   </button>
                   <button
                     onClick={handleSaveNote}
@@ -672,14 +728,14 @@ export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMul
                     className="flex-1 h-10 rounded-xl text-[13px] font-semibold text-white active:opacity-80 disabled:opacity-40"
                     style={{ background: "#6750A4" }}
                   >
-                    Save note
+                    {L.saveNote}
                   </button>
                 </div>
               </div>
             ) : showPriceOverride ? (
               /* Price override panel */
               <div className="px-4 py-4">
-                <p className="text-[12px] text-[var(--outline)] mb-2">Enter new price for this item</p>
+                <p className="text-[12px] text-[var(--outline)] mb-2">{L.enterNewPrice}</p>
                 <div className="flex items-center gap-2 mb-4">
                   <span className="text-[15px] font-semibold text-[var(--outline)]">$</span>
                   <input
@@ -698,14 +754,14 @@ export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMul
                     className="flex-1 h-10 rounded-xl border border-[var(--outline-variant)] text-[13px] font-medium active:bg-gray-50"
                     style={{ color: "#49454F" }}
                   >
-                    Cancel
+                    {L.cancel}
                   </button>
                   <button
                     onClick={handleSavePriceOverride}
                     className="flex-1 h-10 rounded-xl text-[13px] font-semibold text-white active:opacity-80"
                     style={{ background: "#6750A4" }}
                   >
-                    Apply
+                    {L.apply}
                   </button>
                 </div>
               </div>
@@ -717,9 +773,9 @@ export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMul
                   return (
                     <div key={group.id} className="mb-3">
                       <p className="text-xs font-semibold mb-1.5 text-[#1D1B20]">
-                        {group.name}
+                        {n(group)}
                         <span className="font-normal ml-1 text-[12px] text-[var(--outline)]">
-                          {group.required ? "Required" : "Optional"}
+                          {group.required ? L.required : L.optional}
                         </span>
                       </p>
                       <div className="grid grid-cols-2 gap-1.5">
@@ -760,7 +816,7 @@ export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMul
                                   : "border-[var(--outline-variant)]"
                               }`}
                             >
-                              <span className="text-xs leading-snug">{option.name}</span>
+                              <span className="text-xs leading-snug">{n(option)}</span>
                               <div className="flex items-center gap-1 shrink-0 ml-1">
                                 {option.price > 0 && (
                                   <span className="text-[10px] text-[var(--outline)]">+${option.price}</span>
@@ -778,7 +834,7 @@ export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMul
             ) : showDiscountPanel ? (
               /* Discount panel */
               <div className="px-4 py-4">
-                <p className="text-[12px] text-[var(--outline)] mb-3">Select a preset discount</p>
+                <p className="text-[12px] text-[var(--outline)] mb-3">{L.selectPreset}</p>
                 <div className="grid grid-cols-2 gap-2 mb-3">
                   <button
                     onClick={() => {
@@ -825,7 +881,7 @@ export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMul
                     className="h-12 rounded-xl border border-[#E7E0EC] text-[15px] font-semibold active:bg-[#F3EDF7] transition-colors"
                     style={{ color: "#6750A4" }}
                   >
-                    Custom
+                    {L.custom}
                   </button>
                 </div>
                 {showCustomDiscountInput && (
@@ -837,7 +893,7 @@ export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMul
                       pattern={discountInputType === "percent" ? "[0-9]*" : "[0-9]*[.]?[0-9]{0,2}"}
                       value={customDiscountInput}
                       onChange={(e) => handleCustomDiscountInputChange(e.target.value)}
-                      placeholder={discountInputType === "percent" ? "Custom %" : "Custom $"}
+                      placeholder={discountInputType === "percent" ? L.customPercent : L.customDollar}
                       className="flex-1 h-10 rounded-xl border border-[var(--outline-variant)] px-3 text-[14px] outline-none focus:border-[var(--primary)]"
                     />
                     <button
@@ -846,7 +902,7 @@ export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMul
                       className="h-10 px-3 rounded-xl text-[13px] font-semibold text-white disabled:opacity-40"
                       style={{ background: "#6750A4" }}
                     >
-                      Apply
+                      {L.apply}
                     </button>
                   </div>
                 )}
@@ -856,7 +912,7 @@ export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMul
                     className="w-full h-10 rounded-xl text-sm font-medium mb-2 border border-[#E7E0EC] active:bg-gray-100"
                     style={{ color: "#B3261E" }}
                   >
-                    Remove discount
+                    {L.removeDiscount}
                   </button>
                 )}
                 <button
@@ -868,7 +924,7 @@ export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMul
                   className="w-full h-10 rounded-xl border border-[var(--outline-variant)] text-sm font-medium active:bg-gray-100"
                   style={{ color: "#49454F" }}
                 >
-                  Back
+                  {L.back}
                 </button>
               </div>
             ) : (
@@ -876,13 +932,13 @@ export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMul
               <div className="p-3 grid grid-cols-2 gap-2">
                 <ItemActionButton
                   icon={<Pencil size={16} />}
-                  label="Modify"
+                  label={L.modify}
                   onClick={openModifyPanel}
                   disabled={!hasModifiers && !isCombo}
                 />
                 <ItemActionButton
                   icon={<StickyNote size={16} />}
-                  label="Notes"
+                  label={L.notes}
                   value={cartItem.note || undefined}
                   onClick={() => {
                     const initialDrafts: Record<string, string> = {};
@@ -900,26 +956,27 @@ export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMul
                 />
                 <ItemActionButton
                   icon={<ArrowDownToLine size={16} />}
-                  label="Add breakline"
+                  label={L.addBreakline}
                   active={!!cartItem.breaklineBelow}
-                  value="Off"
+                  activeLabel={language === "zh" ? "開啟" : "On"}
+                  value={L.off}
                   onClick={() => { toggleBreakline(cartItem.id, "below"); }}
                 />
                 <ItemActionButton
                   icon={<Tag size={16} />}
-                  label="Apply discount"
+                  label={L.applyDiscount}
                   value={cartItem.discount ? (cartItem.discount.type === "percent" ? `${cartItem.discount.value}%` : `$${cartItem.discount.value.toFixed(2)}`) : undefined}
                   onClick={openDiscountPanel}
                 />
                 <ItemActionButton
                   icon={<DollarSign size={16} />}
-                  label="Price override"
+                  label={L.priceOverride}
                   value={cartItem.priceOverride != null ? `$${cartItem.priceOverride.toFixed(2)}` : undefined}
                   onClick={() => { setPriceInput(cartItem.priceOverride?.toFixed(2) ?? ""); setShowPriceOverride(true); }}
                 />
                 <ItemActionButton
                   icon={<Trash2 size={16} />}
-                  label="Remove item"
+                  label={L.removeItem}
                   destructive
                   onClick={() => { removeItem(cartItem.id); handleClose(); }}
                 />
@@ -941,7 +998,7 @@ export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMul
                   }}
                   className="h-10 px-4 rounded-xl border-2 border-[var(--outline-variant)] text-[var(--outline)] flex items-center justify-center gap-1.5 text-sm font-semibold active:opacity-80 transition-opacity"
                 >
-                  Cancel
+                  {L.cancel}
                 </button>
               ) : (
                 <button
@@ -1027,7 +1084,7 @@ export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMul
                 }}
                 className="flex-1 h-10 rounded-xl bg-[var(--primary)] text-white flex items-center justify-center gap-2 text-sm font-semibold disabled:opacity-40 active:opacity-80 transition-opacity"
               >
-                {hasNewOrders ? "Add to order" : "Save changes"}
+                {hasNewOrders ? L.addToOrder : L.saveChanges}
               </button>
             </div>
             );
@@ -1071,10 +1128,10 @@ export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMul
           <div className="flex items-center justify-between">
             <div className="flex items-baseline gap-2 min-w-0">
               <span className="text-[15px] font-semibold text-[#1D1B20] leading-tight truncate">
-                {showDiscountPanel ? "Apply Discount" : showTipPanel ? "Add Tip" : showVoidConfirm ? "Void Order" : "Actions"}
+                {showDiscountPanel ? L.applyDiscountTitle : showTipPanel ? L.addTip : showVoidConfirm ? L.voidOrder : L.actions}
               </span>
               {!showDiscountPanel && !showTipPanel && !showVoidConfirm && (
-                <span className="text-[11px] text-[var(--outline)] truncate">Apply to full check</span>
+                <span className="text-[11px] text-[var(--outline)] truncate">{L.applyToFullCheck}</span>
               )}
             </div>
             <button onClick={handleClose} className="w-8 h-8 flex items-center justify-center rounded-full active:bg-gray-100 shrink-0">
@@ -1091,8 +1148,8 @@ export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMul
                 icon={sentFeedback ? <Check size={16} /> : <Send size={16} />}
                 iconBg="#DCFCE7"
                 iconColor="#16A34A"
-                title="Send to kitchen"
-                subtitle={sentFeedback ? "Sent!" : hasUnsentItems ? `${unsentItems.length} unsent` : "All items sent"}
+                title={L.sendToKitchen}
+                subtitle={sentFeedback ? L.sent : hasUnsentItems ? `${unsentItems.length} ${L.unsent}` : L.allItemsSent}
                 disabled={!hasUnsentItems || sentFeedback}
                 onClick={handleSendToKitchen}
               />
@@ -1100,8 +1157,8 @@ export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMul
                 icon={<Split size={16} />}
                 iconBg="#F3EDF7"
                 iconColor="#6750A4"
-                title="Split check"
-                subtitle="Divide bill among guests"
+                title={L.splitCheck}
+                subtitle={L.divideBill}
                 disabled={!hasItems}
                 onClick={() => { if (hasUnsentItems) markAllSent(); onSplitCheck(); handleClose(); }}
               />
@@ -1109,8 +1166,8 @@ export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMul
                 icon={<PauseCircle size={16} />}
                 iconBg="#FEF9C3"
                 iconColor="#CA8A04"
-                title="Hold"
-                subtitle="Pause firing course"
+                title={L.hold}
+                subtitle={L.pauseFiring}
                 disabled={!hasUnsentItems}
                 onClick={handleClose}
               />
@@ -1118,8 +1175,8 @@ export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMul
                 icon={<WalletCards size={16} />}
                 iconBg="#F3EDF7"
                 iconColor="#6750A4"
-                title="Multi-pay"
-                subtitle="Collect separately"
+                title={L.multiPay}
+                subtitle={L.collectSeparately}
                 disabled={!hasItems}
                 onClick={() => { if (hasUnsentItems) markAllSent(); onMultiplePayment(); handleClose(); }}
               />
@@ -1127,8 +1184,8 @@ export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMul
                 icon={<Tag size={16} />}
                 iconBg="#EFF6FF"
                 iconColor="#2563EB"
-                title="Apply discount"
-                subtitle="Apply to all items"
+                title={L.applyDiscount}
+                subtitle={L.applyToAllItems}
                 disabled={!hasItems}
                 onClick={openDiscountPanel}
               />
@@ -1136,8 +1193,8 @@ export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMul
                 icon={printFeedback ? <Check size={16} /> : <Printer size={16} />}
                 iconBg="#E0F2FE"
                 iconColor="#0369A1"
-                title="Print"
-                subtitle={printFeedback ? "Sent to printer" : "Print check receipt"}
+                title={L.print}
+                subtitle={printFeedback ? L.sentToPrinter : L.printCheckReceipt}
                 disabled={!hasItems || printFeedback}
                 onClick={handlePrint}
               />
@@ -1145,8 +1202,8 @@ export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMul
                 icon={<Banknote size={16} />}
                 iconBg="#FEF3C7"
                 iconColor="#B45309"
-                title="Add tip"
-                subtitle={checkTip > 0 ? `Tip $${checkTip.toFixed(2)}` : "Pre-payment gratuity"}
+                title={L.addTipLabel}
+                subtitle={checkTip > 0 ? `${L.tipAmount} ${checkTip.toFixed(2)}` : L.prePaymentGratuity}
                 disabled={!hasItems}
                 onClick={openTipPanel}
               />
@@ -1154,8 +1211,8 @@ export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMul
                 icon={<Trash2 size={16} />}
                 iconBg="#FEE2E2"
                 iconColor="#DC2626"
-                title="Void order"
-                subtitle="Cancel entire order"
+                title={L.voidOrderAction}
+                subtitle={L.cancelEntireOrder}
                 disabled={!hasItems}
                 onClick={() => setShowVoidConfirm(true)}
                 destructive
@@ -1179,7 +1236,7 @@ export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMul
               className="w-full h-12 rounded-2xl text-sm font-semibold text-white active:opacity-80 disabled:opacity-40 transition-opacity"
               style={{ background: "#6750A4" }}
             >
-              Pay ${payTotal.toFixed(2)}
+              {L.pay} ${payTotal.toFixed(2)}
             </button>
           </div>
         )}
@@ -1187,7 +1244,7 @@ export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMul
         {/* Discount panel */}
         {showDiscountPanel && (
           <div className="px-4 py-4">
-            <p className="text-[12px] text-[#79747E] mb-3">Select a preset or enter a custom discount</p>
+            <p className="text-[12px] text-[#79747E] mb-3">{L.selectPresetDiscount}</p>
             <div className="grid grid-cols-2 gap-2 mb-3">
               <button
                 onClick={() => {
@@ -1234,7 +1291,7 @@ export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMul
                 className="h-12 rounded-xl border border-[#E7E0EC] text-[15px] font-semibold active:bg-[#F3EDF7] transition-colors"
                 style={{ color: "#6750A4" }}
               >
-                Custom
+                {L.custom}
               </button>
             </div>
             {showCustomDiscountInput && (
@@ -1246,7 +1303,7 @@ export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMul
                   pattern={discountInputType === "percent" ? "[0-9]*" : "[0-9]*[.]?[0-9]{0,2}"}
                   value={customDiscountInput}
                   onChange={(e) => handleCustomDiscountInputChange(e.target.value)}
-                  placeholder={discountInputType === "percent" ? "Custom %" : "Custom $"}
+                  placeholder={discountInputType === "percent" ? L.customPercent : L.customDollar}
                   className="flex-1 h-10 rounded-xl border border-[var(--outline-variant)] px-3 text-[14px] outline-none focus:border-[var(--primary)]"
                 />
                 <button
@@ -1255,7 +1312,7 @@ export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMul
                   className="h-10 px-3 rounded-xl text-[13px] font-semibold text-white disabled:opacity-40"
                   style={{ background: "#6750A4" }}
                 >
-                  Apply
+                  {L.apply}
                 </button>
               </div>
             )}
@@ -1265,7 +1322,7 @@ export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMul
                 className="w-full h-10 rounded-xl text-sm font-medium mb-2 border border-[#E7E0EC] active:bg-gray-100"
                 style={{ color: "#B3261E" }}
               >
-                Remove discount
+                {L.removeDiscount}
               </button>
             )}
             <button
@@ -1277,7 +1334,7 @@ export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMul
               className="w-full h-10 rounded-xl text-sm font-medium active:bg-gray-100"
               style={{ color: "#49454F" }}
             >
-              Back
+              {L.back}
             </button>
           </div>
         )}
@@ -1288,8 +1345,8 @@ export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMul
         {showTipPanel && (
           <div className="px-4 py-4">
             <p className="text-[12px] text-[#79747E] mb-3">
-              Tip is added to the check total before sending to payment.
-              {checkTip > 0 ? ` Current tip: $${checkTip.toFixed(2)}` : ""}
+              {L.tipDesc}
+              {checkTip > 0 ? ` ${L.currentTip}: ${checkTip.toFixed(2)}` : ""}
             </p>
             <div className="grid grid-cols-2 gap-2 mb-3">
               <button
@@ -1337,7 +1394,7 @@ export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMul
                 className="h-12 rounded-xl border border-[#E7E0EC] text-[15px] font-semibold active:bg-[#F3EDF7] transition-colors"
                 style={{ color: "#6750A4" }}
               >
-                Custom
+                {L.custom}
               </button>
             </div>
             {showCustomTipInput && (
@@ -1349,7 +1406,7 @@ export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMul
                   pattern={tipInputType === "percent" ? "[0-9]*" : "[0-9]*[.]?[0-9]{0,2}"}
                   value={customTipInput}
                   onChange={(e) => handleCustomTipInputChange(e.target.value)}
-                  placeholder={tipInputType === "percent" ? "Custom %" : "Custom $"}
+                  placeholder={tipInputType === "percent" ? L.customPercent : L.customDollar}
                   className="flex-1 h-10 rounded-xl border border-[var(--outline-variant)] px-3 text-[14px] outline-none focus:border-[var(--primary)]"
                 />
                 <button
@@ -1358,7 +1415,7 @@ export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMul
                   className="h-10 px-3 rounded-xl text-[13px] font-semibold text-white disabled:opacity-40"
                   style={{ background: "#6750A4" }}
                 >
-                  Apply
+                  {L.apply}
                 </button>
               </div>
             )}
@@ -1368,7 +1425,7 @@ export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMul
                 className="w-full h-10 rounded-xl text-sm font-medium mb-2 border border-[#E7E0EC] active:bg-gray-100"
                 style={{ color: "#B3261E" }}
               >
-                Remove tip
+                {L.removeTip}
               </button>
             )}
             <button
@@ -1380,7 +1437,7 @@ export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMul
               className="w-full h-10 rounded-xl text-sm font-medium active:bg-gray-100"
               style={{ color: "#49454F" }}
             >
-              Back
+              {L.back}
             </button>
           </div>
         )}
@@ -1391,7 +1448,7 @@ export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMul
             <div className="flex items-start gap-3 mb-4 p-3 rounded-xl bg-red-50">
               <AlertTriangle size={18} className="text-red-500 shrink-0 mt-0.5" />
               <p className="text-sm text-red-700 leading-snug">
-                This will erase all items and cannot be undone.
+                {L.thisWillErase}
               </p>
             </div>
             <div className="flex flex-col gap-2">
@@ -1400,14 +1457,14 @@ export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMul
                 className="w-full h-11 rounded-xl text-sm font-semibold text-white flex items-center justify-center active:opacity-80"
                 style={{ background: "#DC2626" }}
               >
-                Void order
+                {L.voidOrderAction}
               </button>
               <button
                 onClick={() => setShowVoidConfirm(false)}
                 className="w-full h-11 rounded-xl text-sm font-medium active:bg-gray-100"
                 style={{ color: "#49454F" }}
               >
-                Cancel
+                {L.cancel}
               </button>
             </div>
           </div>
@@ -1422,6 +1479,7 @@ function ItemActionButton({
   label,
   value,
   active,
+  activeLabel,
   destructive,
   centered,
   className,
@@ -1432,6 +1490,7 @@ function ItemActionButton({
   label: string;
   value?: string;
   active?: boolean;
+  activeLabel?: string;
   destructive?: boolean;
   centered?: boolean;
   className?: string;
@@ -1457,7 +1516,7 @@ function ItemActionButton({
           </p>
           {(active || value) && (
             <p className={`text-[11px] mt-0.5 ${centered ? "text-center" : ""}`} style={{ color: active ? "#6750A4" : "#79747E" }}>
-              {active ? "On" : value}
+              {active ? (activeLabel || "On") : value}
             </p>
           )}
         </div>

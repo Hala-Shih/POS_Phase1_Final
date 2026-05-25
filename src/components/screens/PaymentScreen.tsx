@@ -82,8 +82,74 @@ function buildItemizedUnits(items: CartItem[]): ItemizedUnit[] {
 }
 
 export default function PaymentScreen({ onClose: externalClose }: { onClose?: () => void } = {}) {
-  const { cartItems, cartTotal, cartCount, guestCount, selectedTable, currentStaff, setScreen, resetOrder, setStaff, setTable, setOpenMenuOnArrival, setOpenPaymentOnArrival } =
+  const { cartItems, cartTotal, cartCount, guestCount, selectedTable, currentStaff, setScreen, resetOrder, setStaff, setTable, setOpenMenuOnArrival, setOpenPaymentOnArrival, language } =
     useOrderStore();
+
+  const P = language === "zh" ? {
+    subtotal: "小計", tax: "稅", tip: "小費", total: "合計", addTips: "加小費", discount: "折扣",
+    priceOverride: "改價", taxExempt: "免稅", savings: "節省", remove: "移除", cancel: "取消",
+    apply: "套用", confirm: "確認", reset: "重設", newOrderTotal: "新訂單總額",
+    print: "列印", split: "分帳", loadMenu: "菜單", balance: "餘額",
+    cash: "現金", creditCard: "信用卡", giftCard: "禮品卡",
+    currentDiscount: "目前折扣", optional: "可選",
+    pay: "付款", amount: "金額",
+    splitCheck: "分帳", splitCheckBy: "分帳方式", even: "平均", byAmount: "金額", byItem: "品項",
+    splitIntoGuests: "分成幾位", eachPay: "每人付", firstPayment: "第一筆付款金額",
+    nextPayment: "下一筆付款金額", orderTotal: "訂單總額",
+    selectItems: "選擇此帳單品項", selected: "已選", allItemsPaid: "此訂單所有品項已付款。",
+    currentCheckTotal: "此帳單總額",
+    tapToPay: "感應付款", processingPayment: "處理付款中", paymentProcessed: "付款完成",
+    addTip: "加小費", tipPercentage: "小費百分比", other: "其他",
+    tipAmount: "小費金額", totalWithTip: "含小費總額", confirmTip: "確認小費", skipTip: "不加小費",
+    serialNumber: "卡號", enterSerial: "輸入卡號", pin: "PIN碼", pinPlaceholder: "4-6位PIN碼",
+    cardBalance: "卡片餘額", amountToApply: "扣款金額", cardBalanceAfter: "扣款後餘額",
+    remainingToPay: "待付餘額", giftCardApplied: "禮品卡已扣款",
+    amountCharged: "扣款金額：", includesTip: "含小費：", remainingCardBalance: "卡片剩餘餘額：",
+    verifyGiftCard: "驗證禮品卡", applyAmount: "扣款 $", verifying: "驗證禮品卡中...", applying: "扣款中...",
+    done: "完成", continueRemaining: "繼續剩餘餘額",
+    tendered: "收款", exact: "剛好", changeDue: "找零", balanceDue: "待付餘額",
+    collect: "收款 $", cashPayment: "現金付款",
+    paymentComplete: "付款完成", printReceipt: "列印收據", closeOrder: "結束訂單",
+    proceedNext: "進行下一筆付款", enterNextAmount: "輸入下一筆金額", selectNextItems: "選擇下一批品項",
+    amountPaid: "已付金額", remainingBalance: "剩餘餘額",
+    guest: "賓客", splitByAmount: "按金額分帳", remainingAfter: "分帳後剩餘：$",
+    itemPaid: "項已付", itemsRemaining: "項剩餘 · $", left: "待付",
+    unpaidBalance: "未付餘額：$", completePaymentBefore: "離開前請先完成付款。",
+    continuePayment: "繼續付款", leaveAnyway: "仍然離開",
+    note: "備註"
+  } : {
+    subtotal: "Subtotal", tax: "Tax", tip: "Tip", total: "Total", addTips: "Add tips", discount: "Discount",
+    priceOverride: "Price Override", taxExempt: "Tax Exempt", savings: "Savings", remove: "Remove", cancel: "Cancel",
+    apply: "Apply", confirm: "Confirm", reset: "Reset", newOrderTotal: "New order total",
+    print: "Print", split: "Split", loadMenu: "Menu", balance: "Balance",
+    cash: "Cash", creditCard: "Credit Card", giftCard: "Gift Card",
+    currentDiscount: "Current discount", optional: "Optional",
+    pay: "Pay", amount: "Amount",
+    splitCheck: "Split Check", splitCheckBy: "Split Check by", even: "Even", byAmount: "Amount", byItem: "Item",
+    splitIntoGuests: "Split into guests", eachPay: "Each pays", firstPayment: "First payment amount",
+    nextPayment: "Next payment amount", orderTotal: "Order total",
+    selectItems: "Select items for this check", selected: "selected", allItemsPaid: "All items in this order have already been paid.",
+    currentCheckTotal: "Current check total",
+    tapToPay: "Tap to pay", processingPayment: "Processing payment", paymentProcessed: "Payment processed",
+    addTip: "Add tip", tipPercentage: "Tip percentage", other: "Other",
+    tipAmount: "Tip amount", totalWithTip: "Total with tip", confirmTip: "Confirm Tip", skipTip: "Skip Tip",
+    serialNumber: "Serial number", enterSerial: "Enter serial number", pin: "PIN", pinPlaceholder: "4-6 digit PIN",
+    cardBalance: "Card balance", amountToApply: "Amount to apply", cardBalanceAfter: "Card balance after",
+    remainingToPay: "Remaining to pay", giftCardApplied: "Gift card applied",
+    amountCharged: "Amount charged: ", includesTip: "Includes tip: ", remainingCardBalance: "Remaining card balance: ",
+    verifyGiftCard: "Verify Gift Card", applyAmount: "Apply $", verifying: "Verifying gift card...", applying: "Applying gift card...",
+    done: "Done", continueRemaining: "Continue to remaining balance",
+    tendered: "Tendered", exact: "Exact", changeDue: "Change due", balanceDue: "Balance due",
+    collect: "Collect $", cashPayment: "Cash payment",
+    paymentComplete: "Payment complete", printReceipt: "Print receipt", closeOrder: "Close order",
+    proceedNext: "Proceed to next payment", enterNextAmount: "Enter next payment amount", selectNextItems: "Select next items",
+    amountPaid: "Amount paid", remainingBalance: "Remaining balance",
+    guest: "Guest", splitByAmount: "Split by amount", remainingAfter: "Remaining after: $",
+    itemPaid: " paid", itemsRemaining: " remaining · $", left: " left",
+    unpaidBalance: "Unpaid balance: $", completePaymentBefore: "Complete payment before leaving.",
+    continuePayment: "Continue payment", leaveAnyway: "Leave anyway",
+    note: "Note"
+  };
 
   const goBack = externalClose ?? (() => setScreen("check"));
 
@@ -552,7 +618,7 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
                           <p className="text-xs text-[var(--outline)] ml-5">{unit.comboSelections.join(" · ")}</p>
                         )}
                         {unit.note && (
-                          <p className="text-xs text-[var(--primary)] italic ml-5">Note: {unit.note}</p>
+                          <p className="text-xs text-[var(--primary)] italic ml-5">{P.note}: {unit.note}</p>
                         )}
                       </div>
                       <span className="text-sm font-medium shrink-0 ml-2">${unit.unitTotal.toFixed(2)}</span>
@@ -630,7 +696,7 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
           <div className="px-4 py-2 flex items-center gap-2 border-b border-gray-100">
             <span className="text-sm font-semibold text-[#6750A4]">
               {confirmedSplit.type === "even"
-                ? `Guest ${activeGuestIdx + 1}/${confirmedSplit.guests}`
+                ? `{P.guest} ${activeGuestIdx + 1}/${confirmedSplit.guests}`
                 : confirmedSplit.type === "amount"
                 ? `Split by amount`
                 : `Split by item`}
@@ -641,7 +707,7 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
         {/* Price breakdown */}
         <div className="px-4 py-2 space-y-1">
           <div className="flex justify-between">
-            <span className="text-sm">Subtotal</span>
+            <span className="text-sm">{P.subtotal}</span>
             <span className={`text-sm font-medium ${(orderComped || orderDiscount || (orderPriceOverride != null)) ? "text-[#6750A4]" : ""}`}>
               ${(orderPriceOverride != null && !orderComped
                 ? (confirmedSplit ? roundCurrency(rawSubtotal / (confirmedSplit.type === "even" ? confirmedSplit.guests : 1)) : rawSubtotal)
@@ -651,7 +717,7 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
           </div>
           {orderPriceOverride != null && !orderComped && (
             <div className="flex justify-between items-center">
-              <span className="text-sm text-[#6750A4] font-medium">Price Override</span>
+              <span className="text-sm text-[#6750A4] font-medium">{P.priceOverride}</span>
               <span className="text-sm font-medium text-[#6750A4]">${displaySubtotal.toFixed(2)}</span>
             </div>
           )}
@@ -671,23 +737,23 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
           )}
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-2">
-              <span className="text-sm">Tax</span>
+              <span className="text-sm">{P.tax}</span>
               <button
                 onClick={() => setTaxExempt(!taxExempt)}
                 className="flex items-center h-7 rounded-full active:opacity-70 transition-colors overflow-hidden"
               >
                 <span className={`text-[11px] font-bold px-2 h-full flex items-center rounded-full transition-colors ${
                   !taxExempt ? "bg-gray-200 text-gray-600" : "bg-transparent text-gray-400"
-                }`}>ON</span>
+                }`}>{language === "zh" ? "開" : "ON"}</span>
                 <span className={`text-[11px] font-bold px-2 h-full flex items-center rounded-full transition-colors ${
                   taxExempt ? "bg-[#E8DEF8] text-[#6750A4]" : "bg-transparent text-gray-400"
-                }`}>OFF</span>
+                }`}>{language === "zh" ? "關" : "OFF"}</span>
               </button>
             </div>
             <span className={`text-sm font-medium ${taxExempt ? "text-[#6750A4] line-through" : ""}`}>${displayTax.toFixed(2)}</span>
           </div>
           <div className="flex justify-between items-center">
-            <span className="text-sm">Tip</span>
+            <span className="text-sm">{P.tip}</span>
             {tip > 0 ? (
               <button
                 onClick={handleOpenTipDrawer}
@@ -700,13 +766,13 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
                 onClick={handleOpenTipDrawer}
                 className="px-3 py-1 rounded-full border border-[var(--outline-variant)] text-xs font-medium active:bg-[var(--surface)]"
               >
-                Add tips
+                {P.addTips}
               </button>
             )}
           </div>
 
           <div className="flex justify-between items-center !mt-2">
-            <span className="text-lg font-semibold">Total</span>
+            <span className="text-lg font-semibold">{P.total}</span>
             <span className="text-lg font-bold">${displayTotal.toFixed(2)}</span>
           </div>
 
@@ -771,7 +837,7 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
                 {/* Current value display */}
                 <div className="flex items-center justify-between mb-2 px-2 py-2 rounded-lg bg-white">
                   <span className="text-xs text-[var(--outline)]">
-                    {orderDiscount ? "Current discount" : "Discount"}
+                    {orderDiscount ? P.currentDiscount : P.discount}
                   </span>
                   <span className={`text-base font-semibold ${orderDiscountInput ? "text-[#6750A4]" : "text-gray-400"}`}>
                     {orderDiscountMode === "percent"
@@ -830,7 +896,7 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
                 </div>
                 {/* Preview */}
                 <div className="flex items-center justify-between mb-2 px-2 py-2 rounded-lg bg-white">
-                  <span className="text-xs text-[var(--outline)]">Savings</span>
+                  <span className="text-xs text-[var(--outline)]">{P.savings}</span>
                   <span className="text-sm font-semibold text-green-600">
                     -${(isNaN(savings) ? 0 : savings).toFixed(2)}
                   </span>
@@ -868,7 +934,7 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
                       }}
                       className="flex-1 h-10 rounded-xl text-xs font-medium text-red-600 border border-red-300 bg-red-50 active:bg-red-100"
                     >
-                      Remove
+                      {P.remove}
                     </button>
                   )}
                   <button
@@ -879,7 +945,7 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
                     }}
                     className="flex-1 h-10 rounded-xl text-xs font-medium border border-[var(--outline-variant)] active:bg-white"
                   >
-                    Cancel
+                    {P.cancel}
                   </button>
                   <button
                     onClick={() => {
@@ -895,7 +961,7 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
                     className="flex-[2] h-10 rounded-xl text-xs font-medium text-white active:opacity-80"
                     style={{ background: "#6750A4" }}
                   >
-                    Apply
+                    {P.apply}
                   </button>
                 </div>
               </div>
@@ -906,7 +972,7 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
           {showOrderPriceOverridePanel && (
             <div ref={orderActionPanelRef} className="!mt-2 p-3 rounded-xl bg-[var(--surface)] border border-[var(--outline-variant)]">
               <div className="flex items-center justify-between mb-2 px-2 py-2 rounded-lg bg-white">
-                <span className="text-xs text-[var(--outline)]">New order total</span>
+                <span className="text-xs text-[var(--outline)]">{P.newOrderTotal}</span>
                 <span className="text-base font-semibold text-[var(--primary)]">
                   ${orderPriceOverrideInput === "" ? "0.00" : parseFloat(orderPriceOverrideInput || "0").toFixed(2)}
                 </span>
@@ -942,7 +1008,7 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
                   }}
                   className="flex-1 h-10 rounded-xl text-xs font-medium border border-[var(--outline-variant)] active:bg-white"
                 >
-                  {orderPriceOverride != null ? "RESET" : "Cancel"}
+                  {orderPriceOverride != null ? P.reset : P.cancel}
                 </button>
                 <button
                   onClick={() => {
@@ -969,7 +1035,7 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
 
       {/* Print / Split / Load row */}
       <div className="shrink-0 px-3 py-3 grid grid-cols-3 gap-2 border-t border-gray-300 items-center">
-        <button className="h-[48px] rounded-xl bg-white border border-gray-800 text-[13px] font-medium active:opacity-70 transition-colors flex items-center justify-center">Print</button>
+        <button className="h-[48px] rounded-xl bg-white border border-gray-800 text-[13px] font-medium active:opacity-70 transition-colors flex items-center justify-center">{P.print}</button>
         <button
           onClick={() => {
             setSplitType(null);
@@ -978,9 +1044,9 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
           }}
           className="h-[48px] rounded-xl bg-white border border-gray-800 text-[13px] font-medium active:opacity-70 transition-colors flex items-center justify-center"
         >
-          Split
+          {P.split}
         </button>
-        <button onClick={() => { setOpenMenuOnArrival(true); if (externalClose) externalClose(); setScreen("check"); }} className="h-[48px] rounded-xl bg-white border border-gray-800 text-[13px] font-medium active:opacity-70 transition-colors flex items-center justify-center">Load menu</button>
+        <button onClick={() => { setOpenMenuOnArrival(true); if (externalClose) externalClose(); setScreen("check"); }} className="h-[48px] rounded-xl bg-white border border-gray-800 text-[13px] font-medium active:opacity-70 transition-colors flex items-center justify-center">{P.loadMenu}</button>
       </div>
 
       {/* Numpad + Payment Buttons Footer */}
@@ -988,7 +1054,7 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
         {/* Balance + Amount input */}
         <div className="mb-1.5">
           <div className="flex justify-between mb-2">
-            <span className="text-sm font-semibold">Balance</span>
+            <span className="text-sm font-semibold">{P.balance}</span>
             <span className="text-sm font-bold">${(remainingBalance + tip).toFixed(2)}</span>
           </div>
           <div className="flex gap-2">
@@ -1012,10 +1078,10 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
                       className="absolute bottom-full left-0 mb-2 bg-white rounded-xl shadow-lg border border-gray-200 z-50 py-1 min-w-[180px]"
                     >
                       {([
-                        { key: "pay" as const, label: "Pay" },
-                        { key: "discount" as const, label: "Discount" },
-                        { key: "tips" as const, label: "Add Tips" },
-                        { key: "priceOverride" as const, label: "Price Override" },
+                        { key: "pay" as const, label: P.pay },
+                        { key: "discount" as const, label: P.discount },
+                        { key: "tips" as const, label: P.addTips },
+                        { key: "priceOverride" as const, label: P.priceOverride },
                       ]).map((mode) => (
                         <button
                           key={mode.key}
@@ -1050,7 +1116,7 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
             {/* Input field */}
             <div className="flex-1 min-w-0">
               <div className="border border-gray-800 rounded-md px-3 py-1 flex items-center justify-between h-10">
-                <span className="text-sm text-gray-500">{{ pay: "Pay", discount: "Discount", tips: "Add Tips", taxExempt: "Tax Exempt", priceOverride: "Price Override" }[numpadMode]}</span>
+                <span className="text-sm text-gray-500">{{ pay: P.pay, discount: P.discount, tips: P.addTips, taxExempt: P.taxExempt, priceOverride: P.priceOverride }[numpadMode]}</span>
                 <span className="text-base font-medium">{((numpadMode === "discount" && discountUnit === "percent") || (numpadMode === "tips" && tipsUnit === "percent")) ? `${displayAmountValue}%` : `$${displayAmountValue}`}</span>
               </div>
             </div>
@@ -1147,7 +1213,7 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
           <button onClick={() => handleNumpadKey("1")} className="h-11 rounded-2xl bg-white text-lg font-medium active:bg-gray-100 transition-colors">1</button>
           <button onClick={() => handleNumpadKey("2")} className="h-11 rounded-2xl bg-white text-lg font-medium active:bg-gray-100 transition-colors">2</button>
           <button onClick={() => handleNumpadKey("3")} className="h-11 rounded-2xl bg-white text-lg font-medium active:bg-gray-100 transition-colors">3</button>
-          <button onClick={() => setAmountInput(String(Math.round(remainingBalance * 100)))} className="h-11 rounded-2xl bg-white text-sm font-medium active:bg-gray-100 transition-colors">Balance $</button>
+          <button onClick={() => setAmountInput(String(Math.round(remainingBalance * 100)))} className="h-11 rounded-2xl bg-white text-sm font-medium active:bg-gray-100 transition-colors">{P.balance} $</button>
           {/* Row 2 */}
           <button onClick={() => handleNumpadKey("4")} className="h-11 rounded-2xl bg-white text-lg font-medium active:bg-gray-100 transition-colors">4</button>
           <button onClick={() => handleNumpadKey("5")} className="h-11 rounded-2xl bg-white text-lg font-medium active:bg-gray-100 transition-colors">5</button>
@@ -1168,14 +1234,14 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
               onClick={() => { setAmountInput(""); setNumpadMode("pay"); }}
               className="flex-1 h-12 rounded-full text-sm font-semibold active:opacity-80 transition-colors bg-gray-100 text-gray-600"
             >
-              Cancel
+              {P.cancel}
             </button>
             {orderDiscount && (
               <button
                 onClick={() => { setOrderDiscount(null); setAmountInput(""); setNumpadMode("pay"); }}
                 className="flex-1 h-12 rounded-full text-sm font-semibold active:opacity-80 transition-colors bg-red-100 text-red-600"
               >
-                Remove
+                {P.remove}
               </button>
             )}
             <button
@@ -1189,7 +1255,7 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
               }}
               className="flex-1 h-12 rounded-full text-sm font-semibold active:opacity-80 transition-colors bg-purple-600 text-white"
             >
-              Apply
+              {P.apply}
             </button>
           </div>
         )}
@@ -1200,14 +1266,14 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
               onClick={() => { setAmountInput(""); setNumpadMode("pay"); }}
               className="flex-1 h-12 rounded-full text-sm font-semibold active:opacity-80 transition-colors bg-gray-100 text-gray-600"
             >
-              Cancel
+              {P.cancel}
             </button>
             {tip > 0 && (
               <button
                 onClick={() => { setTip(0); setAmountInput(""); setNumpadMode("pay"); }}
                 className="flex-1 h-12 rounded-full text-sm font-semibold active:opacity-80 transition-colors bg-red-100 text-red-600"
               >
-                Remove
+                {P.remove}
               </button>
             )}
             <button
@@ -1221,7 +1287,7 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
               }}
               className="flex-1 h-12 rounded-full text-sm font-semibold active:opacity-80 transition-colors bg-amber-500 text-white"
             >
-              Apply
+              {P.apply}
             </button>
           </div>
         )}
@@ -1232,14 +1298,14 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
               onClick={() => { setAmountInput(""); setNumpadMode("pay"); }}
               className="flex-1 h-12 rounded-full text-sm font-semibold active:opacity-80 transition-colors bg-gray-100 text-gray-600"
             >
-              Cancel
+              {P.cancel}
             </button>
             {orderPriceOverride != null && (
               <button
                 onClick={() => { setOrderPriceOverride(null); setAmountInput(""); setNumpadMode("pay"); }}
                 className="flex-1 h-12 rounded-full text-sm font-semibold active:opacity-80 transition-colors bg-red-100 text-red-600"
               >
-                Remove
+                {P.remove}
               </button>
             )}
             <button
@@ -1253,7 +1319,7 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
               }}
               className="flex-1 h-12 rounded-full text-sm font-semibold active:opacity-80 transition-colors bg-blue-600 text-white"
             >
-              Apply
+              {P.apply}
             </button>
           </div>
         )}
@@ -1265,21 +1331,21 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
               className="flex-1 h-12 rounded-full text-sm font-semibold active:opacity-80 transition-colors"
               style={{ background: "#14AE5C", color: "#ffffff" }}
             >
-              Cash
+              {P.cash}
             </button>
             <button
               onClick={() => { capturePartialPay(); setLastChangeDue(null); setCcStep("tap"); setCcTipIdx(null); setShowCreditCardDrawer(true); }}
               className="flex-1 h-12 rounded-full text-sm font-semibold active:opacity-80 transition-colors"
               style={{ background: "#14AE5C", color: "#ffffff" }}
             >
-              Credit Card
+              {P.creditCard}
             </button>
             <button
               onClick={() => { capturePartialPay(); setLastChangeDue(null); setGcSerial(""); setGcPin(""); setGcStep("input"); setGcResult(null); setShowGiftCardDrawer(true); }}
               className="flex-1 h-12 rounded-full text-sm font-semibold active:opacity-80 transition-colors"
               style={{ background: "#14AE5C", color: "#ffffff" }}
             >
-              Gift Card
+              {P.giftCard}
             </button>
           </div>
         )}
@@ -1309,7 +1375,7 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
         >
               {/* Top row: title + close */}
               <div className="flex items-center justify-between px-4 pt-3">
-                <span className="text-base font-semibold" style={{ color: "#1D1B20", letterSpacing: "0.15px" }}>Gift Card</span>
+                <span className="text-base font-semibold" style={{ color: "#1D1B20", letterSpacing: "0.15px" }}>{P.giftCard}</span>
                 <button
                   onClick={() => { setShowGiftCardDrawer(false); setPartialPayAmount(null); }}
                   className="w-8 h-8 flex items-center justify-center rounded-full active:bg-gray-100"
@@ -1320,7 +1386,7 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
 
               {/* Total row */}
               <div className="flex justify-between items-baseline px-5 pt-4">
-                <span className="font-medium text-black" style={{ fontSize: 36, lineHeight: "44px" }}>{partialPayAmount != null ? "Amount" : "Total"}</span>
+                <span className="font-medium text-black" style={{ fontSize: 36, lineHeight: "44px" }}>{partialPayAmount != null ? P.amount : P.total}</span>
                 <span className="font-medium text-black" style={{ fontSize: 36, lineHeight: "44px" }}>
                   ${drawerChargeAmount.toFixed(2)}
                 </span>
@@ -1341,7 +1407,7 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
                       autoComplete="off"
                       value={gcSerial}
                       onChange={(e) => setGcSerial(e.target.value)}
-                      placeholder="Enter serial number"
+                      placeholder={P.enterSerial}
                       className="h-[52px] px-3 rounded-lg text-sm focus:outline-none"
                       style={{ border: "1px solid #515151" }}
                     />
@@ -1359,7 +1425,7 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
                       maxLength={6}
                       value={gcPin}
                       onChange={(e) => setGcPin(e.target.value.replace(/\D/g, ""))}
-                      placeholder="4-6 digit PIN"
+                      placeholder={P.pinPlaceholder}
                       className="h-[44px] w-40 px-3 rounded-lg text-sm focus:outline-none"
                       style={{ border: "1px solid #515151" }}
                     />
@@ -1385,7 +1451,7 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
                     }}
                   />
                   <span className="font-semibold text-black" style={{ fontSize: 18, lineHeight: "24px" }}>
-                    {gcStep === "processing" ? "Verifying gift card..." : "Applying gift card..."}
+                    {gcStep === "processing" ? P.verifying : P.applying}
                   </span>
                 </div>
               )}
@@ -1470,12 +1536,12 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
                     {/* Summary */}
                     <div className="flex flex-col gap-1.5 pt-2 border-t border-gray-100">
                       <div className="flex justify-between">
-                        <span className="text-sm" style={{ color: "#49454F" }}>Card balance after</span>
+                        <span className="text-sm" style={{ color: "#49454F" }}>{P.cardBalanceAfter}</span>
                         <span className="text-sm" style={{ color: "#49454F" }}>${balanceAfter.toFixed(2)}</span>
                       </div>
                       {orderRemaining > 0.01 && (
                         <div className="flex justify-between">
-                          <span className="text-sm font-medium" style={{ color: "#B71C1C" }}>Remaining to pay</span>
+                          <span className="text-sm font-medium" style={{ color: "#B71C1C" }}>{P.remainingToPay}</span>
                           <span className="text-sm font-medium" style={{ color: "#B71C1C" }}>${orderRemaining.toFixed(2)}</span>
                         </div>
                       )}
@@ -1506,15 +1572,15 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
                     </span>
                     <div className="flex flex-col items-center gap-1">
                       <span className="text-sm" style={{ color: "#49454F" }}>
-                        Amount charged: ${effectiveApply.toFixed(2)}
+                        {P.amountCharged}${effectiveApply.toFixed(2)}
                       </span>
                       {gcTipAmount > 0 && (
                         <span className="text-sm" style={{ color: "#49454F" }}>
-                          Includes tip: ${gcTipAmount.toFixed(2)}
+                          {P.includesTip}${gcTipAmount.toFixed(2)}
                         </span>
                       )}
                       <span className="text-sm" style={{ color: "#49454F" }}>
-                        Remaining card balance: ${(cardBalance - effectiveApply).toFixed(2)}
+                        {P.remainingCardBalance}${(cardBalance - effectiveApply).toFixed(2)}
                       </span>
                     </div>
                   </div>
@@ -1556,7 +1622,7 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
                     className="w-full h-14 rounded-full flex items-center justify-center active:bg-gray-100 transition-colors bg-white"
                   >
                     <span className="text-base font-medium text-black" style={{ letterSpacing: "0.15px" }}>
-                      Cancel
+                      {P.cancel}
                     </span>
                   </button>
                 )}
@@ -1581,7 +1647,7 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
                       style={{ background: "#00B618" }}
                     >
                       <span className="text-base font-medium text-white" style={{ letterSpacing: "0.15px" }}>
-                        Apply ${effectiveApply.toFixed(2)}
+                        {P.applyAmount}{effectiveApply.toFixed(2)}
                       </span>
                     </button>
                   );
@@ -1610,7 +1676,7 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
                       style={{ background: "#00B618" }}
                     >
                       <span className="text-base font-medium text-white" style={{ letterSpacing: "0.15px" }}>
-                        {orderRemaining < 0.01 ? "Done" : "Continue to remaining balance"}
+                        {orderRemaining < 0.01 ? P.done : P.continueRemaining}
                       </span>
                     </button>
                   );
@@ -1663,7 +1729,7 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
 
               {/* Total row */}
               <div className="flex justify-between items-baseline px-5 pt-4">
-                <span className="font-medium text-black" style={{ fontSize: 36, lineHeight: "44px" }}>Total</span>
+                <span className="font-medium text-black" style={{ fontSize: 36, lineHeight: "44px" }}>{P.total}</span>
                 <span className="font-medium text-black" style={{ fontSize: 36, lineHeight: "44px" }}>
                   ${orderBaseTotal.toFixed(2)}
                 </span>
@@ -1677,7 +1743,7 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
                 <div className="flex gap-1.5">
                   {(["even", "amount", "item"] as const).map((type) => {
                     const isSelected = splitType === type;
-                    const label = type === "even" ? "Even" : type === "amount" ? "Amount" : "Item";
+                    const label = type === "even" ? "Even" : type === "amount" ? P.amount : "Item";
                     // Lock to the active split method once any sub-payment has been recorded
                     const lockedType =
                       paidGuests.size > 0 ? "even"
@@ -1763,14 +1829,14 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
                           <span className="text-sm font-medium" style={{ color: "#49454F" }}>${amountPaidSoFar.toFixed(2)}</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-sm font-medium" style={{ color: "#1D1B20" }}>Remaining balance</span>
+                          <span className="text-sm font-medium" style={{ color: "#1D1B20" }}>{P.remainingBalance}</span>
                           <span className="text-sm font-medium" style={{ color: "#1D1B20" }}>${amountRemaining.toFixed(2)}</span>
                         </div>
                       </div>
                     )}
                     <div className="flex flex-col gap-1.5">
                       <span className="text-base font-medium" style={{ color: "#1D1B20", letterSpacing: "0.15px" }}>
-                        {isSubsequent ? "Next payment amount" : "First payment amount"}
+                        {isSubsequent ? P.nextPayment : P.firstPayment}
                       </span>
                       <div className="flex items-center gap-2">
                         <span className="text-base font-medium">$</span>
@@ -1787,7 +1853,7 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
                       </div>
                       {!isSubsequent && (
                         <span className="text-xs" style={{ color: "#49454F" }}>
-                          Order total: ${orderBaseTotal.toFixed(2)}
+                          {P.orderTotal}: ${orderBaseTotal.toFixed(2)}
                         </span>
                       )}
                     </div>
@@ -1807,7 +1873,7 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
                     <span className="text-base font-medium" style={{ color: "#1D1B20", letterSpacing: "0.15px" }}>
                       Select items for this check
                     </span>
-                    <span className="text-sm" style={{ color: "#49454F" }}>{itemizedSelectedCount} selected</span>
+                    <span className="text-sm" style={{ color: "#49454F" }}>{itemizedSelectedCount} {P.selected}</span>
                   </div>
                   <div className="flex-1 overflow-y-auto rounded-xl border border-[#DADADA] bg-[#FAFAFA]">
                     {unpaidItemUnits.length > 0 ? (
@@ -1849,7 +1915,7 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
                                   <p className="text-xs mt-0.5" style={{ color: "#49454F" }}>{unit.comboSelections.join(" · ")}</p>
                                 )}
                                 {unit.note && (
-                                  <p className="text-xs mt-0.5 italic" style={{ color: "#6750A4" }}>Note: {unit.note}</p>
+                                  <p className="text-xs mt-0.5 italic" style={{ color: "#6750A4" }}>{P.note}: {unit.note}</p>
                                 )}
                               </div>
                               <span className="text-sm font-medium text-black shrink-0">${unit.unitTotal.toFixed(2)}</span>
@@ -1931,7 +1997,7 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
                   className="w-full h-14 rounded-full flex items-center justify-center active:bg-gray-100 transition-colors bg-white"
                 >
                   <span className="text-base font-medium text-black" style={{ letterSpacing: "0.15px" }}>
-                    Cancel
+                    {P.cancel}
                   </span>
                 </button>
               </div>
@@ -1948,7 +2014,7 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
         >
               {/* Top row: title + close */}
               <div className="flex items-center justify-between px-4 pt-3">
-                <span className="text-base font-semibold" style={{ color: "#1D1B20", letterSpacing: "0.15px" }}>Credit Card</span>
+                <span className="text-base font-semibold" style={{ color: "#1D1B20", letterSpacing: "0.15px" }}>{P.creditCard}</span>
                 <button
                   onClick={() => { setShowCreditCardDrawer(false); setPartialPayAmount(null); }}
                   className="w-8 h-8 flex items-center justify-center rounded-full active:bg-gray-100"
@@ -1959,7 +2025,7 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
 
               {/* Total row */}
               <div className="flex justify-between items-baseline px-5 pt-4">
-                <span className="font-medium text-black" style={{ fontSize: 36, lineHeight: "44px" }}>{partialPayAmount != null ? "Amount" : "Total"}</span>
+                <span className="font-medium text-black" style={{ fontSize: 36, lineHeight: "44px" }}>{partialPayAmount != null ? P.amount : P.total}</span>
                 <span className="font-medium text-black" style={{ fontSize: 36, lineHeight: "44px" }}>
                   ${drawerChargeAmount.toFixed(2)}
                 </span>
@@ -1997,7 +2063,7 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
                       className="w-full h-14 rounded-full flex items-center justify-center active:bg-gray-100 transition-colors bg-white"
                     >
                       <span className="text-base font-medium text-black" style={{ letterSpacing: "0.15px" }}>
-                        Cancel
+                        {P.cancel}
                       </span>
                     </button>
                   </div>
@@ -2032,7 +2098,7 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
                       }}
                     >
                       <span className="text-base font-medium" style={{ color: "#B71C1C", letterSpacing: "0.15px" }}>
-                        Cancel
+                        {P.cancel}
                       </span>
                     </button>
                   </div>
@@ -2087,7 +2153,7 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
                           className="flex-1 h-[52px] rounded-lg flex items-center pl-3"
                           style={{ background: "#FFFFFF", border: "1px solid #DADADA" }}
                         >
-                          <span className="text-sm text-black" style={{ letterSpacing: "0.25px" }}>Other</span>
+                          <span className="text-sm text-black" style={{ letterSpacing: "0.25px" }}>{P.other}</span>
                         </button>
                       </div>
                     </div>
@@ -2102,7 +2168,7 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
                           <span className="text-sm" style={{ color: "#49454F" }}>${ccTipAmount.toFixed(2)}</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-sm font-medium text-black">Total with tip</span>
+                          <span className="text-sm font-medium text-black">{P.totalWithTip}</span>
                           <span className="text-sm font-medium text-black">${ccTotalWithTip.toFixed(2)}</span>
                         </div>
                       </div>
@@ -2153,7 +2219,7 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
         >
               {/* Top row: title + close */}
               <div className="flex items-center justify-between px-4 pt-3">
-                <span className="text-base font-semibold" style={{ color: "#1D1B20", letterSpacing: "0.15px" }}>Tip</span>
+                <span className="text-base font-semibold" style={{ color: "#1D1B20", letterSpacing: "0.15px" }}>{P.tip}</span>
                 <button
                   onClick={() => { setShowTipDrawer(false); setPendingCashAfterTip(false); }}
                   className="w-8 h-8 flex items-center justify-center rounded-full active:bg-gray-100"
@@ -2173,7 +2239,7 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
                   </span>
                 </div>
                 <div className="flex items-baseline justify-between mt-1">
-                  <span className="text-sm text-[#49454F]">Tip</span>
+                  <span className="text-sm text-[#49454F]">{P.tip}</span>
                   <span className="text-sm text-[#49454F]">${previewTip.toFixed(2)}</span>
                 </div>
               </div>
@@ -2289,7 +2355,7 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
                   className="w-full h-14 rounded-full flex items-center justify-center active:bg-gray-100 transition-colors bg-white"
                 >
                   <span className="text-base font-medium text-black" style={{ letterSpacing: "0.15px" }}>
-                    Cancel
+                    {P.cancel}
                   </span>
                 </button>
               </div>
@@ -2304,7 +2370,7 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
         >
               {/* Top row: title + close */}
               <div className="flex items-center justify-between px-4 pt-3">
-                <span className="text-base font-semibold" style={{ color: "#1D1B20", letterSpacing: "0.15px" }}>Cash</span>
+                <span className="text-base font-semibold" style={{ color: "#1D1B20", letterSpacing: "0.15px" }}>{P.cash}</span>
                 <button
                   onClick={() => { setShowCashDrawer(false); setPartialPayAmount(null); }}
                   className="w-8 h-8 flex items-center justify-center rounded-full active:bg-gray-100"
@@ -2317,7 +2383,7 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
               <div className="px-5 pt-4 pb-3">
                 <div className="flex items-baseline justify-between">
                   <span className="font-medium text-black" style={{ fontSize: 36, lineHeight: "44px" }}>
-                    {partialPayAmount != null ? "Amount" : "Total"}
+                    {partialPayAmount != null ? P.amount : P.total}
                   </span>
                   <span className="font-medium text-black" style={{ fontSize: 36, lineHeight: "44px" }}>
                     ${(partialPayAmount != null ? partialPayAmount + tip : discountedTotal).toFixed(2)}
@@ -2325,7 +2391,7 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
                 </div>
                 {tip > 0 && partialPayAmount != null && (
                   <div className="flex justify-between mt-1">
-                    <span className="text-sm text-[#49454F]">Tip</span>
+                    <span className="text-sm text-[#49454F]">{P.tip}</span>
                     <span className="text-sm text-[#49454F]">${tip.toFixed(2)}</span>
                   </div>
                 )}
@@ -2346,7 +2412,7 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
                     <span className="text-base font-medium" style={{ color: "#1D1B20", letterSpacing: "0.15px" }}>
                       Discount
                     </span>
-                    <span className="text-xs text-[#49454F]">Optional</span>
+                    <span className="text-xs text-[#49454F]">{P.optional}</span>
                   </div>
                   <div className="flex gap-1.5">
                     {DISCOUNT_PRESETS.map((preset, idx) => {
@@ -2530,7 +2596,7 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
                 {changeDue !== null && (
                   <div className="flex items-center justify-between">
                     <span className="text-base font-medium" style={{ color: "#1D1B20", letterSpacing: "0.15px" }}>
-                      {changeDue >= 0 ? "Change due" : "Balance due"}
+                      {changeDue >= 0 ? P.changeDue : P.balanceDue}
                     </span>
                     <span className="text-base font-medium" style={{ color: "#1D1B20", letterSpacing: "0.15px" }}>
                       ${Math.abs(changeDue).toFixed(2)}
@@ -2561,8 +2627,8 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
                 >
                   <span className="text-base font-medium text-white" style={{ letterSpacing: "0.15px" }}>
                     {cashTenderAmount > 0
-                      ? `Collect $${cashTenderAmount.toFixed(2)}`
-                      : "Confirm"}
+                      ? `{P.collect}${cashTenderAmount.toFixed(2)}`
+                      : P.confirm}
                   </span>
                 </button>
                 <button
@@ -2570,7 +2636,7 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
                   className="w-full h-14 rounded-full flex items-center justify-center active:bg-gray-100 transition-colors bg-white mt-2"
                 >
                   <span className="text-base font-medium text-black" style={{ letterSpacing: "0.15px" }}>
-                    Cancel
+                    {P.cancel}
                   </span>
                 </button>
               </div>
@@ -2624,11 +2690,11 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
                 )}
               </div>
 
-              {/* Guest label when in even split mode */}
+              {/* {P.guest} label when in even split mode */}
               {confirmedSplit && confirmedSplit.type === "even" && (
                 <div className="px-5 mt-2">
                   <span className="text-sm font-medium" style={{ color: "#49454F" }}>
-                    Guest {activeGuestIdx + 1} of {confirmedSplit.guests}
+                    {P.guest} {activeGuestIdx + 1} of {confirmedSplit.guests}
                   </span>
                 </div>
               )}
@@ -2636,7 +2702,7 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
               {confirmedSplit && confirmedSplit.type === "amount" && (
                 <div className="px-5 mt-2">
                   <span className="text-sm font-medium" style={{ color: "#49454F" }}>
-                    Payment #{splitAmountPayments.length + 1} · Remaining after: ${Math.max(0, splitAmountRemaining - splitAmountCurrent).toFixed(2)}
+                    Payment #{splitAmountPayments.length + 1} · {P.remainingAfter}{Math.max(0, splitAmountRemaining - splitAmountCurrent).toFixed(2)}
                   </span>
                 </div>
               )}
@@ -2775,7 +2841,7 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
           >
             <div className="px-4 pt-4 pb-1">
               <p className="text-2xl font-medium text-black leading-8">
-                Unpaid balance: ${outstandingAmount.toFixed(2)}
+                {P.unpaidBalance}{outstandingAmount.toFixed(2)}
               </p>
               <p className="text-base text-black leading-6 mt-1" style={{ letterSpacing: "0.5px" }}>
                 Complete payment before leaving.
@@ -2787,7 +2853,7 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
                 className="w-full h-12 rounded-md flex items-center justify-center active:opacity-80"
                 style={{ background: "#6750A4" }}
               >
-                <span className="text-sm font-medium text-white tracking-wide">Continue payment</span>
+                <span className="text-sm font-medium text-white tracking-wide">{P.continuePayment}</span>
               </button>
               <button
                 onClick={() => {
@@ -2797,7 +2863,7 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
                 className="w-full h-12 rounded-md flex items-center justify-center active:opacity-80"
                 style={{ background: "#E8DEF8" }}
               >
-                <span className="text-sm font-medium tracking-wide" style={{ color: "#6750A4" }}>Leave anyway</span>
+                <span className="text-sm font-medium tracking-wide" style={{ color: "#6750A4" }}>{P.leaveAnyway}</span>
               </button>
             </div>
           </div>

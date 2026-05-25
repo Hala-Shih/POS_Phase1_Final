@@ -72,6 +72,13 @@ export default function ComboConfigSheet({
   // standard 60% drawer).
   const setComboSheetOpen = useOrderStore((s) => s.setComboSheetOpen);
   const removeItem = useOrderStore((s) => s.removeItem);
+  const language = useOrderStore((s) => s.language);
+  const displayName = language === "zh" && item.nameCn ? item.nameCn : item.name;
+  const cn = (o: { name: string; nameCn?: string }) =>
+    language === "zh" && o.nameCn ? o.nameCn : o.name;
+  const L = language === "zh"
+    ? { required: "必選", ready: "完成", chooseMore: (n: number) => `還需選 ${n} 項`, order: "份", addToCart: "加入購物車", saveChanges: "保存修改", nextOrder: "下一份" }
+    : { required: "Required", ready: "Ready", chooseMore: (n: number) => `Choose ${n} more`, order: "Order", addToCart: "Add to cart", saveChanges: "Save changes", nextOrder: "Next Order" };
   useEffect(() => {
     setComboSheetOpen(true);
     return () => setComboSheetOpen(false);
@@ -238,11 +245,11 @@ export default function ComboConfigSheet({
 
   const getComponentModifierNames = (order: ComboState, groupId: string, componentId: string) => {
     const compMods = order.componentModifiers[groupId]?.[componentId] || {};
-    return Object.values(compMods).flatMap((mods) => mods.map((m) => m.name));
+    return Object.values(compMods).flatMap((mods) => mods.map((m) => cn(m)));
   };
 
   const formatSelectionLine = (groupName: string, component: ComboComponent, modifierNames: string[]) => {
-    const left = `${shortGroupName(groupName)}: ${component.name}`;
+    const left = `${shortGroupName(groupName)}: ${cn(component)}`;
     return modifierNames.length > 0 ? `${left} (${modifierNames.join(", ")})` : left;
   };
 
@@ -372,7 +379,7 @@ export default function ComboConfigSheet({
             <ArrowLeft size={20} />
           </button>
           <div className="flex-1 min-w-0">
-            <h2 className="text-base font-semibold">{item.name}</h2>
+            <h2 className="text-base font-semibold">{displayName}</h2>
           </div>
         </div>
 
@@ -401,7 +408,7 @@ export default function ComboConfigSheet({
                   }`}
                 >
                   {complete && <Check size={12} className="text-[var(--primary)]" />}
-                  Order {i + 1}
+                  {L.order} {i + 1}
                 </button>
               );
             })}
@@ -430,10 +437,10 @@ export default function ComboConfigSheet({
                     {complete && (
                       <Check size={14} className="text-[var(--primary)]" />
                     )}
-                    <h3 className="text-sm font-semibold">{group.name}</h3>
+                    <h3 className="text-sm font-semibold">{cn(group)}</h3>
                     {group.required && (
                       <span className={`text-[12px] ${isGroupSkipped ? "text-[var(--error)]" : "text-[var(--outline)]"}`}>
-                        Required
+                        {L.required}
                       </span>
                     )}
                     {isMulti && (
@@ -443,7 +450,7 @@ export default function ComboConfigSheet({
                     )}
                     {!isMulti && group.required && (
                       <span className="text-[10px] text-[var(--outline)]">
-                        {remainingRequired > 0 ? `Choose ${remainingRequired} more` : "Ready"}
+                        {remainingRequired > 0 ? L.chooseMore(remainingRequired) : L.ready}
                       </span>
                     )}
                   </div>
@@ -464,7 +471,7 @@ export default function ComboConfigSheet({
                             : "border-[var(--outline-variant)]"
                         }`}
                       >
-                        <span className="text-xs leading-snug">{comp.name}</span>
+                        <span className="text-xs leading-snug">{cn(comp)}</span>
                         <div className="flex items-center gap-1 shrink-0 ml-1">
                           {comp.price > 0 && (
                             <span className="text-[10px] text-[var(--outline)]">
@@ -493,9 +500,9 @@ export default function ComboConfigSheet({
                       return (
                       <div key={mg.id} ref={(el) => { sectionRefs.current[`${group.id}:${comp.id}:${mg.id}`] = el; }} className="mb-2">
                         <p className="text-xs font-semibold text-[var(--outline)] mb-1.5">
-                          {shortGroupName(group.name)}: {comp.name} - {mg.name}
+                          {shortGroupName(cn(group))}: {cn(comp)} - {cn(mg)}
                           {mg.required && (
-                            <span className={`font-normal ml-1 text-[12px] ${isModSkipped ? "text-[var(--error)]" : ""}`}>Required</span>
+                            <span className={`font-normal ml-1 text-[12px] ${isModSkipped ? "text-[var(--error)]" : ""}`}>{L.required}</span>
                           )}
                         </p>
                         <div className="grid grid-cols-3 gap-1.5">
@@ -516,7 +523,7 @@ export default function ComboConfigSheet({
                                 }`}
                               >
                                 <span className="flex items-center gap-1">
-                                  {opt.name}
+                                  {cn(opt)}
                                   {modSelected && (
                                     <Check size={10} className="text-[var(--primary)]" />
                                   )}
@@ -546,7 +553,7 @@ export default function ComboConfigSheet({
                 const modNames = getComponentModifierNames(activeOrder, group.id, comp.id);
                 return (
                   <p key={`${group.id}:${comp.id}`} className="text-[11px] text-[var(--outline)] leading-snug truncate">
-                    {formatSelectionLine(group.name, comp, modNames)}
+                    {formatSelectionLine(cn(group), comp, modNames)}
                   </p>
                 );
               });
@@ -569,7 +576,7 @@ export default function ComboConfigSheet({
               disabled={primaryDisabled}
               className="flex-1 h-11 rounded-xl bg-[var(--primary)] text-white flex items-center justify-center gap-2 text-sm font-semibold disabled:opacity-40 active:opacity-80 transition-opacity"
             >
-              {showNextAction ? "Next Order" : (activeOrder.cartItemId ? "Save changes" : "Add to cart")}
+              {showNextAction ? L.nextOrder : (activeOrder.cartItemId ? L.saveChanges : L.addToCart)}
             </button>
           </div>
         </div>

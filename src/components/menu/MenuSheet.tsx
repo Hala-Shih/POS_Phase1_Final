@@ -27,10 +27,18 @@ function formatUpcharge(price: number) {
 }
 
 export default function MenuSheet({ open, onClose, actionButtons, initialConfigItemId }: MenuSheetProps) {
-  const { addItem, updateItemModifiers, updateComboSelections, updateQuantity, removeItem, cartItems } = useOrderStore();
+  const { addItem, updateItemModifiers, updateComboSelections, updateQuantity, removeItem, cartItems, language } = useOrderStore();
 
-  const [activeBookId, setActiveBookId] = useState<string | null>(null);
-  const [activeCatId, setActiveCatId] = useState<string | null>(null);
+  const n = (item: { name: string; nameCn?: string }) =>
+    language === "zh" && item.nameCn ? item.nameCn : item.name;
+
+  const L = language === "zh"
+    ? { required: "必選", optional: "可選", cancel: "取消", addToOrder: "加入訂單", saveChanges: "儲存修改", nextOrder: "下一份", order: "份" }
+    : { required: "Required", optional: "Optional", cancel: "Cancel", addToOrder: "Add to order", saveChanges: "Save changes", nextOrder: "Next Order", order: "Order" };
+
+  // Single-book mode: auto-select the only book
+  const [activeBookId, setActiveBookId] = useState<string | null>(menuBooks[0]?.id ?? null);
+  const [activeCatId, setActiveCatId] = useState<string | null>(menuBooks[0]?.categories[0]?.id ?? null);
   const [configItem, setConfigItem] = useState<MenuItem | null>(null);
   const [comboItem, setComboItem] = useState<MenuItem | null>(null);
   const [editingExisting, setEditingExisting] = useState(false);
@@ -286,7 +294,7 @@ export default function MenuSheet({ open, onClose, actionButtons, initialConfigI
   const goBack = () => {
     if (editingExisting) { handleClose(); return; }
     if (configItem) setConfigItem(null);
-    else { setActiveBookId(null); setActiveCatId(null); }
+    else { handleClose(); }
   };
 
   const handleClose = () => {
@@ -355,10 +363,10 @@ export default function MenuSheet({ open, onClose, actionButtons, initialConfigI
     return () => { if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current); };
   }, [activeBookId, activeCatId, configItem]);
 
-  const level = configItem ? 3 : activeBookId == null ? 1 : 2;
+  const level = configItem ? 3 : 2;
 
   const headerTitle =
-    level === 1 ? "Menu" : level === 3 ? configItem?.name : activeBook?.name;
+    level === 3 ? (configItem ? n(configItem) : undefined) : (activeBook ? n(activeBook) : undefined);
 
   return (
     <>
@@ -403,32 +411,10 @@ export default function MenuSheet({ open, onClose, actionButtons, initialConfigI
             {/* Content area */}
             <div className="flex-1 min-h-0 relative overflow-hidden bg-[#F5F5F5]">
 
-                {/* Level 1 — Book grid */}
-                {activeBookId == null && (
-                  <div className="absolute inset-0 overflow-y-auto thin-scrollbar p-3">
-                    <div className="grid grid-cols-2 gap-2.5">
-                      {menuBooks.map((book) => (
-                        <button
-                          key={book.id}
-                          onClick={() => pickBook(book)}
-                          className="flex flex-col items-center justify-center py-6 px-3 border border-[#E7E0EC] rounded-2xl bg-white active:bg-[var(--primary-light)] transition-colors text-center"
-                          style={{ minHeight: 80 }}
-                        >
-                          <span className="text-[15px] font-semibold text-[#1D1B20] leading-snug">{book.name}</span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
                 {/* Level 2 — Combined header + category pills row, then item grid */}
-                {activeBookId != null && activeBook && (
+                {activeBook && (
                   <div className="absolute inset-0 flex flex-col">
                     <div className="flex items-center gap-1 pl-2 py-1.5 border-b border-gray-100 shrink-0 mt-1">
-                      <button onClick={goBack} className="flex items-center gap-0.5 rounded-full active:bg-gray-100 shrink-0 pl-1 pr-1 py-1" style={{ marginRight: 4 }}>
-                        <ChevronLeft size={20} />
-                        <span className="text-[14px] font-semibold text-[#1D1B20]">{activeBook.name}</span>
-                      </button>
                       <div className="flex-1 flex items-center gap-1.5 overflow-x-auto overflow-y-hidden no-scrollbar pr-2">
                         {activeBook.categories.map((cat) => {
                           const active = (activeCatId ?? activeBook.categories[0]?.id) === cat.id;
@@ -450,7 +436,7 @@ export default function MenuSheet({ open, onClose, actionButtons, initialConfigI
                                   : { background: "white", color: "#1D1B20", borderColor: "#CAC4D0" }
                               }
                             >
-                              {cat.name}
+                              {n(cat)}
                             </button>
                           );
                         })}
@@ -530,7 +516,7 @@ export default function MenuSheet({ open, onClose, actionButtons, initialConfigI
                                 }}
                               >
                                 <span className="flex-1 text-[13px] font-normal text-[#1D1B20] leading-snug text-left truncate">
-                                  {item.name}
+                                  {n(item)}
                                 </span>
                                 {item.soldOut && (
                                   <span className="text-[10px] text-[var(--error)] font-medium shrink-0">Sold out</span>
@@ -574,7 +560,7 @@ export default function MenuSheet({ open, onClose, actionButtons, initialConfigI
                         <ArrowLeft size={20} />
                       </button>
                       <div className="flex-1 min-w-0">
-                        <h2 className="text-base font-semibold">{configItem.name}</h2>
+                        <h2 className="text-base font-semibold">{n(configItem)}</h2>
                       </div>
                     </div>
                     {/* Qty editor lives in the sheet header (next to X) */}
@@ -609,7 +595,7 @@ export default function MenuSheet({ open, onClose, actionButtons, initialConfigI
                                 }`}
                               >
                                 {complete && <Check size={12} className="text-[var(--primary)]" />}
-                                Order {i + 1}
+                                {L.order} {i + 1}
                               </button>
                             );
                           })}
@@ -628,9 +614,9 @@ export default function MenuSheet({ open, onClose, actionButtons, initialConfigI
                           return (
                           <div key={group.id} ref={(el) => { modGroupRefs.current[group.id] = el; }} className="mb-3">
                             <p className="text-xs font-semibold mb-1.5 text-[#1D1B20]">
-                              {group.name}
+                              {n(group)}
                               <span className={`font-normal ml-1 text-[12px] ${isSkipped ? "text-[var(--error)]" : "text-[var(--outline)]"}`}>
-                                {group.required ? "Required" : "Optional"}
+                                {group.required ? L.required : L.optional}
                               </span>
                             </p>
 
@@ -645,7 +631,7 @@ export default function MenuSheet({ open, onClose, actionButtons, initialConfigI
                                       selected ? "border-[var(--primary)] bg-[var(--primary-light)]" : "border-[var(--outline-variant)]"
                                     }`}
                                   >
-                                    <span className="text-xs leading-snug">{option.name}</span>
+                                    <span className="text-xs leading-snug">{n(option)}</span>
                                     <div className="flex items-center gap-1 shrink-0 ml-1">
                                       {option.price > 0 && (
                                         <span className="text-[10px] text-[var(--outline)]">+${formatUpcharge(option.price)}</span>
@@ -687,7 +673,7 @@ export default function MenuSheet({ open, onClose, actionButtons, initialConfigI
                           }}
                           className="h-10 px-4 rounded-xl border-2 border-[var(--outline-variant)] text-[var(--outline)] flex items-center justify-center gap-1.5 text-sm font-semibold active:opacity-80 transition-opacity"
                         >
-                          Cancel
+                          {L.cancel}
                         </button>
                       )}
                       <button
@@ -704,7 +690,7 @@ export default function MenuSheet({ open, onClose, actionButtons, initialConfigI
                         disabled={showNextOrder ? false : (!allOrdersComplete || !hasNewOrChangedOrders)}
                         className="flex-1 h-10 rounded-xl bg-[var(--primary)] text-white flex items-center justify-center gap-2 text-sm font-semibold disabled:opacity-40 active:opacity-80 transition-opacity"
                       >
-                        {showNextOrder ? "Next Order" : (activeOrder?.cartItemId ? "Save changes" : "Add to order")}
+                        {showNextOrder ? L.nextOrder : (activeOrder?.cartItemId ? L.saveChanges : L.addToOrder)}
                       </button>
                     </div>
                   </div>

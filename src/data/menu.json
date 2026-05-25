@@ -4,934 +4,744 @@
     "name": "Food",
     "categories": [
       {
-        "id": "cat-appetizers",
-        "name": "Appetizers",
+        "id": "cat-soup-dumpling",
+        "name": "Soup Dumpling",
+        "nameCn": "南翔小籠包",
         "items": [
           {
-            "id": "item-calamari",
-            "name": "Calamari",
-            "price": 14,
-            "description": "Lightly dusted and fried golden, served with marinara and lemon aioli",
+            "id": "item-nx-soup-dumpling",
+            "name": "Nan Xiang Soup Dumplings (6)",
+            "nameCn": "南翔小籠包(六粒)",
+            "price": 9.95,
+            "description": "Our most iconic handmade soup dumplings. Classic pork-filled dumplings with rich, savory broth, in a delicate hand-rolled wrapper",
             "modifierGroups": []
           },
           {
-            "id": "item-truffle-fries",
-            "name": "Truffle Fries",
-            "price": 13,
-            "description": "Hand-cut fries tossed in truffle oil, parmesan, and fresh herbs",
+            "id": "item-crab-pork-soup-dumpling",
+            "name": "Crab Meat & Pork Soup Dumplings (6)",
+            "nameCn": "蟹粉小籠包(六粒）",
+            "price": 10.95,
+            "description": "Juicy dumplings combining rich crab meat and tender pork",
             "modifierGroups": []
           },
           {
-            "id": "item-crispy-tempura-shrimp",
-            "name": "Crispy Tempura Shrimp",
-            "price": 17,
-            "description": "With yuzu kosho aioli and pickled daikon radish slaw",
+            "id": "item-lucky-six-soup-dumpling",
+            "name": "Lucky Six Soup Dumplings (6)",
+            "nameCn": "六彩小籠包(六粒）",
+            "price": 14.5,
+            "description": "A mouthwatering medley of six uniquely-flavored soup dumplings, made with all-natural ingredients.",
             "modifierGroups": []
           },
           {
-            "id": "item-duck-confit-spring-rolls",
-            "name": "Duck Confit Spring Rolls",
-            "price": 16,
-            "description": "With hoisin plum sauce and pickled carrot slaw",
+            "id": "item-chicken-soup-dumpling",
+            "name": "Chicken Soup Dumplings (6)",
+            "nameCn": "雞肉小籠包(六粒）",
+            "price": 10.95,
+            "description": "Delicate and flavorful chicken-filled dumplings in a comforting broth",
             "modifierGroups": []
           },
           {
-            "id": "item-burrata",
-            "name": "Burrata",
-            "price": 16,
-            "description": "Creamy burrata with heirloom tomatoes, basil oil, and aged balsamic",
+            "id": "item-truffle-pork-soup-dumpling",
+            "name": "Truffle & Pork Soup Dumplings (6)",
+            "nameCn": "松露小籠包(六粒)",
+            "price": 13.95,
+            "description": "Premium soup dumplings with aromatic truffle and succulent pork",
             "modifierGroups": []
           },
           {
-            "id": "item-tuna-tartare",
-            "name": "Ahi Tuna Tartare",
-            "price": 18,
-            "description": "Sushi-grade tuna with avocado, sesame, soy-ginger dressing, and wonton crisps",
+            "id": "item-luffa-shrimp-pork-soup-dumpling",
+            "name": "Gourd Luffa, Shrimp, Pork Soup Dumplings (6)",
+            "nameCn": "絲瓜小籠包(六粒)",
+            "price": 10.95,
+            "description": "Refreshing luffa with shrimp and pork in a juicy dumpling",
             "modifierGroups": []
           },
           {
-            "id": "item-charcuterie",
-            "name": "Charcuterie Board",
-            "price": 24,
-            "description": "Selection of cured meats, artisan cheeses, honeycomb, marcona almonds, and grilled bread",
+            "id": "item-scallop-pork-soup-dumpling",
+            "name": "Scallop & Pork Soup Dumplings (6)",
+            "nameCn": "干貝小籠包(六粒)",
+            "price": 10.95,
+            "description": "Premium scallops paired with tender pork for a rich taste",
+            "modifierGroups": []
+          },
+          {
+            "id": "item-veg-soup-dumpling",
+            "name": "Vegetable Soup Dumpling (6)",
+            "nameCn": "蔬菜小籠包(六粒）",
+            "price": 10.95,
+            "description": "Delicate handmade dumplings filled with fresh, flavorful vegetables in a savory, piping-hot broth.",
+            "modifierGroups": []
+          },
+          {
+            "id": "item-abalone-pork-soup-dumpling",
+            "name": "Abalone & Pork Soup Dumplings (6)",
+            "nameCn": "鮑魚小籠包(六粒）",
+            "price": 13.95,
+            "description": "Premium-quality abalone with tender pork for a gourmet experience",
+            "modifierGroups": []
+          }
+        ]
+      },
+      {
+        "id": "cat-chef-recommended",
+        "name": "Chef-Recommended",
+        "nameCn": "招牌點心",
+        "items": [
+          {
+            "id": "item-pan-fried-buns",
+            "name": "Pan-Fried Pork / Crabmeat Buns (6)",
+            "nameCn": "生煎包(六粒）",
+            "price": 9.95,
+            "description": "A Shanghai comfort food staple. Crispy on the outside, juicy pork filling inside / Golden buns with rich crab and pork filling",
             "modifierGroups": [
               {
-                "id": "mg-charcuterie-size",
-                "name": "Board Size",
+                "id": "mg-pan-fried-buns-type",
+                "name": "Choose Type",
                 "required": true,
                 "minSelect": 1,
                 "maxSelect": 1,
                 "options": [
-                  { "id": "mod-charc-small", "name": "Small (2 person)", "price": 0 },
-                  { "id": "mod-charc-large", "name": "Large (4 person)", "price": 14 }
-                ]
+                  {
+                    "id": "mod-pfb-pork",
+                    "name": "Pork",
+                    "price": 0,
+                    "nameCn": "豬肉"
+                  },
+                  {
+                    "id": "mod-pfb-crabmeat",
+                    "name": "Crabmeat",
+                    "price": 1,
+                    "nameCn": "蟹粉"
+                  }
+                ],
+                "nameCn": "選擇類型"
               }
             ]
           },
           {
-            "id": "item-beef-carpaccio",
-            "name": "Beef Carpaccio",
-            "price": 17,
-            "description": "Thinly sliced tenderloin with arugula, capers, shaved parmesan, and truffle vinaigrette",
+            "id": "item-pan-fried-dumplings",
+            "name": "Pan-Fried Pork / Beef Dumplings (6)",
+            "nameCn": "生煎鍋貼 / 生煎牛肉鍋貼 (六粒）",
+            "price": 8.95,
+            "description": "Perfectly pan-fried crispy dumplings with a savory pork filling",
+            "modifierGroups": [
+              {
+                "id": "mg-pan-fried-dumplings-type",
+                "name": "Choose Type",
+                "required": true,
+                "minSelect": 1,
+                "maxSelect": 1,
+                "options": [
+                  {
+                    "id": "mod-pfd-pork",
+                    "name": "Pork",
+                    "price": 0,
+                    "nameCn": "豬肉"
+                  },
+                  {
+                    "id": "mod-pfd-beef",
+                    "name": "Beef",
+                    "price": 1,
+                    "nameCn": "牛肉"
+                  }
+                ],
+                "nameCn": "選擇類型"
+              }
+            ]
+          },
+          {
+            "id": "item-wontons-spicy",
+            "name": "Shrimp / Pork & Veg Wontons in Spicy Peanut Sauce (8)",
+            "nameCn": "紅油蝦仁 / 菜肉炒手(八粒)",
+            "price": 9.25,
+            "description": "Shanghai-style wontons in a spicy, nutty sauce",
+            "modifierGroups": [
+              {
+                "id": "mg-wontons-type",
+                "name": "Choose Type",
+                "required": true,
+                "minSelect": 1,
+                "maxSelect": 1,
+                "options": [
+                  {
+                    "id": "mod-wonton-shrimp",
+                    "name": "Shrimp",
+                    "price": 0.7,
+                    "nameCn": "蝦仁"
+                  },
+                  {
+                    "id": "mod-wonton-pork-veg",
+                    "name": "Pork & Veg",
+                    "price": 0,
+                    "nameCn": "菜肉"
+                  }
+                ],
+                "nameCn": "選擇類型"
+              }
+            ]
+          },
+          {
+            "id": "item-shanghai-siu-mai",
+            "name": "Shanghai Siu Mai (4)",
+            "nameCn": "糯米燒賣(四粒)",
+            "price": 5.95,
+            "description": "Glutinous Rice, Pork, Shrimp & Mushroom",
             "modifierGroups": []
           },
           {
-            "id": "item-crab-cakes",
-            "name": "Lump Crab Cakes",
-            "price": 19,
-            "description": "Pan-seared jumbo lump crab with remoulade, micro greens, and lemon",
+            "id": "item-chicken-shrimp-siu-mai",
+            "name": "Chicken & Shrimp Siu Mai (4)",
+            "nameCn": "雞肉蝦仁燒賣(四粒)",
+            "price": 6.95,
+            "description": "Steamed siu mai with chicken and shrimp filling",
             "modifierGroups": []
           },
           {
-            "id": "item-stuffed-mushrooms",
-            "name": "Stuffed Portobello Mushrooms",
-            "price": 14,
-            "description": "Roasted portobello caps with herbed goat cheese, sun-dried tomatoes, and balsamic glaze",
+            "id": "item-steamed-veg-dumplings",
+            "name": "Steamed Vegetable Dumplings (6)",
+            "nameCn": "花素蒸餃(六粒)",
+            "price": 9.95,
+            "description": "Healthy dumplings packed with fresh vegetables",
             "modifierGroups": []
           },
           {
-            "id": "item-shrimp-cocktail",
-            "name": "Jumbo Shrimp Cocktail",
-            "price": 18,
-            "description": "Chilled jumbo shrimp with classic cocktail sauce and fresh horseradish",
+            "id": "item-steamed-pork-shrimp-cabbage",
+            "name": "Handmade Steamed Pork, Shrimp & Cabbage Dumplings (8)",
+            "nameCn": "手工白菜豬肉蝦仁水餃(八粒)",
+            "price": 9.95,
+            "description": "Succulent shrimp and pork wontons in a rich, spicy sauce",
             "modifierGroups": []
           },
           {
-            "id": "item-wagyu-sliders",
-            "name": "Wagyu Beef Sliders",
-            "price": 16,
-            "description": "Three mini wagyu patties with aged gruyère, caramelized shallots, and dijonnaise",
+            "id": "item-boiled-shrimp-pork-chive",
+            "name": "Boiled Shrimp, Pork & Chive Dumplings (8)",
+            "nameCn": "韭菜豬肉蝦仁水餃(八粒)",
+            "price": 9.95,
+            "description": "Savory boiled dumplings with shrimp, pork, and chives",
             "modifierGroups": []
           },
           {
-            "id": "item-coconut-shrimp",
-            "name": "Coconut Shrimp",
+            "id": "item-boiled-chicken-dumplings",
+            "name": "Boiled Chicken Dumplings (8)",
+            "nameCn": "雞肉水餃(八粒)",
+            "price": 9.95,
+            "description": "Tender chicken-filled dumplings, boiled to perfection",
+            "modifierGroups": []
+          },
+          {
+            "id": "item-boiled-beef-dumplings",
+            "name": "Boiled Beef Dumplings (8)",
+            "nameCn": "牛肉水餃(八粒)",
+            "price": 9.95,
+            "description": "Juicy beef dumplings in a light broth",
+            "modifierGroups": []
+          },
+          {
+            "id": "item-turnip-ham-puffs",
+            "name": "Crispy Shredded Turnip Ham Puffs (4)",
+            "nameCn": "蘿蔔酥餅(四粒)",
+            "price": 6.25,
+            "description": "Crispy puffs filled with shredded turnips and savory ham",
+            "modifierGroups": []
+          }
+        ]
+      },
+      {
+        "id": "cat-all-day-breakfast",
+        "name": "All-Day Breakfast",
+        "nameCn": "全日早餐",
+        "items": [
+          {
+            "id": "item-soybean-milk",
+            "name": "Soybean Milk",
+            "nameCn": "熱/ 冰豆漿",
+            "price": 3.95,
+            "description": "Fresh, organic soybean milk served hot or cold.",
+            "modifierGroups": [
+              {
+                "id": "mg-soybean-temp",
+                "name": "Temperature",
+                "required": true,
+                "minSelect": 1,
+                "maxSelect": 1,
+                "options": [
+                  {
+                    "id": "mod-soy-ice",
+                    "name": "Ice",
+                    "price": 0,
+                    "nameCn": "冰"
+                  },
+                  {
+                    "id": "mod-soy-hot",
+                    "name": "Hot",
+                    "price": 0,
+                    "nameCn": "熱"
+                  }
+                ],
+                "nameCn": "溫度"
+              }
+            ]
+          },
+          {
+            "id": "item-crispy-dough",
+            "name": "Crispy Dough",
+            "nameCn": "油條",
+            "price": 2.5,
+            "description": "A Chinese breakfast staple. Crispy and airy fried dough",
+            "modifierGroups": []
+          },
+          {
+            "id": "item-savory-soybean-milk",
+            "name": "Savory Soybean Milk",
+            "nameCn": "鹹豆花",
+            "price": 4.75,
+            "description": "Savory twist on classic soybean milk",
+            "modifierGroups": []
+          },
+          {
+            "id": "item-savory-tofu-pudding",
+            "name": "Savory Tofu Pudding",
+            "nameCn": "甜豆花",
+            "price": 4.75,
+            "description": "Silky tofu pudding with pickled vegetables and pork floss",
+            "modifierGroups": []
+          },
+          {
+            "id": "item-spring-rolls",
+            "name": "Fried Vegetable / Shrimp Spring Rolls (3)",
+            "nameCn": "素菜/蝦 春卷(三條)",
+            "price": 5.95,
+            "description": "Crispy spring rolls filled with fresh vegetables",
+            "modifierGroups": [
+              {
+                "id": "mg-spring-roll-type",
+                "name": "Choose Type",
+                "required": true,
+                "minSelect": 1,
+                "maxSelect": 1,
+                "options": [
+                  {
+                    "id": "mod-sr-veg",
+                    "name": "Vegetable",
+                    "price": 0,
+                    "nameCn": "蔬菜"
+                  },
+                  {
+                    "id": "mod-sr-shrimp",
+                    "name": "Shrimp",
+                    "price": 1,
+                    "nameCn": "蝦仁"
+                  }
+                ],
+                "nameCn": "選擇類型"
+              }
+            ]
+          },
+          {
+            "id": "item-scallion-pancake",
+            "name": "Scallion Pancake",
+            "nameCn": "手擀蔥油餅",
+            "price": 5.95,
+            "description": "Crispy, flaky pancake with fresh scallions",
+            "modifierGroups": []
+          },
+          {
+            "id": "item-scallion-pancake-beef",
+            "name": "Scallion Pancake w. Sliced Beef",
+            "nameCn": "蔥油餅夾牛肉",
+            "price": 8.95,
+            "description": "Scallion pancake topped with tender sliced beef",
+            "modifierGroups": []
+          },
+          {
+            "id": "item-fried-chives-box",
+            "name": "Fried Chinese Chives Box",
+            "nameCn": "韭菜盒子",
+            "price": 5.95,
+            "description": "Crispy box-shaped pastry with chives filling",
+            "modifierGroups": []
+          },
+          {
+            "id": "item-bk-shanghai-siu-mai",
+            "name": "Shanghai Siu Mai (4)",
+            "nameCn": "糯米燒賣(四粒)",
+            "price": 5.95,
+            "description": "Glutinous Rice, Pork, Shrimp & Mushroom",
+            "modifierGroups": []
+          },
+          {
+            "id": "item-bk-chicken-shrimp-siu-mai",
+            "name": "Chicken & Shrimp Siu Mai (4)",
+            "nameCn": "雞肉蝦仁燒賣(四粒)",
+            "price": 6.95,
+            "description": "Steamed siu mai with chicken and shrimp filling",
+            "modifierGroups": []
+          },
+          {
+            "id": "item-bk-pan-fried-buns",
+            "name": "Pan-Fried Crabmeat / Pork Buns (6)",
+            "nameCn": "蟹粉 / 生煎包(六粒）",
+            "price": 9.95,
+            "description": "A Shanghai comfort food staple. Crispy on the outside, juicy pork filling inside / Golden buns with rich crab and pork filling",
+            "modifierGroups": [
+              {
+                "id": "mg-bk-pan-fried-buns-type",
+                "name": "Choose Type",
+                "required": true,
+                "minSelect": 1,
+                "maxSelect": 1,
+                "options": [
+                  {
+                    "id": "mod-bk-pfb-crabmeat",
+                    "name": "Crabmeat",
+                    "price": 1,
+                    "nameCn": "蟹粉"
+                  },
+                  {
+                    "id": "mod-bk-pfb-pork",
+                    "name": "Pork",
+                    "price": 0,
+                    "nameCn": "豬肉"
+                  }
+                ],
+                "nameCn": "選擇類型"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "cat-cold-dishes",
+        "name": "Cold Dishes",
+        "nameCn": "經典冷菜",
+        "items": [
+          {
+            "id": "item-chicken-wine-sauce",
+            "name": "Chicken in Wine Sauce",
+            "nameCn": "紹興醉雞",
+            "price": 10.95,
+            "description": "Bone-in chicken infused with aromatic wine. Served chilled",
+            "modifierGroups": []
+          },
+          {
+            "id": "item-beef-tendon-tripe",
+            "name": "Beef Tendon & Tripe in Spicy Sauce",
+            "nameCn": "夫妻肺片",
+            "price": 15.5,
+            "description": "Spicy and tingly beef tendon and tripe",
+            "modifierGroups": []
+          },
+          {
+            "id": "item-four-happiness-kaofu",
+            "name": "Four Happiness Kaofu",
+            "nameCn": "四喜烤麩",
+            "price": 10.95,
+            "description": "Braised tofu w. bamboo shoots and wood ear mushrooms",
+            "modifierGroups": []
+          },
+          {
+            "id": "item-cucumber-salad",
+            "name": "Cucumber Salad w. Garlic",
+            "nameCn": "脆口黃瓜",
+            "price": 8.25,
+            "description": "Crunchy cucumber salad with a garlic kick",
+            "modifierGroups": []
+          },
+          {
+            "id": "item-black-wood-ear",
+            "name": "Black Wood Ear Mushroom",
+            "nameCn": "涼拌木耳",
+            "price": 8.5,
+            "description": "Refreshing black wood ear mushroom salad",
+            "modifierGroups": []
+          },
+          {
+            "id": "item-potherb-tofu-skin",
+            "name": "Potherb Mustard & Tofu Skin",
+            "nameCn": "雪菜豆干毛豆",
+            "price": 8.5,
+            "description": "Nutritious salad with potherb mustard and tofu skin",
+            "modifierGroups": []
+          },
+          {
+            "id": "item-shredded-pig-ear",
+            "name": "Shredded Pig Ear w. Spicy Sauce",
+            "nameCn": "紅油豬耳",
+            "price": 11.75,
+            "description": "Savory and spicy shredded pig ear. Very crunchy",
+            "modifierGroups": []
+          },
+          {
+            "id": "item-pressed-tofu-celery",
+            "name": "Savory Pressed Tofu w. Chinese Celery",
+            "nameCn": "香芹拌香干",
+            "price": 8.95,
+            "description": "Savory Pressed Tofu with Chinese Celery",
+            "modifierGroups": []
+          },
+          {
+            "id": "item-seaweed-garlic",
+            "name": "Seaweed & Garlic",
+            "nameCn": "涼拌海帶",
+            "price": 8.5,
+            "description": "Tangy seaweed salad with freshly grated garlic",
+            "modifierGroups": []
+          },
+          {
+            "id": "item-spicy-bamboo-shoot",
+            "name": "Spicy Bamboo Shoot",
+            "nameCn": "紅油香筍",
+            "price": 8.5,
+            "description": "Spicy and crunchy bamboo shoots in housemade red oil",
+            "modifierGroups": []
+          },
+          {
+            "id": "item-jellyfish-turnip",
+            "name": "Jelly Fish w. Turnip",
+            "nameCn": "蘿蔔海蜇絲",
+            "price": 8.95,
+            "description": "Refreshing jellyfish salad with crisp turnip",
+            "modifierGroups": []
+          },
+          {
+            "id": "item-shredded-potato-salad",
+            "name": "Shredded Potato Salad",
+            "nameCn": "涼拌土豆絲",
+            "price": 8.25,
+            "description": "Light and tangy shredded julienned potato served cold",
+            "modifierGroups": []
+          },
+          {
+            "id": "item-fried-pork-chops",
+            "name": "Fried Pork Chops",
+            "nameCn": "炸排骨",
+            "price": 9.25,
+            "description": "Golden and crispy bone-in pork chops",
+            "modifierGroups": []
+          }
+        ]
+      },
+      {
+        "id": "cat-rice-cake-fried-rice",
+        "name": "Rice Cake & Fried Rice",
+        "nameCn": "炒飯炒年糕",
+        "items": [
+          {
+            "id": "item-rice-cake-veg",
+            "name": "Stir-Fried Rice Cakes w. Vegetable",
+            "nameCn": "素炒年糕",
+            "price": 12.75,
+            "description": "Rice cakes and pork stir-fried to perfection",
+            "modifierGroups": []
+          },
+          {
+            "id": "item-rice-cake-pork",
+            "name": "Stir-Fried Rice Cakes w. Shredded Pork",
+            "nameCn": "雪菜肉絲炒年糕",
+            "price": 13.75,
+            "description": "Rice cakes and pork stir-fried to perfection",
+            "modifierGroups": []
+          },
+          {
+            "id": "item-rice-cake-pork-potherb",
+            "name": "Stir-Fried Rice Cakes w. Shredded Pork & Potherb Mustard",
+            "nameCn": "肉絲炒年糕",
+            "price": 13.75,
+            "description": "Stir-Fried Rice Cakes with Shredded Pork & Potherb Mustard",
+            "modifierGroups": []
+          },
+          {
+            "id": "item-rice-cake-chicken-beef",
+            "name": "Stir-Fried Rice Cakes with Shredded Chicken / Beef",
+            "nameCn": "雞絲/ 牛肉炒年糕",
+            "price": 13.75,
+            "description": "Rice cakes stir-fried with tender chicken",
+            "modifierGroups": [
+              {
+                "id": "mg-rice-cake-protein",
+                "name": "Choose Protein",
+                "required": true,
+                "minSelect": 1,
+                "maxSelect": 1,
+                "options": [
+                  {
+                    "id": "mod-rc-chicken",
+                    "name": "Chicken",
+                    "price": 0,
+                    "nameCn": "雞肉"
+                  },
+                  {
+                    "id": "mod-rc-beef",
+                    "name": "Beef",
+                    "price": 1,
+                    "nameCn": "牛肉"
+                  }
+                ],
+                "nameCn": "選擇蛋白質"
+              }
+            ]
+          },
+          {
+            "id": "item-rice-cake-seafood",
+            "name": "Stir-Fried Rice Cakes w. Seasonal Seafood",
+            "nameCn": "海鮮炒年糕",
+            "price": 14.75,
+            "description": "Rice cakes with a mix of fresh seafood",
+            "modifierGroups": []
+          },
+          {
+            "id": "item-nx-fried-rice",
+            "name": "Nan Xiang Fried Rice",
+            "nameCn": "南翔炒飯",
             "price": 15,
-            "description": "Crispy coconut-crusted shrimp with mango-chili dipping sauce",
+            "description": "House special fried rice with ham, shrimp, and veggies",
             "modifierGroups": []
           }
         ]
       },
       {
-        "id": "cat-salads",
-        "name": "Salads",
+        "id": "cat-noodles",
+        "name": "Noodles",
+        "nameCn": "炒麵湯麵",
         "items": [
           {
-            "id": "item-warm-salad",
-            "name": "Warm Salad",
-            "price": 15,
-            "description": "Roasted beets, warm goat cheese, candied walnuts, and arugula with sherry vinaigrette",
+            "id": "item-shanghai-udon",
+            "name": "Shanghai Stir-Fried Udon",
+            "nameCn": "牛肉 /上海粗炒麵",
+            "price": 12.75,
+            "description": "Thick noodles stir-fried with bok choy and pork",
+            "modifierGroups": []
+          },
+          {
+            "id": "item-seafood-udon",
+            "name": "Seafood Stir-Fried Udon",
+            "nameCn": "海鮮粗炒麵",
+            "price": 14.75,
+            "description": "Flavorful udon noodles with fresh seafood",
+            "modifierGroups": []
+          },
+          {
+            "id": "item-crispy-noodle-veg",
+            "name": "Pan-Fried Crispy Noodles w. Vegetable",
+            "nameCn": "素兩麵黃",
+            "price": 12.75,
+            "description": "Crispy Noodle W. Stir-Fried Vegetables. Sauce on top.",
+            "modifierGroups": []
+          },
+          {
+            "id": "item-crispy-noodle-meat",
+            "name": "Pan-Fried Crispy Noodles with Shredded Pork / Chicken / Beef",
+            "nameCn": "雞絲兩麵黃",
+            "price": 13.75,
+            "description": "Crispy noodles with savory shredded pork",
             "modifierGroups": [
               {
-                "id": "mg-warm-salad-dressing",
-                "name": "Dressing",
+                "id": "mg-crispy-noodle-protein",
+                "name": "Choose Protein",
                 "required": true,
                 "minSelect": 1,
                 "maxSelect": 1,
                 "options": [
-                  { "id": "mod-sherry-vin", "name": "Sherry Vinaigrette", "price": 0 },
-                  { "id": "mod-balsamic-vin", "name": "Balsamic Vinaigrette", "price": 0 },
-                  { "id": "mod-lemon-herb", "name": "Lemon Herb", "price": 0 },
-                  { "id": "mod-ranch", "name": "Buttermilk Ranch", "price": 0 }
-                ]
-              },
-              {
-                "id": "mg-warm-salad-protein",
-                "name": "Add Protein",
-                "required": false,
-                "minSelect": 0,
-                "maxSelect": 1,
-                "options": [
-                  { "id": "mod-add-chicken", "name": "Grilled Chicken", "price": 8 },
-                  { "id": "mod-add-salmon", "name": "Pan-Seared Salmon", "price": 12 },
-                  { "id": "mod-add-shrimp", "name": "Grilled Shrimp", "price": 10 }
-                ]
+                  {
+                    "id": "mod-cn-pork",
+                    "name": "Pork",
+                    "price": 0,
+                    "nameCn": "豬肉"
+                  },
+                  {
+                    "id": "mod-cn-chicken",
+                    "name": "Chicken",
+                    "price": 0,
+                    "nameCn": "雞肉"
+                  },
+                  {
+                    "id": "mod-cn-beef",
+                    "name": "Beef",
+                    "price": 1,
+                    "nameCn": "牛肉"
+                  }
+                ],
+                "nameCn": "選擇蛋白質"
               }
             ]
           },
           {
-            "id": "item-caesar-salad",
-            "name": "Classic Caesar",
-            "price": 14,
-            "description": "Crisp romaine, house-made croutons, white anchovies, and shaved parmesan",
-            "modifierGroups": [
-              {
-                "id": "mg-caesar-protein",
-                "name": "Add Protein",
-                "required": false,
-                "minSelect": 0,
-                "maxSelect": 1,
-                "options": [
-                  { "id": "mod-caesar-chicken", "name": "Grilled Chicken", "price": 8 },
-                  { "id": "mod-caesar-salmon", "name": "Pan-Seared Salmon", "price": 12 },
-                  { "id": "mod-caesar-shrimp", "name": "Grilled Shrimp", "price": 10 }
-                ]
-              }
-            ]
+            "id": "item-crispy-noodle-seafood",
+            "name": "Pan-Fried Crispy Noodles w. Seasonal Seafood",
+            "nameCn": "海鮮兩麵黃",
+            "price": 14.75,
+            "description": "Crispy noodles topped with a mix of seafood",
+            "modifierGroups": []
           },
           {
-            "id": "item-wedge-salad",
-            "name": "Iceberg Wedge",
-            "price": 13,
-            "description": "Blue cheese crumbles, applewood smoked bacon, cherry tomatoes, and blue cheese dressing",
+            "id": "item-scallion-oil-noodle",
+            "name": "Scallion Oil Noodles (No Soup)",
+            "nameCn": "蔥油乾拌麵",
+            "price": 8.5,
+            "description": "Noodles with fragrant scallion oil",
+            "modifierGroups": []
+          },
+          {
+            "id": "item-veg-noodle-soup",
+            "name": "Vegetable Noodle Soup",
+            "nameCn": "素菜湯麵",
+            "price": 11.5,
+            "description": "Vegetable Noodle Soup",
+            "modifierGroups": []
+          },
+          {
+            "id": "item-pork-potherb-noodle",
+            "name": "Pork & Potherb Mustard Noodle Soup",
+            "nameCn": "雪菜肉絲湯麵",
+            "price": 12.75,
+            "description": "Noodles in a savory pork and mustard broth",
+            "modifierGroups": []
+          },
+          {
+            "id": "item-pork-chop-noodle",
+            "name": "Pork Chop Noodle Soup",
+            "nameCn": "排骨湯麵",
+            "price": 13.5,
+            "description": "Rich noodle soup with tender pork chop",
+            "modifierGroups": []
+          },
+          {
+            "id": "item-beef-pepper-noodle",
+            "name": "Beef with Shredded Pepper Noodle Soup / (No Soup)",
+            "nameCn": "小椒牛肉絲湯麵 / (無湯)",
+            "price": 14.5,
+            "description": "Spicy noodle soup with shredded beef",
             "modifierGroups": [
               {
-                "id": "mg-wedge-dressing",
-                "name": "Dressing",
+                "id": "mg-beef-noodle-style",
+                "name": "Choose Style",
                 "required": true,
                 "minSelect": 1,
                 "maxSelect": 1,
                 "options": [
-                  { "id": "mod-wedge-blue", "name": "Blue Cheese", "price": 0 },
-                  { "id": "mod-wedge-ranch", "name": "Buttermilk Ranch", "price": 0 },
-                  { "id": "mod-wedge-balsamic", "name": "Balsamic Vinaigrette", "price": 0 }
-                ]
+                  {
+                    "id": "mod-bn-soup",
+                    "name": "Soup",
+                    "price": 0,
+                    "nameCn": "湯"
+                  },
+                  {
+                    "id": "mod-bn-no-soup",
+                    "name": "No Soup",
+                    "price": -1,
+                    "nameCn": "無湯"
+                  }
+                ],
+                "nameCn": "選擇方式"
               }
             ]
           },
           {
-            "id": "item-kale-salad",
-            "name": "Tuscan Kale Salad",
-            "price": 14,
-            "description": "Shaved kale, dried cranberries, toasted pine nuts, pecorino, and lemon vinaigrette",
-            "modifierGroups": []
-          },
-          {
-            "id": "item-quinoa-salad",
-            "name": "Mediterranean Quinoa Bowl",
-            "price": 16,
-            "description": "Tricolor quinoa with cucumber, kalamata olives, feta, cherry tomatoes, and herb vinaigrette",
-            "modifierGroups": [
-              {
-                "id": "mg-quinoa-protein",
-                "name": "Add Protein",
-                "required": false,
-                "minSelect": 0,
-                "maxSelect": 1,
-                "options": [
-                  { "id": "mod-quinoa-chicken", "name": "Grilled Chicken", "price": 8 },
-                  { "id": "mod-quinoa-salmon", "name": "Pan-Seared Salmon", "price": 12 },
-                  { "id": "mod-quinoa-falafel", "name": "Crispy Falafel", "price": 6 }
-                ]
-              }
-            ]
-          },
-          {
-            "id": "item-cobb-salad",
-            "name": "Classic Cobb",
-            "price": 17,
-            "description": "Grilled chicken, avocado, bacon, egg, blue cheese, tomato, and red wine vinaigrette",
-            "modifierGroups": []
-          },
-          {
-            "id": "item-pear-salad",
-            "name": "Pear & Gorgonzola",
-            "price": 15,
-            "description": "Sliced Bartlett pear, gorgonzola, candied pecans, mixed greens, and honey-mustard dressing",
-            "modifierGroups": []
-          },
-          {
-            "id": "item-nicoise-salad",
-            "name": "Niçoise Salad",
-            "price": 18,
-            "description": "Seared ahi tuna, haricots verts, fingerling potatoes, olives, egg, and Dijon vinaigrette",
-            "modifierGroups": []
-          },
-          {
-            "id": "item-spinach-salad",
-            "name": "Baby Spinach Salad",
-            "price": 14,
-            "description": "Baby spinach, crispy prosciutto, roasted pears, shaved manchego, and warm bacon dressing",
-            "modifierGroups": []
-          }
-        ]
-      },
-      {
-        "id": "cat-soup",
-        "name": "Soup",
-        "items": [
-          {
-            "id": "item-lobster-bisque",
-            "name": "Lobster Bisque",
-            "price": 14,
-            "description": "Creamy and rich with chunks of Maine lobster, finished with brandy cream",
-            "modifierGroups": []
-          },
-          {
-            "id": "item-french-onion",
-            "name": "French Onion Soup",
-            "price": 12,
-            "description": "Caramelized onions in rich beef broth, topped with gruyère crouton",
-            "modifierGroups": []
-          },
-          {
-            "id": "item-soup-of-day",
-            "name": "Soup of the Day",
-            "price": 11,
-            "description": "Ask your server for today's selection",
-            "modifierGroups": [],
-            "soldOut": true
-          },
-          {
-            "id": "item-tomato-bisque",
-            "name": "Roasted Tomato Bisque",
-            "price": 11,
-            "description": "Roasted Roma tomatoes blended with cream, fresh basil, and a grilled cheese crouton",
-            "modifierGroups": []
-          },
-          {
-            "id": "item-clam-chowder",
-            "name": "New England Clam Chowder",
-            "price": 13,
-            "description": "Creamy chowder with littleneck clams, bacon, potatoes, and thyme in a bread bowl",
-            "modifierGroups": []
-          },
-          {
-            "id": "item-mushroom-soup",
-            "name": "Wild Mushroom Soup",
-            "price": 12,
-            "description": "Porcini, shiitake, and cremini mushrooms in a velvety cream with truffle oil drizzle",
-            "modifierGroups": []
-          },
-          {
-            "id": "item-miso-soup",
-            "name": "Miso Soup",
-            "price": 9,
-            "description": "White miso broth with silken tofu, wakame seaweed, and scallions",
-            "modifierGroups": []
-          },
-          {
-            "id": "item-minestrone",
-            "name": "Classic Minestrone",
-            "price": 11,
-            "description": "Hearty Italian vegetable soup with cannellini beans, pasta, and pesto drizzle",
-            "modifierGroups": []
-          }
-        ]
-      },
-      {
-        "id": "cat-steak",
-        "name": "Steak",
-        "items": [
-          {
-            "id": "item-filet-mignon",
-            "name": "Filet Mignon",
-            "price": 56,
-            "description": "8oz center-cut tenderloin, served with roasted garlic mashed potatoes and asparagus",
-            "modifierGroups": [
-              {
-                "id": "mg-filet-temp",
-                "name": "Temperature",
-                "required": true,
-                "minSelect": 1,
-                "maxSelect": 1,
-                "options": [
-                  { "id": "mod-filet-rare", "name": "Rare", "price": 0 },
-                  { "id": "mod-filet-mr", "name": "Medium Rare", "price": 0 },
-                  { "id": "mod-filet-med", "name": "Medium", "price": 0 },
-                  { "id": "mod-filet-mw", "name": "Medium Well", "price": 0 },
-                  { "id": "mod-filet-well", "name": "Well Done", "price": 0 }
-                ]
-              },
-              {
-                "id": "mg-filet-sauce",
-                "name": "Sauce",
-                "required": false,
-                "minSelect": 0,
-                "maxSelect": 1,
-                "options": [
-                  { "id": "mod-filet-bearnaise", "name": "Béarnaise", "price": 0 },
-                  { "id": "mod-filet-peppercorn", "name": "Peppercorn", "price": 0 },
-                  { "id": "mod-filet-redwine", "name": "Red Wine Reduction", "price": 0 },
-                  { "id": "mod-filet-bleu", "name": "Blue Cheese Butter", "price": 2 }
-                ]
-              }
-            ]
-          },
-          {
-            "id": "item-ribeye",
-            "name": "Bone-In Ribeye",
-            "price": 62,
-            "description": "16oz prime ribeye, dry-aged 28 days, with truffle butter and roasted bone marrow",
-            "modifierGroups": [
-              {
-                "id": "mg-ribeye-temp",
-                "name": "Temperature",
-                "required": true,
-                "minSelect": 1,
-                "maxSelect": 1,
-                "options": [
-                  { "id": "mod-ribeye-rare", "name": "Rare", "price": 0 },
-                  { "id": "mod-ribeye-mr", "name": "Medium Rare", "price": 0 },
-                  { "id": "mod-ribeye-med", "name": "Medium", "price": 0 },
-                  { "id": "mod-ribeye-mw", "name": "Medium Well", "price": 0 },
-                  { "id": "mod-ribeye-well", "name": "Well Done", "price": 0 }
-                ]
-              },
-              {
-                "id": "mg-ribeye-sauce",
-                "name": "Sauce",
-                "required": false,
-                "minSelect": 0,
-                "maxSelect": 1,
-                "options": [
-                  { "id": "mod-ribeye-bearnaise", "name": "Béarnaise", "price": 0 },
-                  { "id": "mod-ribeye-peppercorn", "name": "Peppercorn", "price": 0 },
-                  { "id": "mod-ribeye-chimichurri", "name": "Chimichurri", "price": 0 }
-                ]
-              }
-            ]
-          },
-          {
-            "id": "item-ny-strip",
-            "name": "New York Strip",
-            "price": 52,
-            "description": "14oz prime strip, chargrilled, with herb compound butter",
-            "modifierGroups": [
-              {
-                "id": "mg-strip-temp",
-                "name": "Temperature",
-                "required": true,
-                "minSelect": 1,
-                "maxSelect": 1,
-                "options": [
-                  { "id": "mod-strip-rare", "name": "Rare", "price": 0 },
-                  { "id": "mod-strip-mr", "name": "Medium Rare", "price": 0 },
-                  { "id": "mod-strip-med", "name": "Medium", "price": 0 },
-                  { "id": "mod-strip-mw", "name": "Medium Well", "price": 0 },
-                  { "id": "mod-strip-well", "name": "Well Done", "price": 0 }
-                ]
-              }
-            ]
-          },
-          {
-            "id": "item-wagyu",
-            "name": "A5 Wagyu Striploin",
-            "price": 95,
-            "description": "6oz Japanese A5 wagyu, lightly seared, with sea salt and wasabi",
-            "modifierGroups": [
-              {
-                "id": "mg-wagyu-temp",
-                "name": "Temperature",
-                "required": true,
-                "minSelect": 1,
-                "maxSelect": 1,
-                "options": [
-                  { "id": "mod-wagyu-rare", "name": "Rare", "price": 0 },
-                  { "id": "mod-wagyu-mr", "name": "Medium Rare", "price": 0 },
-                  { "id": "mod-wagyu-med", "name": "Medium", "price": 0 }
-                ]
-              }
-            ]
-          },
-          {
-            "id": "item-steak-sides",
-            "name": "Steak Side Upgrades",
-            "price": 0,
-            "description": "Enhance your steak with premium sides",
-            "modifierGroups": [
-              {
-                "id": "mg-steak-sides",
-                "name": "Premium Sides",
-                "required": true,
-                "minSelect": 1,
-                "maxSelect": 3,
-                "options": [
-                  { "id": "mod-side-lobstertail", "name": "Butter-Poached Lobster Tail", "price": 28 },
-                  { "id": "mod-side-truffle-mac", "name": "Truffle Mac & Cheese", "price": 12 },
-                  { "id": "mod-side-creamed-spinach", "name": "Creamed Spinach", "price": 9 },
-                  { "id": "mod-side-gratin", "name": "Potato Gratin", "price": 10 },
-                  { "id": "mod-side-asparagus", "name": "Grilled Asparagus", "price": 9 },
-                  { "id": "mod-side-mushrooms", "name": "Sautéed Wild Mushrooms", "price": 11 }
-                ]
-              }
-            ]
-          },
-          {
-            "id": "item-tomahawk",
-            "name": "Tomahawk Ribeye",
-            "price": 85,
-            "description": "32oz bone-in ribeye, dry-aged 45 days, served with roasted garlic and herb butter",
-            "modifierGroups": [
-              {
-                "id": "mg-tomahawk-temp",
-                "name": "Temperature",
-                "required": true,
-                "minSelect": 1,
-                "maxSelect": 1,
-                "options": [
-                  { "id": "mod-tomahawk-rare", "name": "Rare", "price": 0 },
-                  { "id": "mod-tomahawk-mr", "name": "Medium Rare", "price": 0 },
-                  { "id": "mod-tomahawk-med", "name": "Medium", "price": 0 },
-                  { "id": "mod-tomahawk-mw", "name": "Medium Well", "price": 0 }
-                ]
-              }
-            ]
-          },
-          {
-            "id": "item-porterhouse",
-            "name": "Porterhouse for Two",
-            "price": 110,
-            "description": "40oz prime porterhouse with bone marrow butter, carved tableside",
-            "modifierGroups": [
-              {
-                "id": "mg-porterhouse-temp",
-                "name": "Temperature",
-                "required": true,
-                "minSelect": 1,
-                "maxSelect": 1,
-                "options": [
-                  { "id": "mod-porter-rare", "name": "Rare", "price": 0 },
-                  { "id": "mod-porter-mr", "name": "Medium Rare", "price": 0 },
-                  { "id": "mod-porter-med", "name": "Medium", "price": 0 },
-                  { "id": "mod-porter-mw", "name": "Medium Well", "price": 0 }
-                ]
-              }
-            ]
-          },
-          {
-            "id": "item-flank-steak",
-            "name": "Chimichurri Flank Steak",
-            "price": 38,
-            "description": "12oz grilled flank steak with house chimichurri, roasted peppers, and crispy potatoes",
-            "modifierGroups": [
-              {
-                "id": "mg-flank-temp",
-                "name": "Temperature",
-                "required": true,
-                "minSelect": 1,
-                "maxSelect": 1,
-                "options": [
-                  { "id": "mod-flank-mr", "name": "Medium Rare", "price": 0 },
-                  { "id": "mod-flank-med", "name": "Medium", "price": 0 },
-                  { "id": "mod-flank-mw", "name": "Medium Well", "price": 0 }
-                ]
-              }
-            ]
-          },
-          {
-            "id": "item-steak-frites",
-            "name": "Steak Frites",
-            "price": 34,
-            "description": "10oz hanger steak with truffle fries, béarnaise, and mixed greens",
-            "modifierGroups": [
-              {
-                "id": "mg-frites-temp",
-                "name": "Temperature",
-                "required": true,
-                "minSelect": 1,
-                "maxSelect": 1,
-                "options": [
-                  { "id": "mod-frites-rare", "name": "Rare", "price": 0 },
-                  { "id": "mod-frites-mr", "name": "Medium Rare", "price": 0 },
-                  { "id": "mod-frites-med", "name": "Medium", "price": 0 },
-                  { "id": "mod-frites-mw", "name": "Medium Well", "price": 0 }
-                ]
-              }
-            ]
-          }
-        ]
-      },
-      {
-        "id": "cat-seafood",
-        "name": "Seafood",
-        "items": [
-          {
-            "id": "item-salmon",
-            "name": "Pan-Seared Scottish Salmon",
-            "price": 36,
-            "description": "With lemon-dill beurre blanc, fingerling potatoes, and haricots verts",
-            "modifierGroups": [
-              {
-                "id": "mg-salmon-prep",
-                "name": "Preparation",
-                "required": true,
-                "minSelect": 1,
-                "maxSelect": 1,
-                "options": [
-                  { "id": "mod-salmon-seared", "name": "Pan-Seared", "price": 0 },
-                  { "id": "mod-salmon-grilled", "name": "Grilled", "price": 0 },
-                  { "id": "mod-salmon-blackened", "name": "Blackened", "price": 0 }
-                ]
-              }
-            ]
-          },
-          {
-            "id": "item-sea-bass",
-            "name": "Chilean Sea Bass",
-            "price": 44,
-            "description": "Miso-glazed, with bok choy, shiitake mushrooms, and jasmine rice",
-            "modifierGroups": []
-          },
-          {
-            "id": "item-scallops",
-            "name": "Seared Diver Scallops",
-            "price": 40,
-            "description": "With cauliflower purée, crispy pancetta, brown butter, and capers",
-            "modifierGroups": []
-          },
-          {
-            "id": "item-lobster",
-            "name": "Whole Maine Lobster",
-            "price": 65,
-            "description": "2lb lobster with drawn butter, roasted corn, and new potatoes",
-            "modifierGroups": [
-              {
-                "id": "mg-lobster-prep",
-                "name": "Preparation",
-                "required": true,
-                "minSelect": 1,
-                "maxSelect": 1,
-                "options": [
-                  { "id": "mod-lobster-steamed", "name": "Steamed", "price": 0 },
-                  { "id": "mod-lobster-grilled", "name": "Grilled", "price": 0 },
-                  { "id": "mod-lobster-baked", "name": "Baked Stuffed", "price": 6 }
-                ]
-              }
-            ]
-          },
-          {
-            "id": "item-branzino",
-            "name": "Grilled Branzino",
-            "price": 38,
-            "description": "Whole Mediterranean sea bass with olive tapenade, cherry tomatoes, and herbs",
-            "modifierGroups": []
-          },
-          {
-            "id": "item-mahi-mahi",
-            "name": "Grilled Mahi-Mahi",
-            "price": 32,
-            "description": "With tropical mango salsa, coconut rice, and grilled pineapple",
-            "modifierGroups": []
-          },
-          {
-            "id": "item-lobster-roll",
-            "name": "Warm Lobster Roll",
-            "price": 34,
-            "description": "Butter-poached lobster on a toasted brioche split-top roll with drawn butter and fries",
-            "modifierGroups": []
-          },
-          {
-            "id": "item-fish-and-chips",
-            "name": "Beer-Battered Fish & Chips",
-            "price": 26,
-            "description": "Crispy Atlantic cod with hand-cut chips, mushy peas, and tartar sauce",
-            "modifierGroups": []
-          },
-          {
-            "id": "item-shrimp-scampi",
-            "name": "Shrimp Scampi",
-            "price": 30,
-            "description": "Jumbo shrimp sautéed in garlic, white wine, and lemon butter over angel hair pasta",
-            "modifierGroups": []
-          },
-          {
-            "id": "item-seafood-tower",
-            "name": "Grand Seafood Tower",
-            "price": 88,
-            "description": "Oysters, shrimp cocktail, lobster tail, king crab legs, tuna tartare, and mignonette",
-            "modifierGroups": []
-          }
-        ]
-      },
-      {
-        "id": "cat-pasta",
-        "name": "Pasta",
-        "items": [
-          {
-            "id": "item-truffle-risotto",
-            "name": "Black Truffle Risotto",
-            "price": 28,
-            "description": "Arborio rice with black truffle, wild mushrooms, and aged parmesan",
-            "modifierGroups": []
-          },
-          {
-            "id": "item-lobster-linguine",
-            "name": "Lobster Linguine",
-            "price": 34,
-            "description": "Fresh linguine with butter-poached lobster, cherry tomatoes, and tarragon cream",
-            "modifierGroups": []
-          },
-          {
-            "id": "item-short-rib-pappardelle",
-            "name": "Braised Short Rib Pappardelle",
-            "price": 29,
-            "description": "Hand-cut pappardelle with slow-braised short rib ragù and gremolata",
-            "modifierGroups": []
-          },
-          {
-            "id": "item-cacio-pepe",
-            "name": "Cacio e Pepe",
-            "price": 22,
-            "description": "House-made tonnarelli with pecorino romano and cracked black pepper",
-            "modifierGroups": [
-              {
-                "id": "mg-cacio-addon",
-                "name": "Add Protein",
-                "required": false,
-                "minSelect": 0,
-                "maxSelect": 1,
-                "options": [
-                  { "id": "mod-cacio-chicken", "name": "Grilled Chicken", "price": 8 },
-                  { "id": "mod-cacio-shrimp", "name": "Grilled Shrimp", "price": 10 },
-                  { "id": "mod-cacio-truffle", "name": "Shaved Black Truffle", "price": 15 }
-                ]
-              }
-            ]
-          },
-          {
-            "id": "item-gnocchi",
-            "name": "Ricotta Gnocchi",
-            "price": 25,
-            "description": "Pillowy gnocchi with brown butter, sage, butternut squash, and toasted hazelnuts",
-            "modifierGroups": [],
-            "soldOut": true
-          },
-          {
-            "id": "item-carbonara",
-            "name": "Spaghetti Carbonara",
-            "price": 24,
-            "description": "Guanciale, pecorino romano, egg yolk, and cracked black pepper over spaghetti",
-            "modifierGroups": []
-          },
-          {
-            "id": "item-bolognese",
-            "name": "Tagliatelle Bolognese",
-            "price": 26,
-            "description": "Slow-simmered veal and pork ragù with hand-cut egg tagliatelle and parmigiano",
-            "modifierGroups": []
-          },
-          {
-            "id": "item-pesto-orecchiette",
-            "name": "Pesto Orecchiette",
-            "price": 23,
-            "description": "House-made basil pesto with orecchiette, burrata, sun-dried tomatoes, and toasted pine nuts",
-            "modifierGroups": []
-          },
-          {
-            "id": "item-wild-mushroom-ravioli",
-            "name": "Wild Mushroom Ravioli",
-            "price": 27,
-            "description": "Handmade ravioli stuffed with porcini and ricotta in a brown butter and sage sauce",
-            "modifierGroups": []
-          },
-          {
-            "id": "item-aglio-olio",
-            "name": "Spaghetti Aglio e Olio",
-            "price": 20,
-            "description": "Spaghetti with garlic, Calabrian chili, extra virgin olive oil, and toasted breadcrumbs",
-            "modifierGroups": [
-              {
-                "id": "mg-aglio-protein",
-                "name": "Add Protein",
-                "required": false,
-                "minSelect": 0,
-                "maxSelect": 1,
-                "options": [
-                  { "id": "mod-aglio-shrimp", "name": "Grilled Shrimp", "price": 10 },
-                  { "id": "mod-aglio-chicken", "name": "Grilled Chicken", "price": 8 }
-                ]
-              }
-            ]
-          }
-        ]
-      },
-      {
-        "id": "cat-poultry",
-        "name": "Poultry",
-        "items": [
-          {
-            "id": "item-roast-chicken",
-            "name": "Herb-Roasted Half Chicken",
-            "price": 30,
-            "description": "Free-range chicken with lemon jus, roasted root vegetables, and crispy skin",
-            "modifierGroups": []
-          },
-          {
-            "id": "item-duck-breast",
-            "name": "Pan-Seared Duck Breast",
-            "price": 38,
-            "description": "With cherry gastrique, sweet potato purée, and wilted greens",
-            "modifierGroups": [
-              {
-                "id": "mg-duck-temp",
-                "name": "Temperature",
-                "required": true,
-                "minSelect": 1,
-                "maxSelect": 1,
-                "options": [
-                  { "id": "mod-duck-mr", "name": "Medium Rare", "price": 0 },
-                  { "id": "mod-duck-med", "name": "Medium", "price": 0 },
-                  { "id": "mod-duck-mw", "name": "Medium Well", "price": 0 }
-                ]
-              }
-            ]
-          },
-          {
-            "id": "item-chicken-milanese",
-            "name": "Chicken Milanese",
-            "price": 27,
-            "description": "Panko-crusted chicken cutlet with arugula, shaved parmesan, and lemon vinaigrette",
-            "modifierGroups": []
-          },
-          {
-            "id": "item-cornish-hen",
-            "name": "Roasted Cornish Hen",
-            "price": 32,
-            "description": "Whole Cornish game hen with herb stuffing, pan gravy, and roasted root vegetables",
-            "modifierGroups": []
-          },
-          {
-            "id": "item-turkey-chop",
-            "name": "Grilled Turkey Chop",
-            "price": 28,
-            "description": "Bone-in turkey chop with cranberry mostarda, sweet potato mash, and Brussels sprouts",
-            "modifierGroups": []
-          },
-          {
-            "id": "item-chicken-marsala",
-            "name": "Chicken Marsala",
-            "price": 26,
-            "description": "Pan-seared chicken breast with marsala wine sauce, mushrooms, and mashed potatoes",
-            "modifierGroups": []
-          },
-          {
-            "id": "item-duck-leg-confit",
-            "name": "Duck Leg Confit",
-            "price": 34,
-            "description": "Slow-cooked duck leg with crispy skin, lentils du Puy, and red wine jus",
-            "modifierGroups": []
-          },
-          {
-            "id": "item-chicken-parm",
-            "name": "Chicken Parmigiana",
-            "price": 25,
-            "description": "Breaded chicken breast with marinara, melted mozzarella, and spaghetti",
-            "modifierGroups": []
-          }
-        ]
-      },
-      {
-        "id": "cat-burgers",
-        "name": "Burgers & Sandwiches",
-        "items": [
-          {
-            "id": "item-signature-burger",
-            "name": "The Signature Burger",
-            "price": 22,
-            "description": "Dry-aged beef blend, aged cheddar, caramelized onion, house pickles, brioche bun",
-            "modifierGroups": [
-              {
-                "id": "mg-burger-temp",
-                "name": "Temperature",
-                "required": true,
-                "minSelect": 1,
-                "maxSelect": 1,
-                "options": [
-                  { "id": "mod-burger-mr", "name": "Medium Rare", "price": 0 },
-                  { "id": "mod-burger-med", "name": "Medium", "price": 0 },
-                  { "id": "mod-burger-mw", "name": "Medium Well", "price": 0 },
-                  { "id": "mod-burger-well", "name": "Well Done", "price": 0 }
-                ]
-              },
-              {
-                "id": "mg-burger-addons",
-                "name": "Add-Ons",
-                "required": false,
-                "minSelect": 0,
-                "maxSelect": 5,
-                "options": [
-                  { "id": "mod-burger-bacon", "name": "Applewood Bacon", "price": 3 },
-                  { "id": "mod-burger-egg", "name": "Fried Egg", "price": 2 },
-                  { "id": "mod-burger-avocado", "name": "Avocado", "price": 3 },
-                  { "id": "mod-burger-mushroom", "name": "Sautéed Mushrooms", "price": 2 },
-                  { "id": "mod-burger-truffle-aioli", "name": "Truffle Aioli", "price": 2 },
-                  { "id": "mod-burger-blue", "name": "Blue Cheese Crumbles", "price": 2 }
-                ]
-              }
-            ]
-          },
-          {
-            "id": "item-wagyu-burger",
-            "name": "Wagyu Smash Burger",
-            "price": 28,
-            "description": "Double wagyu patties, American cheese, special sauce, shredded lettuce, brioche bun",
-            "modifierGroups": [
-              {
-                "id": "mg-wagyu-burger-temp",
-                "name": "Temperature",
-                "required": true,
-                "minSelect": 1,
-                "maxSelect": 1,
-                "options": [
-                  { "id": "mod-wburger-mr", "name": "Medium Rare", "price": 0 },
-                  { "id": "mod-wburger-med", "name": "Medium", "price": 0 },
-                  { "id": "mod-wburger-mw", "name": "Medium Well", "price": 0 }
-                ]
-              }
-            ]
-          },
-          {
-            "id": "item-club-sandwich",
-            "name": "Grilled Chicken Club",
-            "price": 19,
-            "description": "Herb-marinated chicken, bacon, avocado, tomato, and garlic aioli on sourdough",
-            "modifierGroups": []
-          },
-          {
-            "id": "item-prime-dip",
-            "name": "Prime Rib French Dip",
-            "price": 24,
-            "description": "Slow-roasted prime rib, gruyère, horseradish cream, au jus, on a toasted hoagie",
-            "modifierGroups": []
-          },
-          {
-            "id": "item-fully-loaded-burger",
-            "name": "The Fully Loaded Super Deluxe Double Bacon Cheeseburger",
-            "price": 32,
-            "description": "Two dry-aged beef patties, double aged cheddar, applewood bacon, fried egg, crispy onion, house pickles, and special sauce on a toasted brioche bun",
-            "modifierGroups": [
-              {
-                "id": "mg-fully-loaded-temp",
-                "name": "Temperature",
-                "required": true,
-                "minSelect": 1,
-                "maxSelect": 1,
-                "options": [
-                  { "id": "mod-fl-mr", "name": "Medium Rare", "price": 0 },
-                  { "id": "mod-fl-med", "name": "Medium", "price": 0 },
-                  { "id": "mod-fl-mw", "name": "Medium Well", "price": 0 },
-                  { "id": "mod-fl-well", "name": "Well Done", "price": 0 }
-                ]
-              }
-            ]
-          },
-          {
-            "id": "item-turkey-burger",
-            "name": "Turkey Avocado Burger",
-            "price": 20,
-            "description": "Ground turkey patty with avocado, sprouts, tomato, and herb aioli on a whole wheat bun",
-            "modifierGroups": []
-          },
-          {
-            "id": "item-blt",
-            "name": "The Ultimate BLT",
-            "price": 17,
-            "description": "Thick-cut applewood bacon, heirloom tomato, butter lettuce, and garlic aioli on sourdough",
-            "modifierGroups": []
-          },
-          {
-            "id": "item-philly-cheesesteak",
-            "name": "Philly Cheesesteak",
-            "price": 22,
-            "description": "Shaved ribeye, provolone, caramelized onions, and peppers on a hoagie roll",
-            "modifierGroups": []
-          },
-          {
-            "id": "item-fried-chicken-sando",
-            "name": "Crispy Chicken Sandwich",
-            "price": 18,
-            "description": "Buttermilk-brined fried chicken, coleslaw, pickles, and spicy mayo on a brioche bun",
+            "id": "item-pork-pickled-noodle",
+            "name": "Pork & Pickled Mustard Noodle Soup",
+            "nameCn": "榨菜肉絲湯麵",
+            "price": 12.75,
+            "description": "Pork & Pickled Mustard Noodle Soup",
             "modifierGroups": []
           }
         ]
@@ -967,14 +777,41 @@
                         "minSelect": 1,
                         "maxSelect": 1,
                         "options": [
-                          { "id": "mod-cc-ny-rare", "name": "Rare", "price": 0 },
-                          { "id": "mod-cc-ny-mr", "name": "Medium Rare", "price": 0 },
-                          { "id": "mod-cc-ny-med", "name": "Medium", "price": 0 },
-                          { "id": "mod-cc-ny-mw", "name": "Medium Well", "price": 0 },
-                          { "id": "mod-cc-ny-well", "name": "Well Done", "price": 0 }
-                        ]
+                          {
+                            "id": "mod-cc-ny-rare",
+                            "name": "Rare",
+                            "price": 0,
+                            "nameCn": "一分熟"
+                          },
+                          {
+                            "id": "mod-cc-ny-mr",
+                            "name": "Medium Rare",
+                            "price": 0,
+                            "nameCn": "三分熟"
+                          },
+                          {
+                            "id": "mod-cc-ny-med",
+                            "name": "Medium",
+                            "price": 0,
+                            "nameCn": "五分熟"
+                          },
+                          {
+                            "id": "mod-cc-ny-mw",
+                            "name": "Medium Well",
+                            "price": 0,
+                            "nameCn": "七分熟"
+                          },
+                          {
+                            "id": "mod-cc-ny-well",
+                            "name": "Well Done",
+                            "price": 0,
+                            "nameCn": "全熟"
+                          }
+                        ],
+                        "nameCn": "熟度"
                       }
-                    ]
+                    ],
+                    "nameCn": "紐約客牛排 12oz"
                   },
                   {
                     "id": "cc-ribeye",
@@ -988,14 +825,41 @@
                         "minSelect": 1,
                         "maxSelect": 1,
                         "options": [
-                          { "id": "mod-cc-rib-rare", "name": "Rare", "price": 0 },
-                          { "id": "mod-cc-rib-mr", "name": "Medium Rare", "price": 0 },
-                          { "id": "mod-cc-rib-med", "name": "Medium", "price": 0 },
-                          { "id": "mod-cc-rib-mw", "name": "Medium Well", "price": 0 },
-                          { "id": "mod-cc-rib-well", "name": "Well Done", "price": 0 }
-                        ]
+                          {
+                            "id": "mod-cc-rib-rare",
+                            "name": "Rare",
+                            "price": 0,
+                            "nameCn": "一分熟"
+                          },
+                          {
+                            "id": "mod-cc-rib-mr",
+                            "name": "Medium Rare",
+                            "price": 0,
+                            "nameCn": "三分熟"
+                          },
+                          {
+                            "id": "mod-cc-rib-med",
+                            "name": "Medium",
+                            "price": 0,
+                            "nameCn": "五分熟"
+                          },
+                          {
+                            "id": "mod-cc-rib-mw",
+                            "name": "Medium Well",
+                            "price": 0,
+                            "nameCn": "七分熟"
+                          },
+                          {
+                            "id": "mod-cc-rib-well",
+                            "name": "Well Done",
+                            "price": 0,
+                            "nameCn": "全熟"
+                          }
+                        ],
+                        "nameCn": "熟度"
                       }
-                    ]
+                    ],
+                    "nameCn": "肋眼牛排 14oz"
                   },
                   {
                     "id": "cc-filet",
@@ -1009,16 +873,44 @@
                         "minSelect": 1,
                         "maxSelect": 1,
                         "options": [
-                          { "id": "mod-cc-fil-rare", "name": "Rare", "price": 0 },
-                          { "id": "mod-cc-fil-mr", "name": "Medium Rare", "price": 0 },
-                          { "id": "mod-cc-fil-med", "name": "Medium", "price": 0 },
-                          { "id": "mod-cc-fil-mw", "name": "Medium Well", "price": 0 },
-                          { "id": "mod-cc-fil-well", "name": "Well Done", "price": 0 }
-                        ]
+                          {
+                            "id": "mod-cc-fil-rare",
+                            "name": "Rare",
+                            "price": 0,
+                            "nameCn": "一分熟"
+                          },
+                          {
+                            "id": "mod-cc-fil-mr",
+                            "name": "Medium Rare",
+                            "price": 0,
+                            "nameCn": "三分熟"
+                          },
+                          {
+                            "id": "mod-cc-fil-med",
+                            "name": "Medium",
+                            "price": 0,
+                            "nameCn": "五分熟"
+                          },
+                          {
+                            "id": "mod-cc-fil-mw",
+                            "name": "Medium Well",
+                            "price": 0,
+                            "nameCn": "七分熟"
+                          },
+                          {
+                            "id": "mod-cc-fil-well",
+                            "name": "Well Done",
+                            "price": 0,
+                            "nameCn": "全熟"
+                          }
+                        ],
+                        "nameCn": "熟度"
                       }
-                    ]
+                    ],
+                    "nameCn": "菲力牛排 8oz"
                   }
-                ]
+                ],
+                "nameCn": "選擇牛排"
               },
               {
                 "id": "cg-steak-side",
@@ -1027,12 +919,43 @@
                 "minSelect": 1,
                 "maxSelect": 1,
                 "components": [
-                  { "id": "cc-side-mash", "name": "Garlic Mashed Potatoes", "price": 0, "modifierGroups": [] },
-                  { "id": "cc-side-fries", "name": "Truffle Fries", "price": 0, "modifierGroups": [] },
-                  { "id": "cc-side-caesar", "name": "Caesar Salad", "price": 0, "modifierGroups": [] },
-                  { "id": "cc-side-asparagus", "name": "Grilled Asparagus", "price": 2, "modifierGroups": [] },
-                  { "id": "cc-side-lobster-mac", "name": "Lobster Mac & Cheese", "price": 5, "modifierGroups": [] }
-                ]
+                  {
+                    "id": "cc-side-mash",
+                    "name": "Garlic Mashed Potatoes",
+                    "price": 0,
+                    "modifierGroups": [],
+                    "nameCn": "蒜香薯泥"
+                  },
+                  {
+                    "id": "cc-side-fries",
+                    "name": "Truffle Fries",
+                    "price": 0,
+                    "modifierGroups": [],
+                    "nameCn": "松露薯條"
+                  },
+                  {
+                    "id": "cc-side-caesar",
+                    "name": "Caesar Salad",
+                    "price": 0,
+                    "modifierGroups": [],
+                    "nameCn": "凱撒沙拉"
+                  },
+                  {
+                    "id": "cc-side-asparagus",
+                    "name": "Grilled Asparagus",
+                    "price": 2,
+                    "modifierGroups": [],
+                    "nameCn": "烤蘆筍"
+                  },
+                  {
+                    "id": "cc-side-lobster-mac",
+                    "name": "Lobster Mac & Cheese",
+                    "price": 5,
+                    "modifierGroups": [],
+                    "nameCn": "龍蝦起司通心粉"
+                  }
+                ],
+                "nameCn": "選擇配菜"
               },
               {
                 "id": "cg-steak-drink",
@@ -1041,14 +964,46 @@
                 "minSelect": 1,
                 "maxSelect": 1,
                 "components": [
-                  { "id": "cc-drink-soda", "name": "Fountain Soda", "price": 0, "modifierGroups": [] },
-                  { "id": "cc-drink-iced-tea", "name": "Iced Tea", "price": 0, "modifierGroups": [] },
-                  { "id": "cc-drink-lemonade", "name": "Fresh Lemonade", "price": 0, "modifierGroups": [] },
-                  { "id": "cc-drink-beer", "name": "Draft Beer", "price": 3, "modifierGroups": [] },
-                  { "id": "cc-drink-wine", "name": "House Wine", "price": 5, "modifierGroups": [] }
-                ]
+                  {
+                    "id": "cc-drink-soda",
+                    "name": "Fountain Soda",
+                    "price": 0,
+                    "modifierGroups": [],
+                    "nameCn": "汽水"
+                  },
+                  {
+                    "id": "cc-drink-iced-tea",
+                    "name": "Iced Tea",
+                    "price": 0,
+                    "modifierGroups": [],
+                    "nameCn": "冰茶"
+                  },
+                  {
+                    "id": "cc-drink-lemonade",
+                    "name": "Fresh Lemonade",
+                    "price": 0,
+                    "modifierGroups": [],
+                    "nameCn": "鮮榨檸檬水"
+                  },
+                  {
+                    "id": "cc-drink-beer",
+                    "name": "Draft Beer",
+                    "price": 3,
+                    "modifierGroups": [],
+                    "nameCn": "生啤酒"
+                  },
+                  {
+                    "id": "cc-drink-wine",
+                    "name": "House Wine",
+                    "price": 5,
+                    "modifierGroups": [],
+                    "nameCn": "招牌紅酒"
+                  }
+                ],
+                "nameCn": "選擇飲料"
               }
-            ]
+            ],
+            "nameCn": "牛排套餐"
           },
           {
             "id": "item-seafood-combo",
@@ -1077,15 +1032,44 @@
                         "minSelect": 1,
                         "maxSelect": 1,
                         "options": [
-                          { "id": "mod-cc-sal-med", "name": "Medium", "price": 0 },
-                          { "id": "mod-cc-sal-mw", "name": "Medium Well", "price": 0 },
-                          { "id": "mod-cc-sal-well", "name": "Well Done", "price": 0 }
-                        ]
+                          {
+                            "id": "mod-cc-sal-med",
+                            "name": "Medium",
+                            "price": 0,
+                            "nameCn": "五分熟"
+                          },
+                          {
+                            "id": "mod-cc-sal-mw",
+                            "name": "Medium Well",
+                            "price": 0,
+                            "nameCn": "七分熟"
+                          },
+                          {
+                            "id": "mod-cc-sal-well",
+                            "name": "Well Done",
+                            "price": 0,
+                            "nameCn": "全熟"
+                          }
+                        ],
+                        "nameCn": "熟度"
                       }
-                    ]
+                    ],
+                    "nameCn": "烤三文魚"
                   },
-                  { "id": "cc-shrimp", "name": "Garlic Butter Shrimp", "price": 0, "modifierGroups": [] },
-                  { "id": "cc-lobster-tail", "name": "Lobster Tail", "price": 12, "modifierGroups": [] },
+                  {
+                    "id": "cc-shrimp",
+                    "name": "Garlic Butter Shrimp",
+                    "price": 0,
+                    "modifierGroups": [],
+                    "nameCn": "蒜香奶油蝦"
+                  },
+                  {
+                    "id": "cc-lobster-tail",
+                    "name": "Lobster Tail",
+                    "price": 12,
+                    "modifierGroups": [],
+                    "nameCn": "龍蝦尾"
+                  },
                   {
                     "id": "cc-ahi-tuna",
                     "name": "Seared Ahi Tuna",
@@ -1098,13 +1082,26 @@
                         "minSelect": 1,
                         "maxSelect": 1,
                         "options": [
-                          { "id": "mod-cc-ahi-rare", "name": "Rare", "price": 0 },
-                          { "id": "mod-cc-ahi-mr", "name": "Medium Rare", "price": 0 }
-                        ]
+                          {
+                            "id": "mod-cc-ahi-rare",
+                            "name": "Rare",
+                            "price": 0,
+                            "nameCn": "一分熟"
+                          },
+                          {
+                            "id": "mod-cc-ahi-mr",
+                            "name": "Medium Rare",
+                            "price": 0,
+                            "nameCn": "三分熟"
+                          }
+                        ],
+                        "nameCn": "熟度"
                       }
-                    ]
+                    ],
+                    "nameCn": "香煎鮪魚"
                   }
-                ]
+                ],
+                "nameCn": "選擇海鮮"
               },
               {
                 "id": "cg-sea-side",
@@ -1113,11 +1110,36 @@
                 "minSelect": 1,
                 "maxSelect": 1,
                 "components": [
-                  { "id": "cc-sea-side-rice", "name": "Jasmine Rice", "price": 0, "modifierGroups": [] },
-                  { "id": "cc-sea-side-mash", "name": "Garlic Mashed Potatoes", "price": 0, "modifierGroups": [] },
-                  { "id": "cc-sea-side-veg", "name": "Seasonal Vegetables", "price": 0, "modifierGroups": [] },
-                  { "id": "cc-sea-side-caesar", "name": "Caesar Salad", "price": 0, "modifierGroups": [] }
-                ]
+                  {
+                    "id": "cc-sea-side-rice",
+                    "name": "Jasmine Rice",
+                    "price": 0,
+                    "modifierGroups": [],
+                    "nameCn": "茉莉香米飯"
+                  },
+                  {
+                    "id": "cc-sea-side-mash",
+                    "name": "Garlic Mashed Potatoes",
+                    "price": 0,
+                    "modifierGroups": [],
+                    "nameCn": "蒜香薯泥"
+                  },
+                  {
+                    "id": "cc-sea-side-veg",
+                    "name": "Seasonal Vegetables",
+                    "price": 0,
+                    "modifierGroups": [],
+                    "nameCn": "時令蔬菜"
+                  },
+                  {
+                    "id": "cc-sea-side-caesar",
+                    "name": "Caesar Salad",
+                    "price": 0,
+                    "modifierGroups": [],
+                    "nameCn": "凱撒沙拉"
+                  }
+                ],
+                "nameCn": "選擇配菜"
               },
               {
                 "id": "cg-sea-drink",
@@ -1126,12 +1148,32 @@
                 "minSelect": 1,
                 "maxSelect": 1,
                 "components": [
-                  { "id": "cc-sea-drink-soda", "name": "Fountain Soda", "price": 0, "modifierGroups": [] },
-                  { "id": "cc-sea-drink-tea", "name": "Iced Tea", "price": 0, "modifierGroups": [] },
-                  { "id": "cc-sea-drink-wine", "name": "House White Wine", "price": 5, "modifierGroups": [] }
-                ]
+                  {
+                    "id": "cc-sea-drink-soda",
+                    "name": "Fountain Soda",
+                    "price": 0,
+                    "modifierGroups": [],
+                    "nameCn": "汽水"
+                  },
+                  {
+                    "id": "cc-sea-drink-tea",
+                    "name": "Iced Tea",
+                    "price": 0,
+                    "modifierGroups": [],
+                    "nameCn": "冰茶"
+                  },
+                  {
+                    "id": "cc-sea-drink-wine",
+                    "name": "House White Wine",
+                    "price": 5,
+                    "modifierGroups": [],
+                    "nameCn": "招牌白酒"
+                  }
+                ],
+                "nameCn": "選擇飲料"
               }
-            ]
+            ],
+            "nameCn": "海鮮套餐"
           },
           {
             "id": "item-burger-combo",
@@ -1160,13 +1202,35 @@
                         "minSelect": 1,
                         "maxSelect": 1,
                         "options": [
-                          { "id": "mod-cc-cb-mr", "name": "Medium Rare", "price": 0 },
-                          { "id": "mod-cc-cb-med", "name": "Medium", "price": 0 },
-                          { "id": "mod-cc-cb-mw", "name": "Medium Well", "price": 0 },
-                          { "id": "mod-cc-cb-well", "name": "Well Done", "price": 0 }
-                        ]
+                          {
+                            "id": "mod-cc-cb-mr",
+                            "name": "Medium Rare",
+                            "price": 0,
+                            "nameCn": "三分熟"
+                          },
+                          {
+                            "id": "mod-cc-cb-med",
+                            "name": "Medium",
+                            "price": 0,
+                            "nameCn": "五分熟"
+                          },
+                          {
+                            "id": "mod-cc-cb-mw",
+                            "name": "Medium Well",
+                            "price": 0,
+                            "nameCn": "七分熟"
+                          },
+                          {
+                            "id": "mod-cc-cb-well",
+                            "name": "Well Done",
+                            "price": 0,
+                            "nameCn": "全熟"
+                          }
+                        ],
+                        "nameCn": "熟度"
                       }
-                    ]
+                    ],
+                    "nameCn": "經典漢堡"
                   },
                   {
                     "id": "cc-bacon-burger",
@@ -1180,16 +1244,45 @@
                         "minSelect": 1,
                         "maxSelect": 1,
                         "options": [
-                          { "id": "mod-cc-bb-mr", "name": "Medium Rare", "price": 0 },
-                          { "id": "mod-cc-bb-med", "name": "Medium", "price": 0 },
-                          { "id": "mod-cc-bb-mw", "name": "Medium Well", "price": 0 },
-                          { "id": "mod-cc-bb-well", "name": "Well Done", "price": 0 }
-                        ]
+                          {
+                            "id": "mod-cc-bb-mr",
+                            "name": "Medium Rare",
+                            "price": 0,
+                            "nameCn": "三分熟"
+                          },
+                          {
+                            "id": "mod-cc-bb-med",
+                            "name": "Medium",
+                            "price": 0,
+                            "nameCn": "五分熟"
+                          },
+                          {
+                            "id": "mod-cc-bb-mw",
+                            "name": "Medium Well",
+                            "price": 0,
+                            "nameCn": "七分熟"
+                          },
+                          {
+                            "id": "mod-cc-bb-well",
+                            "name": "Well Done",
+                            "price": 0,
+                            "nameCn": "全熟"
+                          }
+                        ],
+                        "nameCn": "熟度"
                       }
-                    ]
+                    ],
+                    "nameCn": "培根起司漢堡"
                   },
-                  { "id": "cc-veggie-burger", "name": "Veggie Burger", "price": 0, "modifierGroups": [] }
-                ]
+                  {
+                    "id": "cc-veggie-burger",
+                    "name": "Veggie Burger",
+                    "price": 0,
+                    "modifierGroups": [],
+                    "nameCn": "蔬菜漢堡"
+                  }
+                ],
+                "nameCn": "選擇漢堡"
               },
               {
                 "id": "cg-burger-side",
@@ -1198,11 +1291,36 @@
                 "minSelect": 1,
                 "maxSelect": 1,
                 "components": [
-                  { "id": "cc-bg-side-fries", "name": "French Fries", "price": 0, "modifierGroups": [] },
-                  { "id": "cc-bg-side-onion", "name": "Onion Rings", "price": 2, "modifierGroups": [] },
-                  { "id": "cc-bg-side-salad", "name": "Side Salad", "price": 0, "modifierGroups": [] },
-                  { "id": "cc-bg-side-slaw", "name": "Coleslaw", "price": 0, "modifierGroups": [] }
-                ]
+                  {
+                    "id": "cc-bg-side-fries",
+                    "name": "French Fries",
+                    "price": 0,
+                    "modifierGroups": [],
+                    "nameCn": "薯條"
+                  },
+                  {
+                    "id": "cc-bg-side-onion",
+                    "name": "Onion Rings",
+                    "price": 2,
+                    "modifierGroups": [],
+                    "nameCn": "洋蔥圈"
+                  },
+                  {
+                    "id": "cc-bg-side-salad",
+                    "name": "Side Salad",
+                    "price": 0,
+                    "modifierGroups": [],
+                    "nameCn": "沙拉"
+                  },
+                  {
+                    "id": "cc-bg-side-slaw",
+                    "name": "Coleslaw",
+                    "price": 0,
+                    "modifierGroups": [],
+                    "nameCn": "涼拌捲心菜"
+                  }
+                ],
+                "nameCn": "選擇配菜"
               },
               {
                 "id": "cg-burger-drink",
@@ -1211,12 +1329,32 @@
                 "minSelect": 1,
                 "maxSelect": 1,
                 "components": [
-                  { "id": "cc-bg-drink-soda", "name": "Fountain Soda", "price": 0, "modifierGroups": [] },
-                  { "id": "cc-bg-drink-tea", "name": "Iced Tea", "price": 0, "modifierGroups": [] },
-                  { "id": "cc-bg-drink-shake", "name": "Milkshake", "price": 4, "modifierGroups": [] }
-                ]
+                  {
+                    "id": "cc-bg-drink-soda",
+                    "name": "Fountain Soda",
+                    "price": 0,
+                    "modifierGroups": [],
+                    "nameCn": "汽水"
+                  },
+                  {
+                    "id": "cc-bg-drink-tea",
+                    "name": "Iced Tea",
+                    "price": 0,
+                    "modifierGroups": [],
+                    "nameCn": "冰茶"
+                  },
+                  {
+                    "id": "cc-bg-drink-shake",
+                    "name": "Milkshake",
+                    "price": 4,
+                    "modifierGroups": [],
+                    "nameCn": "奶昔"
+                  }
+                ],
+                "nameCn": "選擇飲料"
               }
-            ]
+            ],
+            "nameCn": "漢堡套餐"
           },
           {
             "id": "item-lunch-legendary-combo",
@@ -1245,10 +1383,26 @@
                         "minSelect": 1,
                         "maxSelect": 1,
                         "options": [
-                          { "id": "mod-legendary-bn-mild", "name": "Mild", "price": 0 },
-                          { "id": "mod-legendary-bn-medium", "name": "Medium Spicy", "price": 0 },
-                          { "id": "mod-legendary-bn-hot", "name": "Hot", "price": 0 }
-                        ]
+                          {
+                            "id": "mod-legendary-bn-mild",
+                            "name": "Mild",
+                            "price": 0,
+                            "nameCn": "微辣"
+                          },
+                          {
+                            "id": "mod-legendary-bn-medium",
+                            "name": "Medium Spicy",
+                            "price": 0,
+                            "nameCn": "中辣"
+                          },
+                          {
+                            "id": "mod-legendary-bn-hot",
+                            "name": "Hot",
+                            "price": 0,
+                            "nameCn": "辣"
+                          }
+                        ],
+                        "nameCn": "辣度"
                       },
                       {
                         "id": "mg-legendary-bn-customize",
@@ -1257,12 +1411,29 @@
                         "minSelect": 0,
                         "maxSelect": 3,
                         "options": [
-                          { "id": "mod-legendary-bn-no-scallions", "name": "No Scallions", "price": 0 },
-                          { "id": "mod-legendary-bn-extra-broth", "name": "Extra Broth", "price": 0 },
-                          { "id": "mod-legendary-bn-add-beef", "name": "Extra Beef", "price": 2 }
-                        ]
+                          {
+                            "id": "mod-legendary-bn-no-scallions",
+                            "name": "No Scallions",
+                            "price": 0,
+                            "nameCn": "不加蔥"
+                          },
+                          {
+                            "id": "mod-legendary-bn-extra-broth",
+                            "name": "Extra Broth",
+                            "price": 0,
+                            "nameCn": "加湯"
+                          },
+                          {
+                            "id": "mod-legendary-bn-add-beef",
+                            "name": "Extra Beef",
+                            "price": 2,
+                            "nameCn": "加牛肉"
+                          }
+                        ],
+                        "nameCn": "客製化"
                       }
-                    ]
+                    ],
+                    "nameCn": "牛肉麵"
                   },
                   {
                     "id": "cc-legendary-fried-rice",
@@ -1276,10 +1447,26 @@
                         "minSelect": 0,
                         "maxSelect": 2,
                         "options": [
-                          { "id": "mod-legendary-fr-shrimp", "name": "+Shrimp", "price": 3 },
-                          { "id": "mod-legendary-fr-egg", "name": "Extra Egg", "price": 1 },
-                          { "id": "mod-legendary-fr-pork", "name": "Extra Pork", "price": 2 }
-                        ]
+                          {
+                            "id": "mod-legendary-fr-shrimp",
+                            "name": "+Shrimp",
+                            "price": 3,
+                            "nameCn": "加蝦"
+                          },
+                          {
+                            "id": "mod-legendary-fr-egg",
+                            "name": "Extra Egg",
+                            "price": 1,
+                            "nameCn": "加蛋"
+                          },
+                          {
+                            "id": "mod-legendary-fr-pork",
+                            "name": "Extra Pork",
+                            "price": 2,
+                            "nameCn": "加豬肉"
+                          }
+                        ],
+                        "nameCn": "加料"
                       },
                       {
                         "id": "mg-legendary-fr-spice",
@@ -1288,10 +1475,26 @@
                         "minSelect": 1,
                         "maxSelect": 1,
                         "options": [
-                          { "id": "mod-legendary-fr-no-spice", "name": "No Spicy", "price": 0 },
-                          { "id": "mod-legendary-fr-medium", "name": "Medium Spicy", "price": 0 },
-                          { "id": "mod-legendary-fr-hot", "name": "Hot", "price": 0 }
-                        ]
+                          {
+                            "id": "mod-legendary-fr-no-spice",
+                            "name": "No Spicy",
+                            "price": 0,
+                            "nameCn": "不辣"
+                          },
+                          {
+                            "id": "mod-legendary-fr-medium",
+                            "name": "Medium Spicy",
+                            "price": 0,
+                            "nameCn": "中辣"
+                          },
+                          {
+                            "id": "mod-legendary-fr-hot",
+                            "name": "Hot",
+                            "price": 0,
+                            "nameCn": "辣"
+                          }
+                        ],
+                        "nameCn": "辣度"
                       },
                       {
                         "id": "mg-legendary-fr-customize",
@@ -1300,11 +1503,23 @@
                         "minSelect": 0,
                         "maxSelect": 2,
                         "options": [
-                          { "id": "mod-legendary-fr-no-scallions", "name": "No Scallions", "price": 0 },
-                          { "id": "mod-legendary-fr-less-oil", "name": "Less Oil", "price": 0 }
-                        ]
+                          {
+                            "id": "mod-legendary-fr-no-scallions",
+                            "name": "No Scallions",
+                            "price": 0,
+                            "nameCn": "不加蔥"
+                          },
+                          {
+                            "id": "mod-legendary-fr-less-oil",
+                            "name": "Less Oil",
+                            "price": 0,
+                            "nameCn": "少油"
+                          }
+                        ],
+                        "nameCn": "客製化"
                       }
-                    ]
+                    ],
+                    "nameCn": "台式炒飯"
                   },
                   {
                     "id": "cc-legendary-fried-noodle",
@@ -1318,10 +1533,26 @@
                         "minSelect": 1,
                         "maxSelect": 1,
                         "options": [
-                          { "id": "mod-legendary-fn-chicken", "name": "Chicken", "price": 0 },
-                          { "id": "mod-legendary-fn-beef", "name": "Beef", "price": 1 },
-                          { "id": "mod-legendary-fn-shrimp", "name": "Shrimp", "price": 2 }
-                        ]
+                          {
+                            "id": "mod-legendary-fn-chicken",
+                            "name": "Chicken",
+                            "price": 0,
+                            "nameCn": "雞肉"
+                          },
+                          {
+                            "id": "mod-legendary-fn-beef",
+                            "name": "Beef",
+                            "price": 1,
+                            "nameCn": "牛肉"
+                          },
+                          {
+                            "id": "mod-legendary-fn-shrimp",
+                            "name": "Shrimp",
+                            "price": 2,
+                            "nameCn": "蝦仁"
+                          }
+                        ],
+                        "nameCn": "蛋白質"
                       },
                       {
                         "id": "mg-legendary-fn-spice",
@@ -1330,14 +1561,32 @@
                         "minSelect": 0,
                         "maxSelect": 1,
                         "options": [
-                          { "id": "mod-legendary-fn-mild", "name": "Mild", "price": 0 },
-                          { "id": "mod-legendary-fn-medium", "name": "Medium Spicy", "price": 0 },
-                          { "id": "mod-legendary-fn-hot", "name": "Hot", "price": 0 }
-                        ]
+                          {
+                            "id": "mod-legendary-fn-mild",
+                            "name": "Mild",
+                            "price": 0,
+                            "nameCn": "微辣"
+                          },
+                          {
+                            "id": "mod-legendary-fn-medium",
+                            "name": "Medium Spicy",
+                            "price": 0,
+                            "nameCn": "中辣"
+                          },
+                          {
+                            "id": "mod-legendary-fn-hot",
+                            "name": "Hot",
+                            "price": 0,
+                            "nameCn": "辣"
+                          }
+                        ],
+                        "nameCn": "辣度"
                       }
-                    ]
+                    ],
+                    "nameCn": "台式炒麵"
                   }
-                ]
+                ],
+                "nameCn": "主食"
               },
               {
                 "id": "cg-legendary-side",
@@ -1358,11 +1607,23 @@
                         "minSelect": 0,
                         "maxSelect": 1,
                         "options": [
-                          { "id": "mod-legendary-side-fc-bite", "name": "Bite-size", "price": 0 },
-                          { "id": "mod-legendary-side-fc-on-bone", "name": "On Bone", "price": 0 }
-                        ]
+                          {
+                            "id": "mod-legendary-side-fc-bite",
+                            "name": "Bite-size",
+                            "price": 0,
+                            "nameCn": "小塊"
+                          },
+                          {
+                            "id": "mod-legendary-side-fc-on-bone",
+                            "name": "On Bone",
+                            "price": 0,
+                            "nameCn": "帶骨"
+                          }
+                        ],
+                        "nameCn": "切法"
                       }
-                    ]
+                    ],
+                    "nameCn": "炸雞"
                   },
                   {
                     "id": "cc-legendary-side-pork-chop",
@@ -1376,11 +1637,23 @@
                         "minSelect": 0,
                         "maxSelect": 1,
                         "options": [
-                          { "id": "mod-legendary-side-pc-crispy", "name": "Extra Crispy", "price": 0 },
-                          { "id": "mod-legendary-side-pc-tender", "name": "Tender", "price": 0 }
-                        ]
+                          {
+                            "id": "mod-legendary-side-pc-crispy",
+                            "name": "Extra Crispy",
+                            "price": 0,
+                            "nameCn": "酥脆"
+                          },
+                          {
+                            "id": "mod-legendary-side-pc-tender",
+                            "name": "Tender",
+                            "price": 0,
+                            "nameCn": "軟嫩"
+                          }
+                        ],
+                        "nameCn": "風格"
                       }
-                    ]
+                    ],
+                    "nameCn": "炸豬排"
                   },
                   {
                     "id": "cc-legendary-side-cucumber",
@@ -1394,13 +1667,26 @@
                         "minSelect": 0,
                         "maxSelect": 1,
                         "options": [
-                          { "id": "mod-legendary-side-cb-regular", "name": "Regular", "price": 0 },
-                          { "id": "mod-legendary-side-cb-more-spicy", "name": "More Spicy", "price": 0 }
-                        ]
+                          {
+                            "id": "mod-legendary-side-cb-regular",
+                            "name": "Regular",
+                            "price": 0,
+                            "nameCn": "正常"
+                          },
+                          {
+                            "id": "mod-legendary-side-cb-more-spicy",
+                            "name": "More Spicy",
+                            "price": 0,
+                            "nameCn": "加辣"
+                          }
+                        ],
+                        "nameCn": "辣度"
                       }
-                    ]
+                    ],
+                    "nameCn": "小黃瓜"
                   }
-                ]
+                ],
+                "nameCn": "配菜"
               },
               {
                 "id": "cg-legendary-drink",
@@ -1421,9 +1707,20 @@
                         "minSelect": 1,
                         "maxSelect": 1,
                         "options": [
-                          { "id": "mod-legendary-drink-bt-medium", "name": "Size Medium", "price": 0 },
-                          { "id": "mod-legendary-drink-bt-large", "name": "Size Large", "price": 1 }
-                        ]
+                          {
+                            "id": "mod-legendary-drink-bt-medium",
+                            "name": "Size Medium",
+                            "price": 0,
+                            "nameCn": "中杯"
+                          },
+                          {
+                            "id": "mod-legendary-drink-bt-large",
+                            "name": "Size Large",
+                            "price": 1,
+                            "nameCn": "大杯"
+                          }
+                        ],
+                        "nameCn": "大小"
                       },
                       {
                         "id": "mg-legendary-drink-bt-sugar",
@@ -1432,9 +1729,20 @@
                         "minSelect": 0,
                         "maxSelect": 1,
                         "options": [
-                          { "id": "mod-legendary-drink-bt-less-sugar", "name": "Less Sugar", "price": 0 },
-                          { "id": "mod-legendary-drink-bt-no-sugar", "name": "No Sugar", "price": 0 }
-                        ]
+                          {
+                            "id": "mod-legendary-drink-bt-less-sugar",
+                            "name": "Less Sugar",
+                            "price": 0,
+                            "nameCn": "少糖"
+                          },
+                          {
+                            "id": "mod-legendary-drink-bt-no-sugar",
+                            "name": "No Sugar",
+                            "price": 0,
+                            "nameCn": "無糖"
+                          }
+                        ],
+                        "nameCn": "甜度"
                       },
                       {
                         "id": "mg-legendary-drink-bt-milk",
@@ -1443,10 +1751,26 @@
                         "minSelect": 1,
                         "maxSelect": 1,
                         "options": [
-                          { "id": "mod-legendary-drink-bt-whole-milk", "name": "Whole Milk", "price": 0 },
-                          { "id": "mod-legendary-drink-bt-skim-milk", "name": "Skim Milk", "price": 0 },
-                          { "id": "mod-legendary-drink-bt-oat-milk", "name": "Oat Milk", "price": 1 }
-                        ]
+                          {
+                            "id": "mod-legendary-drink-bt-whole-milk",
+                            "name": "Whole Milk",
+                            "price": 0,
+                            "nameCn": "全脂牛奶"
+                          },
+                          {
+                            "id": "mod-legendary-drink-bt-skim-milk",
+                            "name": "Skim Milk",
+                            "price": 0,
+                            "nameCn": "脫脂牛奶"
+                          },
+                          {
+                            "id": "mod-legendary-drink-bt-oat-milk",
+                            "name": "Oat Milk",
+                            "price": 1,
+                            "nameCn": "燕麥奶"
+                          }
+                        ],
+                        "nameCn": "奶類"
                       },
                       {
                         "id": "mg-legendary-drink-bt-ice",
@@ -1455,9 +1779,20 @@
                         "minSelect": 0,
                         "maxSelect": 1,
                         "options": [
-                          { "id": "mod-legendary-drink-bt-less-ice", "name": "Less Ice", "price": 0 },
-                          { "id": "mod-legendary-drink-bt-extra-ice", "name": "Extra Ice", "price": 0 }
-                        ]
+                          {
+                            "id": "mod-legendary-drink-bt-less-ice",
+                            "name": "Less Ice",
+                            "price": 0,
+                            "nameCn": "少冰"
+                          },
+                          {
+                            "id": "mod-legendary-drink-bt-extra-ice",
+                            "name": "Extra Ice",
+                            "price": 0,
+                            "nameCn": "多冰"
+                          }
+                        ],
+                        "nameCn": "冰量"
                       },
                       {
                         "id": "mg-legendary-drink-bt-toppings",
@@ -1466,12 +1801,29 @@
                         "minSelect": 0,
                         "maxSelect": 2,
                         "options": [
-                          { "id": "mod-legendary-drink-bt-coconut-jelly", "name": "+ Coconut Jelly", "price": 1 },
-                          { "id": "mod-legendary-drink-bt-taro-balls", "name": "+Taro Balls", "price": 1 },
-                          { "id": "mod-legendary-drink-bt-boba", "name": "Extra Boba", "price": 1 }
-                        ]
+                          {
+                            "id": "mod-legendary-drink-bt-coconut-jelly",
+                            "name": "+ Coconut Jelly",
+                            "price": 1,
+                            "nameCn": "加椰果"
+                          },
+                          {
+                            "id": "mod-legendary-drink-bt-taro-balls",
+                            "name": "+Taro Balls",
+                            "price": 1,
+                            "nameCn": "加芋圓"
+                          },
+                          {
+                            "id": "mod-legendary-drink-bt-boba",
+                            "name": "Extra Boba",
+                            "price": 1,
+                            "nameCn": "加珍珠"
+                          }
+                        ],
+                        "nameCn": "配料"
                       }
-                    ]
+                    ],
+                    "nameCn": "珍珠奶茶"
                   },
                   {
                     "id": "cc-legendary-drink-jasmine",
@@ -1485,9 +1837,20 @@
                         "minSelect": 1,
                         "maxSelect": 1,
                         "options": [
-                          { "id": "mod-legendary-drink-jg-medium", "name": "Size Medium", "price": 0 },
-                          { "id": "mod-legendary-drink-jg-large", "name": "Size Large", "price": 1 }
-                        ]
+                          {
+                            "id": "mod-legendary-drink-jg-medium",
+                            "name": "Size Medium",
+                            "price": 0,
+                            "nameCn": "中杯"
+                          },
+                          {
+                            "id": "mod-legendary-drink-jg-large",
+                            "name": "Size Large",
+                            "price": 1,
+                            "nameCn": "大杯"
+                          }
+                        ],
+                        "nameCn": "大小"
                       },
                       {
                         "id": "mg-legendary-drink-jg-ice",
@@ -1496,9 +1859,20 @@
                         "minSelect": 0,
                         "maxSelect": 1,
                         "options": [
-                          { "id": "mod-legendary-drink-jg-less-ice", "name": "Less Ice", "price": 0 },
-                          { "id": "mod-legendary-drink-jg-extra-ice", "name": "Extra Ice", "price": 0 }
-                        ]
+                          {
+                            "id": "mod-legendary-drink-jg-less-ice",
+                            "name": "Less Ice",
+                            "price": 0,
+                            "nameCn": "少冰"
+                          },
+                          {
+                            "id": "mod-legendary-drink-jg-extra-ice",
+                            "name": "Extra Ice",
+                            "price": 0,
+                            "nameCn": "多冰"
+                          }
+                        ],
+                        "nameCn": "冰量"
                       },
                       {
                         "id": "mg-legendary-drink-jg-toppings",
@@ -1507,11 +1881,23 @@
                         "minSelect": 0,
                         "maxSelect": 2,
                         "options": [
-                          { "id": "mod-legendary-drink-jg-coconut-jelly", "name": "+ Coconut Jelly", "price": 1 },
-                          { "id": "mod-legendary-drink-jg-taro-balls", "name": "+Taro Balls", "price": 1 }
-                        ]
+                          {
+                            "id": "mod-legendary-drink-jg-coconut-jelly",
+                            "name": "+ Coconut Jelly",
+                            "price": 1,
+                            "nameCn": "加椰果"
+                          },
+                          {
+                            "id": "mod-legendary-drink-jg-taro-balls",
+                            "name": "+Taro Balls",
+                            "price": 1,
+                            "nameCn": "加芋圓"
+                          }
+                        ],
+                        "nameCn": "配料"
                       }
-                    ]
+                    ],
+                    "nameCn": "茉莉綠茶"
                   },
                   {
                     "id": "cc-legendary-drink-black-tea",
@@ -1525,9 +1911,20 @@
                         "minSelect": 1,
                         "maxSelect": 1,
                         "options": [
-                          { "id": "mod-legendary-drink-blk-medium", "name": "Size Medium", "price": 0 },
-                          { "id": "mod-legendary-drink-blk-large", "name": "Size Large", "price": 1 }
-                        ]
+                          {
+                            "id": "mod-legendary-drink-blk-medium",
+                            "name": "Size Medium",
+                            "price": 0,
+                            "nameCn": "中杯"
+                          },
+                          {
+                            "id": "mod-legendary-drink-blk-large",
+                            "name": "Size Large",
+                            "price": 1,
+                            "nameCn": "大杯"
+                          }
+                        ],
+                        "nameCn": "大小"
                       },
                       {
                         "id": "mg-legendary-drink-blk-ice",
@@ -1536,1061 +1933,32 @@
                         "minSelect": 0,
                         "maxSelect": 1,
                         "options": [
-                          { "id": "mod-legendary-drink-blk-less-ice", "name": "Less Ice", "price": 0 },
-                          { "id": "mod-legendary-drink-blk-extra-ice", "name": "Extra Ice", "price": 0 }
-                        ]
+                          {
+                            "id": "mod-legendary-drink-blk-less-ice",
+                            "name": "Less Ice",
+                            "price": 0,
+                            "nameCn": "少冰"
+                          },
+                          {
+                            "id": "mod-legendary-drink-blk-extra-ice",
+                            "name": "Extra Ice",
+                            "price": 0,
+                            "nameCn": "多冰"
+                          }
+                        ],
+                        "nameCn": "冰量"
                       }
-                    ]
+                    ],
+                    "nameCn": "紅茶"
                   }
-                ]
+                ],
+                "nameCn": "飲料"
               }
-            ]
+            ],
+            "nameCn": "豪華午間套餐"
           }
-        ]
-      }
-    ]
-  },
-  {
-    "id": "book-drinks",
-    "name": "Drinks",
-    "categories": [
-      {
-        "id": "cat-cocktails",
-        "name": "Cocktails",
-        "items": [
-          {
-            "id": "item-old-fashioned",
-            "name": "Smoked Old Fashioned",
-            "price": 18,
-            "description": "Woodford Reserve bourbon, demerara, Angostura bitters, smoked tableside",
-            "modifierGroups": []
-          },
-          {
-            "id": "item-espresso-martini",
-            "name": "Espresso Martini",
-            "price": 17,
-            "description": "Grey Goose vodka, Kahlúa, fresh espresso, vanilla",
-            "modifierGroups": []
-          },
-          {
-            "id": "item-spicy-margarita",
-            "name": "Spicy Margarita",
-            "price": 16,
-            "description": "Casamigos blanco, fresh lime, agave, muddled jalapeño, Tajín rim",
-            "modifierGroups": []
-          },
-          {
-            "id": "item-manhattan",
-            "name": "Classic Manhattan",
-            "price": 17,
-            "description": "Bulleit rye, sweet vermouth, Angostura bitters, Luxardo cherry",
-            "modifierGroups": []
-          },
-          {
-            "id": "item-negroni",
-            "name": "Negroni",
-            "price": 16,
-            "description": "Tanqueray gin, Campari, sweet vermouth, orange peel",
-            "modifierGroups": []
-          },
-          {
-            "id": "item-french75",
-            "name": "French 75",
-            "price": 18,
-            "description": "Hendrick's gin, fresh lemon, simple syrup, topped with Champagne",
-            "modifierGroups": []
-          },
-          {
-            "id": "item-aperol-spritz",
-            "name": "Aperol Spritz",
-            "price": 15,
-            "description": "Aperol, Prosecco, soda water, orange slice",
-            "modifierGroups": []
-          },
-          {
-            "id": "item-mojito",
-            "name": "Classic Mojito",
-            "price": 15,
-            "description": "Bacardí white rum, fresh mint, lime, cane sugar, and soda water",
-            "modifierGroups": []
-          },
-          {
-            "id": "item-whiskey-sour",
-            "name": "Whiskey Sour",
-            "price": 16,
-            "description": "Maker's Mark bourbon, fresh lemon, egg white, Angostura bitters",
-            "modifierGroups": []
-          },
-          {
-            "id": "item-paloma",
-            "name": "Paloma",
-            "price": 15,
-            "description": "Espolòn tequila, fresh grapefruit, lime, agave, and Topo Chico",
-            "modifierGroups": []
-          },
-          {
-            "id": "item-dark-stormy",
-            "name": "Dark & Stormy",
-            "price": 14,
-            "description": "Gosling's dark rum, ginger beer, fresh lime, and Angostura bitters",
-            "modifierGroups": []
-          },
-          {
-            "id": "item-cosmopolitan",
-            "name": "Cosmopolitan",
-            "price": 16,
-            "description": "Belvedere vodka, Cointreau, cranberry juice, and fresh lime",
-            "modifierGroups": []
-          }
-        ]
-      },
-      {
-        "id": "cat-wine-red",
-        "name": "Wine (Red)",
-        "items": [
-          {
-            "id": "item-cabernet",
-            "name": "Cabernet Sauvignon",
-            "price": 18,
-            "description": "Jordan, Alexander Valley, Sonoma County 2019",
-            "modifierGroups": [
-              {
-                "id": "mg-cab-pour",
-                "name": "Pour Size",
-                "required": true,
-                "minSelect": 1,
-                "maxSelect": 1,
-                "options": [
-                  { "id": "mod-cab-glass", "name": "Glass (6oz)", "price": 0 },
-                  { "id": "mod-cab-bottle", "name": "Bottle", "price": 54 }
-                ]
-              }
-            ]
-          },
-          {
-            "id": "item-pinot-noir",
-            "name": "Pinot Noir",
-            "price": 16,
-            "description": "Erath, Willamette Valley, Oregon 2020",
-            "modifierGroups": [
-              {
-                "id": "mg-pn-pour",
-                "name": "Pour Size",
-                "required": true,
-                "minSelect": 1,
-                "maxSelect": 1,
-                "options": [
-                  { "id": "mod-pn-glass", "name": "Glass (6oz)", "price": 0 },
-                  { "id": "mod-pn-bottle", "name": "Bottle", "price": 48 }
-                ]
-              }
-            ]
-          },
-          {
-            "id": "item-malbec",
-            "name": "Malbec",
-            "price": 15,
-            "description": "Catena, Mendoza, Argentina 2021",
-            "modifierGroups": [
-              {
-                "id": "mg-malbec-pour",
-                "name": "Pour Size",
-                "required": true,
-                "minSelect": 1,
-                "maxSelect": 1,
-                "options": [
-                  { "id": "mod-malbec-glass", "name": "Glass (6oz)", "price": 0 },
-                  { "id": "mod-malbec-bottle", "name": "Bottle", "price": 44 }
-                ]
-              }
-            ]
-          },
-          {
-            "id": "item-syrah",
-            "name": "Syrah",
-            "price": 16,
-            "description": "E. Guigal, Côtes du Rhône, France 2020",
-            "modifierGroups": [
-              {
-                "id": "mg-syrah-pour",
-                "name": "Pour Size",
-                "required": true,
-                "minSelect": 1,
-                "maxSelect": 1,
-                "options": [
-                  { "id": "mod-syrah-glass", "name": "Glass (6oz)", "price": 0 },
-                  { "id": "mod-syrah-bottle", "name": "Bottle", "price": 48 }
-                ]
-              }
-            ]
-          },
-          {
-            "id": "item-tempranillo",
-            "name": "Tempranillo",
-            "price": 15,
-            "description": "Marqués de Cáceres Crianza, Rioja, Spain 2019",
-            "modifierGroups": [
-              {
-                "id": "mg-tempranillo-pour",
-                "name": "Pour Size",
-                "required": true,
-                "minSelect": 1,
-                "maxSelect": 1,
-                "options": [
-                  { "id": "mod-temp-glass", "name": "Glass (6oz)", "price": 0 },
-                  { "id": "mod-temp-bottle", "name": "Bottle", "price": 44 }
-                ]
-              }
-            ]
-          },
-          {
-            "id": "item-zinfandel",
-            "name": "Zinfandel",
-            "price": 17,
-            "description": "Seghesio, Sonoma County, California 2020",
-            "modifierGroups": [
-              {
-                "id": "mg-zin-pour",
-                "name": "Pour Size",
-                "required": true,
-                "minSelect": 1,
-                "maxSelect": 1,
-                "options": [
-                  { "id": "mod-zin-glass", "name": "Glass (6oz)", "price": 0 },
-                  { "id": "mod-zin-bottle", "name": "Bottle", "price": 52 }
-                ]
-              }
-            ]
-          },
-          {
-            "id": "item-chianti",
-            "name": "Chianti Classico",
-            "price": 16,
-            "description": "Antinori, Pèppoli, Tuscany, Italy 2020",
-            "modifierGroups": [
-              {
-                "id": "mg-chianti-pour",
-                "name": "Pour Size",
-                "required": true,
-                "minSelect": 1,
-                "maxSelect": 1,
-                "options": [
-                  { "id": "mod-chianti-glass", "name": "Glass (6oz)", "price": 0 },
-                  { "id": "mod-chianti-bottle", "name": "Bottle", "price": 50 }
-                ]
-              }
-            ]
-          }
-        ]
-      },
-      {
-        "id": "cat-wine-white",
-        "name": "Wine (White)",
-        "items": [
-          {
-            "id": "item-chardonnay",
-            "name": "Chardonnay",
-            "price": 16,
-            "description": "Rombauer, Carneros, Napa Valley 2021",
-            "modifierGroups": [
-              {
-                "id": "mg-chard-pour",
-                "name": "Pour Size",
-                "required": true,
-                "minSelect": 1,
-                "maxSelect": 1,
-                "options": [
-                  { "id": "mod-chard-glass", "name": "Glass (6oz)", "price": 0 },
-                  { "id": "mod-chard-bottle", "name": "Bottle", "price": 50 }
-                ]
-              }
-            ]
-          },
-          {
-            "id": "item-sauvignon-blanc",
-            "name": "Sauvignon Blanc",
-            "price": 14,
-            "description": "Cloudy Bay, Marlborough, New Zealand 2022",
-            "modifierGroups": [
-              {
-                "id": "mg-sb-pour",
-                "name": "Pour Size",
-                "required": true,
-                "minSelect": 1,
-                "maxSelect": 1,
-                "options": [
-                  { "id": "mod-sb-glass", "name": "Glass (6oz)", "price": 0 },
-                  { "id": "mod-sb-bottle", "name": "Bottle", "price": 42 }
-                ]
-              }
-            ]
-          },
-          {
-            "id": "item-prosecco",
-            "name": "Prosecco",
-            "price": 13,
-            "description": "La Marca, Veneto, Italy NV",
-            "modifierGroups": [
-              {
-                "id": "mg-prosecco-pour",
-                "name": "Pour Size",
-                "required": true,
-                "minSelect": 1,
-                "maxSelect": 1,
-                "options": [
-                  { "id": "mod-prosecco-glass", "name": "Glass (6oz)", "price": 0 },
-                  { "id": "mod-prosecco-bottle", "name": "Bottle", "price": 38 }
-                ]
-              }
-            ]
-          },
-          {
-            "id": "item-pinot-grigio",
-            "name": "Pinot Grigio",
-            "price": 14,
-            "description": "Santa Margherita, Alto Adige, Italy 2022",
-            "modifierGroups": [
-              {
-                "id": "mg-pg-pour",
-                "name": "Pour Size",
-                "required": true,
-                "minSelect": 1,
-                "maxSelect": 1,
-                "options": [
-                  { "id": "mod-pg-glass", "name": "Glass (6oz)", "price": 0 },
-                  { "id": "mod-pg-bottle", "name": "Bottle", "price": 42 }
-                ]
-              }
-            ]
-          },
-          {
-            "id": "item-riesling",
-            "name": "Riesling",
-            "price": 15,
-            "description": "Dr. Loosen, Blue Slate, Mosel, Germany 2021",
-            "modifierGroups": [
-              {
-                "id": "mg-riesling-pour",
-                "name": "Pour Size",
-                "required": true,
-                "minSelect": 1,
-                "maxSelect": 1,
-                "options": [
-                  { "id": "mod-riesling-glass", "name": "Glass (6oz)", "price": 0 },
-                  { "id": "mod-riesling-bottle", "name": "Bottle", "price": 46 }
-                ]
-              }
-            ]
-          },
-          {
-            "id": "item-rose",
-            "name": "Rosé",
-            "price": 15,
-            "description": "Whispering Angel, Côtes de Provence, France 2022",
-            "modifierGroups": [
-              {
-                "id": "mg-rose-pour",
-                "name": "Pour Size",
-                "required": true,
-                "minSelect": 1,
-                "maxSelect": 1,
-                "options": [
-                  { "id": "mod-rose-glass", "name": "Glass (6oz)", "price": 0 },
-                  { "id": "mod-rose-bottle", "name": "Bottle", "price": 46 }
-                ]
-              }
-            ]
-          },
-          {
-            "id": "item-viognier",
-            "name": "Viognier",
-            "price": 16,
-            "description": "Yalumba, Eden Valley, Australia 2021",
-            "modifierGroups": [
-              {
-                "id": "mg-viognier-pour",
-                "name": "Pour Size",
-                "required": true,
-                "minSelect": 1,
-                "maxSelect": 1,
-                "options": [
-                  { "id": "mod-viognier-glass", "name": "Glass (6oz)", "price": 0 },
-                  { "id": "mod-viognier-bottle", "name": "Bottle", "price": 48 }
-                ]
-              }
-            ]
-          }
-        ]
-      },
-      {
-        "id": "cat-beer",
-        "name": "Beer",
-        "items": [
-          {
-            "id": "item-ipa",
-            "name": "Lagunitas IPA",
-            "price": 9,
-            "description": "West Coast IPA, hoppy and balanced",
-            "modifierGroups": []
-          },
-          {
-            "id": "item-pilsner",
-            "name": "Pilsner Urquell",
-            "price": 8,
-            "description": "Czech pilsner, crisp and refreshing",
-            "modifierGroups": []
-          },
-          {
-            "id": "item-stout",
-            "name": "Guinness Draught",
-            "price": 9,
-            "description": "Irish dry stout, smooth and creamy",
-            "modifierGroups": []
-          },
-          {
-            "id": "item-wheat-beer",
-            "name": "Blue Moon Belgian White",
-            "price": 8,
-            "description": "Belgian-style wheat ale with Valencia orange peel",
-            "modifierGroups": []
-          },
-          {
-            "id": "item-local-draft",
-            "name": "Rotating Local Draft",
-            "price": 10,
-            "description": "Ask your server for this week's featured local craft beer",
-            "modifierGroups": []
-          },
-          {
-            "id": "item-amber-ale",
-            "name": "Fat Tire Amber Ale",
-            "price": 8,
-            "description": "New Belgium amber ale, malty and smooth",
-            "modifierGroups": []
-          },
-          {
-            "id": "item-sour-beer",
-            "name": "Gose Sour",
-            "price": 10,
-            "description": "Anderson Valley Blood Orange Gose, tart and refreshing",
-            "modifierGroups": []
-          },
-          {
-            "id": "item-hazy-ipa",
-            "name": "Hazy IPA",
-            "price": 10,
-            "description": "Sierra Nevada Hazy Little Thing, juicy and unfiltered",
-            "modifierGroups": []
-          },
-          {
-            "id": "item-lager",
-            "name": "Modelo Especial",
-            "price": 7,
-            "description": "Mexican lager, crisp and well-balanced",
-            "modifierGroups": []
-          },
-          {
-            "id": "item-hard-cider",
-            "name": "Angry Orchard Crisp Apple",
-            "price": 8,
-            "description": "Hard apple cider, naturally sweet and refreshing",
-            "modifierGroups": []
-          }
-        ]
-      },
-      {
-        "id": "cat-non-alcoholic",
-        "name": "Non-Alcoholic",
-        "items": [
-          {
-            "id": "item-sparkling-water",
-            "name": "San Pellegrino",
-            "price": 5,
-            "description": "750ml bottle of Italian sparkling mineral water",
-            "modifierGroups": []
-          },
-          {
-            "id": "item-still-water",
-            "name": "Acqua Panna",
-            "price": 5,
-            "description": "750ml bottle of Tuscan still mineral water",
-            "modifierGroups": []
-          },
-          {
-            "id": "item-fresh-juice",
-            "name": "Fresh-Pressed Juice",
-            "price": 8,
-            "description": "Made to order",
-            "modifierGroups": [
-              {
-                "id": "mg-juice-flavor",
-                "name": "Flavor",
-                "required": true,
-                "minSelect": 1,
-                "maxSelect": 1,
-                "options": [
-                  { "id": "mod-juice-orange", "name": "Orange", "price": 0 },
-                  { "id": "mod-juice-grapefruit", "name": "Grapefruit", "price": 0 },
-                  { "id": "mod-juice-green", "name": "Green (Kale, Apple, Ginger)", "price": 2 }
-                ]
-              }
-            ]
-          },
-          {
-            "id": "item-soft-drink",
-            "name": "Soft Drink",
-            "price": 4,
-            "description": "Coca-Cola, Diet Coke, Sprite, or Ginger Ale",
-            "modifierGroups": [
-              {
-                "id": "mg-soda-choice",
-                "name": "Selection",
-                "required": true,
-                "minSelect": 1,
-                "maxSelect": 1,
-                "options": [
-                  { "id": "mod-soda-coke", "name": "Coca-Cola", "price": 0 },
-                  { "id": "mod-soda-diet", "name": "Diet Coke", "price": 0 },
-                  { "id": "mod-soda-sprite", "name": "Sprite", "price": 0 },
-                  { "id": "mod-soda-ginger", "name": "Ginger Ale", "price": 0 }
-                ]
-              }
-            ]
-          },
-          {
-            "id": "item-iced-tea",
-            "name": "House-Brewed Iced Tea",
-            "price": 4,
-            "description": "Black tea or peach tea, unsweetened or sweetened",
-            "modifierGroups": []
-          },
-          {
-            "id": "item-coffee",
-            "name": "Espresso / Coffee",
-            "price": 5,
-            "description": "Locally roasted single-origin",
-            "modifierGroups": [
-              {
-                "id": "mg-coffee-type",
-                "name": "Type",
-                "required": true,
-                "minSelect": 1,
-                "maxSelect": 1,
-                "options": [
-                  { "id": "mod-coffee-espresso", "name": "Espresso", "price": 0 },
-                  { "id": "mod-coffee-double", "name": "Double Espresso", "price": 2 },
-                  { "id": "mod-coffee-americano", "name": "Americano", "price": 0 },
-                  { "id": "mod-coffee-cappuccino", "name": "Cappuccino", "price": 1 },
-                  { "id": "mod-coffee-latte", "name": "Latte", "price": 1 },
-                  { "id": "mod-coffee-drip", "name": "Drip Coffee", "price": 0 }
-                ]
-              }
-            ]
-          },
-          {
-            "id": "item-bubble-tea",
-            "name": "Bubble Tea",
-            "price": 7,
-            "description": "Hand-shaken milk tea with chewy tapioca pearls",
-            "modifierGroups": [
-              {
-                "id": "mg-bubble-tea-size",
-            
-                "name": "Size",
-                "required": true,
-                "minSelect": 1,
-                "maxSelect": 1,
-                "options": [
-                  { "id": "mod-bt-size-medium", "name": "Size Medium", "price": 0 },
-                  { "id": "mod-bt-size-large", "name": "Size Large", "price": 1 }
-                ]
-              },
-              {
-                "id": "mg-bubble-tea-sugar",
-                "name": "Sugar",
-                "required": false,
-                "minSelect": 0,
-                "maxSelect": 1,
-                "options": [
-                  { "id": "mod-bt-less-sugar", "name": "Less Sugar", "price": 0 },
-                  { "id": "mod-bt-no-sugar", "name": "No Sugar", "price": 0 }
-                ]
-              },
-              {
-                "id": "mg-bubble-tea-milk",
-                "name": "Milk",
-                "required": true,
-                "minSelect": 1,
-                "maxSelect": 1,
-                "options": [
-                  { "id": "mod-bt-whole-milk", "name": "Whole Milk", "price": 0 },
-                  { "id": "mod-bt-skim-milk", "name": "Skim Milk", "price": 0 },
-                  { "id": "mod-bt-oat-milk", "name": "Oat Milk", "price": 1 }
-                ]
-              },
-              {
-                "id": "mg-bubble-tea-ice",
-                "name": "Ice",
-                "required": false,
-                "minSelect": 0,
-                "maxSelect": 1,
-                "options": [
-                  { "id": "mod-bt-less-ice", "name": "Less Ice", "price": 0 },
-                  { "id": "mod-bt-extra-ice", "name": "Extra Ice", "price": 0 }
-                ]
-              },
-              {
-                "id": "mg-bubble-tea-toppings",
-                "name": "Toppings",
-                "required": false,
-                "minSelect": 0,
-                "maxSelect": 2,
-                "options": [
-                  { "id": "mod-bt-coconut-jelly", "name": "+ Coconut Jelly", "price": 1 },
-                  { "id": "mod-bt-taro-balls", "name": "+ Taro Balls", "price": 1 },
-                  { "id": "mod-bt-extra-boba", "name": "Extra Boba", "price": 1 }
-                ]
-              }
-            ]
-          },
-          {
-            "id": "item-hot-chocolate",
-            "name": "Hot Chocolate",
-            "price": 5,
-            "description": "Rich Valrhona chocolate with steamed milk and whipped cream",
-            "modifierGroups": []
-          },
-          {
-            "id": "item-arnold-palmer",
-            "name": "Arnold Palmer",
-            "price": 5,
-            "description": "Half iced tea, half fresh lemonade",
-            "modifierGroups": []
-          },
-          {
-            "id": "item-virgin-mojito",
-            "name": "Virgin Mojito",
-            "price": 7,
-            "description": "Fresh mint, lime, cane sugar, and sparkling water",
-            "modifierGroups": []
-          },
-          {
-            "id": "item-matcha-latte",
-            "name": "Matcha Latte",
-            "price": 7,
-            "description": "Ceremonial-grade matcha whisked with steamed milk",
-            "modifierGroups": [
-              {
-                "id": "mg-matcha-milk",
-                "name": "Milk Choice",
-                "required": true,
-                "minSelect": 1,
-                "maxSelect": 1,
-                "options": [
-                  { "id": "mod-matcha-whole", "name": "Whole Milk", "price": 0 },
-                  { "id": "mod-matcha-oat", "name": "Oat Milk", "price": 1 },
-                  { "id": "mod-matcha-almond", "name": "Almond Milk", "price": 1 }
-                ]
-              }
-            ]
-          },
-          {
-            "id": "item-kombucha",
-            "name": "House Kombucha",
-            "price": 7,
-            "description": "Locally brewed kombucha, rotating seasonal flavors",
-            "modifierGroups": []
-          }
-        ]
-      }
-    ]
-  },
-  {
-    "id": "book-dessert",
-    "name": "Dessert",
-    "categories": [
-      {
-        "id": "cat-desserts",
-        "name": "Desserts",
-        "items": [
-          {
-            "id": "item-creme-brulee",
-            "name": "Classic Crème Brûlée",
-            "price": 13,
-            "description": "Madagascar vanilla bean custard with caramelized sugar crust",
-            "modifierGroups": []
-          },
-          {
-            "id": "item-chocolate-lava",
-            "name": "Molten Chocolate Lava Cake",
-            "price": 14,
-            "description": "Valrhona dark chocolate with vanilla bean ice cream and raspberry coulis",
-            "modifierGroups": []
-          },
-          {
-            "id": "item-tiramisu",
-            "name": "Tiramisu",
-            "price": 13,
-            "description": "Espresso-soaked ladyfingers with mascarpone cream and cocoa",
-            "modifierGroups": []
-          },
-          {
-            "id": "item-cheesecake",
-            "name": "New York Cheesecake",
-            "price": 13,
-            "description": "Creamy cheesecake with graham cracker crust",
-            "modifierGroups": [
-              {
-                "id": "mg-cheesecake-topping",
-                "name": "Topping",
-                "required": false,
-                "minSelect": 0,
-                "maxSelect": 1,
-                "options": [
-                  { "id": "mod-cc-strawberry", "name": "Fresh Strawberry Compote", "price": 0 },
-                  { "id": "mod-cc-caramel", "name": "Salted Caramel", "price": 0 },
-                  { "id": "mod-cc-chocolate", "name": "Chocolate Ganache", "price": 0 }
-                ]
-              }
-            ]
-          },
-          {
-            "id": "item-affogato",
-            "name": "Affogato",
-            "price": 10,
-            "description": "Double espresso poured over vanilla gelato",
-            "modifierGroups": []
-          },
-          {
-            "id": "item-key-lime",
-            "name": "Key Lime Tart",
-            "price": 12,
-            "description": "Tangy key lime curd, toasted meringue, graham cracker crust",
-            "modifierGroups": [],
-            "soldOut": true
-          },
-          {
-            "id": "item-sorbet",
-            "name": "Seasonal Sorbet Trio",
-            "price": 10,
-            "description": "Three scoops of house-made seasonal fruit sorbets",
-            "modifierGroups": []
-          },
-          {
-            "id": "item-panna-cotta",
-            "name": "Vanilla Panna Cotta",
-            "price": 12,
-            "description": "Silky Italian custard with passion fruit coulis and fresh berries",
-            "modifierGroups": []
-          },
-          {
-            "id": "item-bread-pudding",
-            "name": "Brioche Bread Pudding",
-            "price": 13,
-            "description": "Warm brioche pudding with bourbon caramel sauce and vanilla ice cream",
-            "modifierGroups": []
-          },
-          {
-            "id": "item-profiteroles",
-            "name": "Profiteroles",
-            "price": 13,
-            "description": "Choux pastry filled with vanilla ice cream, drizzled with warm chocolate sauce",
-            "modifierGroups": []
-          },
-          {
-            "id": "item-banana-foster",
-            "name": "Bananas Foster",
-            "price": 14,
-            "description": "Caramelized bananas flambéed in dark rum and banana liqueur over vanilla ice cream",
-            "modifierGroups": []
-          },
-          {
-            "id": "item-churros",
-            "name": "Churros con Chocolate",
-            "price": 11,
-            "description": "Crispy cinnamon-sugar churros with warm Mexican chocolate dipping sauce",
-            "modifierGroups": []
-          }
-        ]
-      }
-    ]
-  },
-  {
-    "id": "book-kids",
-    "name": "Kids Menu",
-    "categories": [
-      {
-        "id": "cat-kids-entrees",
-        "name": "Kids Entrees",
-        "items": [
-          {
-            "id": "item-kids-burger-combo",
-            "name": "Kids Cheeseburger Combo",
-            "price": 12,
-            "description": "Mini cheeseburger with fries and a drink",
-            "isCombo": true,
-            "modifierGroups": [
-              {
-                "id": "mg-kids-burger-temp",
-                "name": "Burger Temperature",
-                "required": true,
-                "minSelect": 1,
-                "maxSelect": 1,
-                "options": [
-                  { "id": "mod-kb-med", "name": "Medium", "price": 0 },
-                  { "id": "mod-kb-mw", "name": "Medium Well", "price": 0 },
-                  { "id": "mod-kb-well", "name": "Well Done", "price": 0 }
-                ]
-              },
-              {
-                "id": "mg-kids-burger-side",
-                "name": "Side",
-                "required": true,
-                "minSelect": 1,
-                "maxSelect": 1,
-                "options": [
-                  { "id": "mod-kb-fries", "name": "French Fries", "price": 0 },
-                  { "id": "mod-kb-fruit", "name": "Fresh Fruit Cup", "price": 0 },
-                  { "id": "mod-kb-mac", "name": "Mac & Cheese", "price": 2 }
-                ]
-              },
-              {
-                "id": "mg-kids-burger-drink",
-                "name": "Drink",
-                "required": true,
-                "minSelect": 1,
-                "maxSelect": 1,
-                "options": [
-                  { "id": "mod-kb-lemonade", "name": "Lemonade", "price": 0 },
-                  { "id": "mod-kb-milk", "name": "Milk", "price": 0 },
-                  { "id": "mod-kb-chocmilk", "name": "Chocolate Milk", "price": 0 },
-                  { "id": "mod-kb-juice", "name": "Apple Juice", "price": 0 }
-                ]
-              }
-            ]
-          },
-          {
-            "id": "item-kids-chicken-combo",
-            "name": "Kids Chicken Tenders Combo",
-            "price": 11,
-            "description": "Crispy chicken tenders with fries and a drink",
-            "isCombo": true,
-            "modifierGroups": [
-              {
-                "id": "mg-kids-ct-side",
-                "name": "Side",
-                "required": true,
-                "minSelect": 1,
-                "maxSelect": 1,
-                "options": [
-                  { "id": "mod-kct-fries", "name": "French Fries", "price": 0 },
-                  { "id": "mod-kct-fruit", "name": "Fresh Fruit Cup", "price": 0 },
-                  { "id": "mod-kct-mac", "name": "Mac & Cheese", "price": 2 }
-                ]
-              },
-              {
-                "id": "mg-kids-ct-drink",
-                "name": "Drink",
-                "required": true,
-                "minSelect": 1,
-                "maxSelect": 1,
-                "options": [
-                  { "id": "mod-kct-lemonade", "name": "Lemonade", "price": 0 },
-                  { "id": "mod-kct-milk", "name": "Milk", "price": 0 },
-                  { "id": "mod-kct-chocmilk", "name": "Chocolate Milk", "price": 0 },
-                  { "id": "mod-kct-juice", "name": "Apple Juice", "price": 0 }
-                ]
-              },
-              {
-                "id": "mg-kids-ct-dip",
-                "name": "Dipping Sauce",
-                "required": false,
-                "minSelect": 0,
-                "maxSelect": 2,
-                "options": [
-                  { "id": "mod-kct-ketchup", "name": "Ketchup", "price": 0 },
-                  { "id": "mod-kct-bbq", "name": "BBQ Sauce", "price": 0 },
-                  { "id": "mod-kct-honey", "name": "Honey Mustard", "price": 0 },
-                  { "id": "mod-kct-ranch", "name": "Ranch", "price": 0 }
-                ]
-              }
-            ]
-          },
-          {
-            "id": "item-kids-pasta-combo",
-            "name": "Kids Pasta Combo",
-            "price": 10,
-            "description": "Choice of pasta with butter or marinara, served with a drink",
-            "isCombo": true,
-            "modifierGroups": [
-              {
-                "id": "mg-kids-pasta-type",
-                "name": "Pasta & Sauce",
-                "required": true,
-                "minSelect": 1,
-                "maxSelect": 1,
-                "options": [
-                  { "id": "mod-kp-mac", "name": "Mac & Cheese", "price": 0 },
-                  { "id": "mod-kp-butter", "name": "Penne with Butter", "price": 0 },
-                  { "id": "mod-kp-marinara", "name": "Penne with Marinara", "price": 0 }
-                ]
-              },
-              {
-                "id": "mg-kids-pasta-drink",
-                "name": "Drink",
-                "required": true,
-                "minSelect": 1,
-                "maxSelect": 1,
-                "options": [
-                  { "id": "mod-kp-lemonade", "name": "Lemonade", "price": 0 },
-                  { "id": "mod-kp-milk", "name": "Milk", "price": 0 },
-                  { "id": "mod-kp-chocmilk", "name": "Chocolate Milk", "price": 0 },
-                  { "id": "mod-kp-juice", "name": "Apple Juice", "price": 0 }
-                ]
-              }
-            ]
-          },
-          {
-            "id": "item-kids-grilled-chicken",
-            "name": "Kids Grilled Chicken",
-            "price": 11,
-            "description": "Grilled chicken breast with steamed broccoli and rice",
-            "modifierGroups": []
-          },
-          {
-            "id": "item-kids-fish",
-            "name": "Kids Fish & Chips",
-            "price": 11,
-            "description": "Lightly battered cod with fries and tartar sauce",
-            "modifierGroups": []
-          },
-          {
-            "id": "item-kids-quesadilla",
-            "name": "Kids Cheese Quesadilla",
-            "price": 9,
-            "description": "Flour tortilla with melted cheddar and jack cheese, served with sour cream and salsa",
-            "modifierGroups": []
-          },
-          {
-            "id": "item-kids-pizza",
-            "name": "Kids Mini Pizza",
-            "price": 10,
-            "description": "Personal-size pizza with mozzarella and marinara",
-            "modifierGroups": [
-              {
-                "id": "mg-kids-pizza-top",
-                "name": "Topping",
-                "required": false,
-                "minSelect": 0,
-                "maxSelect": 2,
-                "options": [
-                  { "id": "mod-kpz-pepperoni", "name": "Pepperoni", "price": 1 },
-                  { "id": "mod-kpz-sausage", "name": "Sausage", "price": 1 },
-                  { "id": "mod-kpz-mushroom", "name": "Mushroom", "price": 1 }
-                ]
-              }
-            ]
-          },
-          {
-            "id": "item-kids-hot-dog",
-            "name": "Kids Hot Dog",
-            "price": 9,
-            "description": "All-beef hot dog on a toasted bun with fries",
-            "modifierGroups": []
-          },
-          {
-            "id": "item-kids-mac",
-            "name": "Kids Mac & Cheese",
-            "price": 9,
-            "description": "Creamy cheddar macaroni and cheese with a breadcrumb topping",
-            "modifierGroups": []
-          }
-        ]
-      },
-      {
-        "id": "cat-kids-drinks",
-        "name": "Kids Drinks",
-        "items": [
-          {
-            "id": "item-kids-lemonade",
-            "name": "Fresh Lemonade",
-            "price": 4,
-            "description": "House-made with fresh lemons",
-            "modifierGroups": []
-          },
-          {
-            "id": "item-kids-milk",
-            "name": "Milk",
-            "price": 3,
-            "modifierGroups": [
-              {
-                "id": "mg-milk-type",
-                "name": "Type",
-                "required": true,
-                "minSelect": 1,
-                "maxSelect": 1,
-                "options": [
-                  { "id": "mod-milk-whole", "name": "Whole Milk", "price": 0 },
-                  { "id": "mod-milk-choc", "name": "Chocolate Milk", "price": 1 }
-                ]
-              }
-            ]
-          },
-          {
-            "id": "item-kids-juice",
-            "name": "Juice Box",
-            "price": 3,
-            "description": "Apple or orange juice",
-            "modifierGroups": [
-              {
-                "id": "mg-juice-type",
-                "name": "Flavor",
-                "required": true,
-                "minSelect": 1,
-                "maxSelect": 1,
-                "options": [
-                  { "id": "mod-jb-apple", "name": "Apple", "price": 0 },
-                  { "id": "mod-jb-orange", "name": "Orange", "price": 0 }
-                ]
-              }
-            ]
-          },
-          {
-            "id": "item-kids-shirley",
-            "name": "Shirley Temple",
-            "price": 4,
-            "description": "Sprite with grenadine and a maraschino cherry",
-            "modifierGroups": []
-          },
-          {
-            "id": "item-kids-choc-milk",
-            "name": "Chocolate Milk",
-            "price": 4,
-            "description": "Rich chocolate milk made with real cocoa",
-            "modifierGroups": []
-          },
-          {
-            "id": "item-kids-smoothie",
-            "name": "Kids Berry Smoothie",
-            "price": 5,
-            "description": "Blended strawberries, banana, and vanilla yogurt",
-            "modifierGroups": []
-          },
-          {
-            "id": "item-kids-hot-cocoa",
-            "name": "Kids Hot Cocoa",
-            "price": 4,
-            "description": "Warm cocoa with whipped cream and mini marshmallows",
-            "modifierGroups": []
-          },
-          {
-            "id": "item-kids-water",
-            "name": "Kids Water",
-            "price": 0,
-            "description": "Still or sparkling water",
-            "modifierGroups": []
-          }
-        ]
+        ],
+        "nameCn": "套餐"
       }
     ]
   }

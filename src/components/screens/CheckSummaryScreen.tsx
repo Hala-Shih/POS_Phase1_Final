@@ -18,7 +18,20 @@ import { useOrderStore } from "@/store/order-store";
 import { getPriceBreakdown, formatCurrency, formatSignedCurrency } from "@/lib/pricing";
 import staffData from "@/data/staff.json";
 import tablesData from "@/data/tables.json";
-import { Staff, Table } from "@/lib/types";
+import menuData from "@/data/menu.json";
+import { Staff, Table, MenuBook } from "@/lib/types";
+
+const menuItemsLookup = (menuData as MenuBook[]).flatMap((b) =>
+  b.categories.flatMap((c) => c.items)
+);
+
+function getItemDisplayName(menuItemId: string, fallbackName: string, language: "en" | "zh") {
+  if (language === "zh") {
+    const mi = menuItemsLookup.find((m) => m.id === menuItemId);
+    if (mi?.nameCn) return mi.nameCn;
+  }
+  return fallbackName;
+}
 import CartDrawer from "@/components/cart/CartDrawer";
 import MenuSheet from "@/components/menu/MenuSheet";
 import SearchDrawer from "@/components/menu/SearchDrawer";
@@ -47,7 +60,12 @@ export default function CheckSummaryScreen({ menuOpen: externalMenuOpen, setMenu
     updateNote,
     updatePriceAdjustment,
     toggleBreakline,
+    language,
   } = useOrderStore();
+
+  const L = language === "zh"
+    ? { newNotSent: "新增 · 未送", sentToKitchen: "已送廚房", send: "送單", pay: "結帳", hold: "保留", menu: "菜單", search: "搜尋", print: "列印", split: "分帳", note: "備註", total: "合計", subtotal: "小計", items: "項", item: "項", action: "操作", close: "關閉", orderNote: "訂單備註", generalNote: "整單備註", addNoteForKitchen: "新增廚房備註", addNotes: "輸入備註", priceAdj: "價格調整", addBreakline: "在下方加分隔線", cancel: "取消", remove: "刪除", saveChanges: "儲存修改", saveNote: "儲存備註" }
+    : { newNotSent: "New · Not Sent", sentToKitchen: "Sent to Kitchen", send: "Send", pay: "Pay", hold: "Hold", menu: "Menu", search: "Search", print: "Print", split: "Split", note: "Note", total: "Total", subtotal: "Subtotal", items: "items", item: "item", action: "Action", close: "Close", orderNote: "Order Note", generalNote: "General Note", addNoteForKitchen: "Add a note for the kitchen", addNotes: "Add notes", priceAdj: "Price adjustment", addBreakline: "Add breakline below", cancel: "Cancel", remove: "Remove", saveChanges: "Save changes", saveNote: "Save note" };
 
   const [internalMenuOpen, setInternalMenuOpen] = useState(false);
   const menuOpen = externalMenuOpen ?? internalMenuOpen;
@@ -193,7 +211,7 @@ export default function CheckSummaryScreen({ menuOpen: externalMenuOpen, setMenu
             >
               <CreditCard size={26} />
             </div>
-            <p className="text-base font-semibold">Add item</p>
+            <p className="text-base font-semibold">{language === "zh" ? "新增品項" : "Add item"}</p>
           </div>
         ) : (
           <>
@@ -202,7 +220,7 @@ export default function CheckSummaryScreen({ menuOpen: externalMenuOpen, setMenu
               <div>
                 {sentItems.length > 0 && (
                   <div className="px-4 py-1.5 bg-amber-50 border-b border-amber-100">
-                    <span className="text-xs font-semibold text-amber-600 uppercase tracking-wider">New · Not Sent</span>
+                    <span className="text-xs font-semibold text-amber-600 uppercase tracking-wider">{L.newNotSent}</span>
                   </div>
                 )}
                 {unsentItems.map((item) => (
@@ -210,7 +228,7 @@ export default function CheckSummaryScreen({ menuOpen: externalMenuOpen, setMenu
                     key={item.id}
                     item={item}
                     onInteract={collapseToCheck}
-                    onTap={() => onOpenItemActions?.({ id: item.id, name: item.name })}
+                    onTap={() => onOpenItemActions?.({ id: item.id, name: getItemDisplayName(item.menuItemId, item.name, language) })}
                     drawerOpen={anyDrawerOpen}
                     muted={false}
                     selected={selectedItemId === item.id}
@@ -223,14 +241,14 @@ export default function CheckSummaryScreen({ menuOpen: externalMenuOpen, setMenu
             {sentItems.length > 0 && (
               <div>
                 <div className="px-4 py-1.5 bg-green-50 border-b border-green-100">
-                  <span className="text-xs font-semibold text-green-600 uppercase tracking-wider">Sent to Kitchen</span>
+                  <span className="text-xs font-semibold text-green-600 uppercase tracking-wider">{L.sentToKitchen}</span>
                 </div>
                 {sentItems.map((item) => (
                   <CheckItem
                     key={item.id}
                     item={item}
                     onInteract={collapseToCheck}
-                    onTap={() => onOpenItemActions?.({ id: item.id, name: item.name })}
+                    onTap={() => onOpenItemActions?.({ id: item.id, name: getItemDisplayName(item.menuItemId, item.name, language) })}
                     drawerOpen={anyDrawerOpen}
                     muted
                     selected={selectedItemId === item.id}
@@ -249,26 +267,26 @@ export default function CheckSummaryScreen({ menuOpen: externalMenuOpen, setMenu
 
             {/* Totals */}
             <div className="px-4 pt-3 pb-4 border-t border-gray-100 bg-[#FBFAFF]">
-              <TotalsRow label="Subtotal" value={`$${subtotal.toFixed(2)}`} />
+              <TotalsRow label={L.subtotal} value={`$${subtotal.toFixed(2)}`} />
               {discountTotal > 0 && (
                 <TotalsRow
                   label={
                     checkDiscount && checkDiscount.type === "percent" && itemDiscountTotal === 0
-                      ? `Discount (${checkDiscount.value}%)`
-                      : "Discount"
+                      ? `${language === "zh" ? "折扣" : "Discount"} (${checkDiscount.value}%)`
+                      : (language === "zh" ? "折扣" : "Discount")
                   }
                   value={`-$${discountTotal.toFixed(2)}`}
                   muted
                 />
               )}
-              <TotalsRow label="Tax (8.75%)" value={`$${tax.toFixed(2)}`} muted />
+              <TotalsRow label={`${language === "zh" ? "稅" : "Tax"} (8.75%)`} value={`$${tax.toFixed(2)}`} muted />
               <TotalsRow
-                label={tip > 0 && subtotal > 0 ? `Tip (${(tip / subtotal * 100).toFixed(tip / subtotal * 100 >= 10 ? 0 : 1)}%)` : "Tip"}
+                label={tip > 0 && subtotal > 0 ? `${language === "zh" ? "小費" : "Tip"} (${(tip / subtotal * 100).toFixed(tip / subtotal * 100 >= 10 ? 0 : 1)}%)` : (language === "zh" ? "小費" : "Tip")}
                 value={`$${tip.toFixed(2)}`}
                 muted
               />
               <div className="h-1.5" />
-              <TotalsRow label="Total" value={`$${grandTotal.toFixed(2)}`} bold large />
+              <TotalsRow label={L.total} value={`$${grandTotal.toFixed(2)}`} bold large />
             </div>
           </>
         )}
@@ -283,21 +301,21 @@ export default function CheckSummaryScreen({ menuOpen: externalMenuOpen, setMenu
             className="flex items-center gap-2.5 px-3 h-[48px] rounded-xl border border-gray-200 text-[13px] font-medium bg-white transition-colors active:opacity-70 disabled:opacity-40"
           >
             <Send size={18} className="text-gray-500 shrink-0" />
-            Send
+            {L.send}
           </button>
           <button
             onClick={() => setMenuOpen(true)}
             className="flex items-center gap-2.5 px-3 h-[48px] rounded-xl border border-gray-200 text-[13px] font-medium bg-white transition-colors active:opacity-70"
           >
             <BookOpen size={18} className="text-gray-500 shrink-0" />
-            Load menu
+            {L.menu}
           </button>
           <button
             disabled={isEmpty}
             className="flex items-center gap-2.5 px-3 h-[48px] rounded-xl border border-gray-200 text-[13px] font-medium bg-white transition-colors active:opacity-70 disabled:opacity-40"
           >
             <Printer size={18} className="text-gray-500 shrink-0" />
-            Print check
+            {L.print}
           </button>
           <button
             onClick={handlePay}
@@ -305,14 +323,14 @@ export default function CheckSummaryScreen({ menuOpen: externalMenuOpen, setMenu
             className="flex items-center gap-2.5 px-3 h-[48px] rounded-xl border border-gray-200 text-[13px] font-medium bg-white transition-colors active:opacity-70 disabled:opacity-40"
           >
             <CreditCard size={18} className="text-gray-500 shrink-0" />
-            Pay
+            {L.pay}
           </button>
           <button
             disabled={isEmpty}
             className="flex items-center gap-2.5 px-3 h-[48px] rounded-xl border border-gray-200 text-[13px] font-medium bg-white transition-colors active:opacity-70 disabled:opacity-40"
           >
             <GitFork size={18} className="text-gray-500 shrink-0" />
-            Split check
+            {L.split}
           </button>
           <div className="relative">
             <button
@@ -320,7 +338,7 @@ export default function CheckSummaryScreen({ menuOpen: externalMenuOpen, setMenu
               className="w-full flex items-center gap-2.5 px-3 h-[48px] rounded-xl border border-gray-200 text-[13px] font-medium bg-white transition-colors active:opacity-70"
             >
               <LayoutGrid size={18} className="text-gray-500 shrink-0" />
-              Table actions
+              {language === "zh" ? "桌位操作" : "Table actions"}
             </button>
             {showTableActions && (
               <>
@@ -353,21 +371,21 @@ export default function CheckSummaryScreen({ menuOpen: externalMenuOpen, setMenu
                 disabled={isEmpty || unsentItems.length === 0}
                 className="flex-1 flex items-center justify-center h-[48px] rounded-xl border border-gray-800 text-[13px] font-medium bg-white transition-colors active:opacity-70 disabled:opacity-40"
               >
-                Send
+                {L.send}
               </button>
               <button
                 onClick={() => { setScreen("tables"); }}
                 disabled={isEmpty}
                 className="flex-1 flex items-center justify-center h-[48px] rounded-xl border border-gray-800 text-[13px] font-medium bg-white transition-colors active:opacity-70 disabled:opacity-40"
               >
-                Hold
+                {L.hold}
               </button>
               <button
                 onClick={handlePay}
                 disabled={isEmpty}
                 className="flex-1 flex items-center justify-center h-[48px] rounded-xl border border-gray-800 text-[13px] font-medium bg-white transition-colors active:opacity-70 disabled:opacity-40"
               >
-                Pay
+                {L.pay}
               </button>
               <button
                 onClick={() => {
@@ -395,7 +413,7 @@ export default function CheckSummaryScreen({ menuOpen: externalMenuOpen, setMenu
                   orderNote || cartItems.some(i => i.note) ? "border-[var(--primary)] text-[var(--primary)]" : "border-gray-800"
                 }`}
               >
-                Note
+                {L.note}
               </button>
             </div>
         }
@@ -413,7 +431,7 @@ export default function CheckSummaryScreen({ menuOpen: externalMenuOpen, setMenu
           <div className="absolute inset-0 bg-black/30 z-[200]" onClick={() => setShowNoteDrawer(false)} />
           <div className="absolute bottom-0 left-0 right-0 z-[201] bg-white rounded-t-2xl shadow-2xl p-4 pb-6" style={{ maxHeight: "92%" }}>
             <div className="w-10 h-1 rounded-full bg-gray-300 mx-auto mb-3" />
-            <p className="text-[13px] font-semibold mb-2">Add Note</p>
+            <p className="text-[13px] font-semibold mb-2">{language === "zh" ? "新增備註" : "Add Note"}</p>
 
             {/* Target selector - radio list */}
             <div className="flex flex-col gap-1 mb-3 max-h-[220px] overflow-y-auto">
@@ -428,7 +446,7 @@ export default function CheckSummaryScreen({ menuOpen: externalMenuOpen, setMenu
                 }`}>
                   {noteTarget === "general" && <span className="w-2 h-2 rounded-full bg-white" />}
                 </span>
-                <span className="text-[13px] font-medium">General Note</span>
+                <span className="text-[13px] font-medium">{L.generalNote}</span>
                 {orderNote && <span className="ml-auto text-[11px] text-gray-400 truncate max-w-[100px]">{orderNote}</span>}
               </label>
               {cartItems.map((item) => (
@@ -451,7 +469,7 @@ export default function CheckSummaryScreen({ menuOpen: externalMenuOpen, setMenu
                   }`}>
                     {noteTarget === item.id && <span className="w-2 h-2 rounded-full bg-white" />}
                   </span>
-                  <span className="text-[13px] truncate">{item.name}{item.quantity > 1 ? ` ×${item.quantity}` : ""}</span>
+                  <span className="text-[13px] truncate">{getItemDisplayName(item.menuItemId, item.name, language)}{item.quantity > 1 ? ` ×${item.quantity}` : ""}</span>
                   {(item.note || item.priceAdjustment) && (
                     <span className="ml-auto text-[11px] text-gray-400 truncate max-w-[100px]">
                       {item.note || (item.priceAdjustment ? `${item.priceAdjustment > 0 ? "+" : ""}${item.priceAdjustment.toFixed(2)}` : "")}
@@ -464,19 +482,19 @@ export default function CheckSummaryScreen({ menuOpen: externalMenuOpen, setMenu
             {/* Note + Price adjustment row */}
             <div className={`flex gap-3 items-start ${noteTarget !== "general" ? "" : ""}`}>
               <div className={noteTarget !== "general" ? "flex-1 min-w-0" : "w-full"}>
-                <p className="text-[12px] text-[var(--outline)] mb-2">Add a note for the kitchen</p>
+                <p className="text-[12px] text-[var(--outline)] mb-2">{L.addNoteForKitchen}</p>
                 <textarea
                   autoFocus
                   value={noteDraft}
                   onChange={(e) => setNoteDraft(e.target.value)}
-                  placeholder="Add notes"
+                  placeholder={L.addNotes}
                   rows={3}
                   className="w-full rounded-xl border border-[var(--outline-variant)] px-3 py-2.5 text-[13px] outline-none resize-none focus:border-[var(--primary)]"
                 />
               </div>
               {noteTarget !== "general" && (
                 <div className="shrink-0">
-                  <p className="text-[12px] text-[var(--outline)] mb-2">Price adjustment</p>
+                  <p className="text-[12px] text-[var(--outline)] mb-2">{L.priceAdj}</p>
                   <div className="flex items-center gap-1.5">
                     <div className="flex rounded-xl border border-[var(--outline-variant)] overflow-hidden shrink-0">
                       <button
@@ -531,7 +549,7 @@ export default function CheckSummaryScreen({ menuOpen: externalMenuOpen, setMenu
                     <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2.5 6L5 8.5L9.5 3.5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
                   )}
                 </span>
-                <span className="text-[13px] text-black">Add breakline below</span>
+                <span className="text-[13px] text-black">{L.addBreakline}</span>
               </label>
             )}
 
@@ -541,7 +559,7 @@ export default function CheckSummaryScreen({ menuOpen: externalMenuOpen, setMenu
                 className="flex-1 h-10 rounded-xl border border-[var(--outline-variant)] text-[13px] font-medium active:bg-gray-50"
                 style={{ color: "#49454F" }}
               >
-                Cancel
+                {L.cancel}
               </button>
               {((noteTarget === "general" && orderNote) || (noteTarget !== "general" && (cartItems.find(i => i.id === noteTarget)?.note || cartItems.find(i => i.id === noteTarget)?.priceAdjustment))) && (
                 <button
@@ -563,7 +581,7 @@ export default function CheckSummaryScreen({ menuOpen: externalMenuOpen, setMenu
                   }}
                   className="flex-1 h-10 rounded-xl border border-red-300 bg-red-50 text-[13px] font-medium text-red-600 active:bg-red-100"
                 >
-                  Remove
+                  {L.remove}
                 </button>
               )}
               <button
@@ -600,7 +618,7 @@ export default function CheckSummaryScreen({ menuOpen: externalMenuOpen, setMenu
                 className="flex-1 h-10 rounded-xl text-[13px] font-semibold text-white active:opacity-80 disabled:opacity-40"
                 style={{ background: "#6750A4" }}
               >
-                Save changes
+                {L.saveChanges}
               </button>
             </div>
           </div>
@@ -628,7 +646,7 @@ function CheckItem({
   drawerOpen?: boolean;
   selected?: boolean;
 }) {
-  const { updateQuantity, removeItem, updateNote } = useOrderStore();
+  const { updateQuantity, removeItem, updateNote, language } = useOrderStore();
   const [showNoteFlyout, setShowNoteFlyout] = useState(false);
   const [noteDraft, setNoteDraft] = useState(item.note || "");
   const noteBtnRef = useRef<HTMLButtonElement>(null);
@@ -669,7 +687,7 @@ function CheckItem({
           </span>
           <div className="flex-1 min-w-0">
             <p className={`text-[13px] font-medium leading-snug ${muted ? "text-[var(--outline)]" : ""}`}>
-              {item.name}
+              {getItemDisplayName(item.menuItemId, item.name, language)}
             </p>
             {/* Rule 15: inline deltas next to each cause. When override is
                 active, modifier/combo/note/discount inline deltas are

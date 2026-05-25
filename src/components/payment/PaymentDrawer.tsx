@@ -125,7 +125,7 @@ function UnitDescription({ item }: { item: CartItem }) {
       )}
 
       {overrideActive && (
-        <p className="text-xs italic mt-0.5" style={{ color: "#6750A4" }}>Override</p>
+        <p className="text-xs italic mt-0.5" style={{ color: "#6750A4" }}>{P.override}</p>
       )}
     </>
   );
@@ -190,20 +190,66 @@ interface PaymentDrawerProps {
   onSubviewChange?: (active: boolean) => void;
 }
 
-const mainButtons = [
-  { id: "cash",     label: "Cash",             icon: DollarSign },
-  { id: "split",    label: "Split check",      icon: Split      },
-  { id: "credit",   label: "Credit Card",      icon: CreditCard },
-  { id: "multiple", label: "Multi-pay", icon: WalletCards},
-  { id: "gift",     label: "Gift Card",        icon: Gift       },
-  { id: "print",    label: "Print",            icon: Printer    },
-] as const;
+  const mainButtons = [
+    { id: "cash",     label: P.cash,        icon: DollarSign },
+    { id: "split",    label: P.splitCheck,   icon: Split      },
+    { id: "credit",   label: P.creditCard,   icon: CreditCard },
+    { id: "multiple", label: P.multiPay,     icon: WalletCards},
+    { id: "gift",     label: P.giftCard,     icon: Gift       },
+    { id: "print",    label: P.print,        icon: Printer    },
+  ] as const;
 
 export default function PaymentDrawer({
   open, onClose, onSplit, onMultiplePayment, onPrint, onPaymentComplete,
   onSubviewChange,
 }: PaymentDrawerProps) {
-  const { cartItems, cartTotal, guestCount } = useOrderStore();
+  const { cartItems, cartTotal, guestCount, language } = useOrderStore();
+
+  const P = language === "zh" ? {
+    payment: "付款", cash: "現金", splitCheck: "分帳", creditCard: "信用卡",
+    multiPay: "多種付款", giftCard: "禮品卡", print: "列印", close: "關閉",
+    total: "合計", splitCheckBy: "分帳方式", even: "平均", amount: "金額", item: "品項",
+    splitIntoGuests: "分成幾位", eachPays: "每人付", firstPayment: "第一筆付款金額",
+    orderTotal: "訂單總額", selectItems: "選擇此帳單品項", selected: "已選",
+    allItemsPaid: "此訂單所有品項已付款。", currentCheckTotal: "此帳單總額", confirm: "確認",
+    discount: "折扣", cashPayment: "現金付款", optional: "可選", other: "其他",
+    tendered: "收款", exact: "剛好", changeDue: "找零", balanceDue: "待付餘額",
+    collect: "收款 $", tapToPay: "感應付款", processingPayment: "處理付款中",
+    cancel: "取消", paymentProcessed: "付款完成", addTip: "加小費", tip: "小費",
+    totalWithTip: "含小費總額", confirmTip: "確認小費", skipTip: "不加小費",
+    serialNumber: "卡號", enterSerial: "輸入卡號", pin: "PIN碼", pinPlaceholder: "4-6位PIN碼",
+    cardBalance: "卡片餘額", amountToApply: "扣款金額", max: "最大",
+    cardBalanceAfter: "扣款後餘額", remainingToPay: "待付餘額",
+    giftCardApplied: "禮品卡已扣款", amountCharged: "扣款金額：$",
+    includesTip: "含小費：$", remainingCardBalance: "卡片剩餘餘額：$",
+    verifyGiftCard: "驗證禮品卡", applyAmount: "扣款 $",
+    verifying: "驗證禮品卡中...", applying: "扣款中...",
+    done: "完成", continueRemaining: "繼續剩餘餘額",
+    paymentComplete: "付款完成", printReceipt: "列印收據", closeOrder: "結束訂單",
+    note: "備註", override: "改價"
+  } : {
+    payment: "Payment", cash: P.cash, splitCheck: "Split check", creditCard: P.creditCard,
+    multiPay: "Multi-pay", giftCard: P.giftCard, print: "Print", close: "Close",
+    total: P.total, splitCheckBy: "Split Check by", even: "Even", amount: "Amount", item: "Item",
+    splitIntoGuests: "Split into guests", eachPays: P.eachPays, firstPayment: P.firstPayment,
+    orderTotal: "Order total", selectItems: "Select items for this check", selected: "selected",
+    allItemsPaid: "All items in this order have already been paid.", currentCheckTotal: "Current check total", confirm: P.confirm,
+    discount: P.discount, cashPayment: P.cashPayment, optional: "Optional", other: "Other",
+    tendered: "Tendered", exact: "Exact", changeDue: "Change due", balanceDue: "Balance due",
+    collect: "{P.collect}", tapToPay: "Tap to pay", processingPayment: "Processing payment",
+    cancel: "Cancel", paymentProcessed: "Payment processed", addTip: "Add tip", tip: "Tip",
+    totalWithTip: "Total with tip", confirmTip: "Confirm Tip", skipTip: "Skip Tip",
+    serialNumber: "Serial number", enterSerial: "Enter serial number", pin: "PIN", pinPlaceholder: "4-6 digit PIN",
+    cardBalance: "Card balance", amountToApply: "Amount to apply", max: "Max",
+    cardBalanceAfter: "Card balance after", remainingToPay: "Remaining to pay",
+    giftCardApplied: "Gift card applied", amountCharged: "{P.amountCharged}",
+    includesTip: "{P.includesTip}", remainingCardBalance: "{P.remainingCardBalance}",
+    verifyGiftCard: "Verify Gift Card", applyAmount: "{P.applyAmount}",
+    verifying: P.verifying, applying: P.applying,
+    done: "Done", continueRemaining: "Continue to remaining balance",
+    paymentComplete: "Payment complete", printReceipt: "Print receipt", closeOrder: "Close order",
+    note: "Note", override: "Override"
+  };
 
   /* ── view state ── */
   const [view, setView] = useState<ViewType>("main");
@@ -361,7 +407,7 @@ export default function PaymentDrawer({
       </div>
       <button
         type="button"
-        aria-label="Close"
+        aria-label={P.close}
         onClick={onClose}
         className="w-8 h-8 flex items-center justify-center rounded-full active:bg-gray-100 shrink-0"
       >
@@ -386,7 +432,7 @@ export default function PaymentDrawer({
       <h2 className="text-[15px] font-semibold text-[#1D1B20] leading-tight truncate">{title}</h2>
       <button
         type="button"
-        aria-label="Close"
+        aria-label={P.close}
         onClick={() => setView("main")}
         className="w-8 h-8 flex items-center justify-center rounded-full active:bg-gray-100 shrink-0 -mr-2"
       >
@@ -402,8 +448,8 @@ export default function PaymentDrawer({
     return (
       <Panel>
         <div className="flex items-center justify-between px-4 pb-3 border-b border-gray-100 shrink-0">
-          <h2 className="text-[15px] font-semibold text-[#1D1B20] leading-tight truncate">Payment</h2>
-          <button type="button" aria-label="Close" onClick={onClose}
+          <h2 className="text-[15px] font-semibold text-[#1D1B20] leading-tight truncate">{P.payment}</h2>
+          <button type="button" aria-label={P.close} onClick={onClose}
             className="w-8 h-8 flex items-center justify-center rounded-full active:bg-gray-100 shrink-0">
             <X size={18} />
           </button>
@@ -443,12 +489,12 @@ export default function PaymentDrawer({
         <BackHeader title="Split Check" />
 
         <div className="flex justify-between items-baseline px-5 pt-1 pb-3 shrink-0 border-b border-gray-100">
-          <span className="text-lg font-semibold text-gray-900">Total</span>
+          <span className="text-lg font-semibold text-gray-900">{P.total}</span>
           <span className="text-lg font-semibold text-gray-900">${orderBaseTotal.toFixed(2)}</span>
         </div>
 
         <div className="px-4 pt-4 shrink-0">
-          <span className="text-sm font-medium text-gray-700 mb-2 block">Split Check by</span>
+          <span className="text-sm font-medium text-gray-700 mb-2 block">{P.splitCheckBy}</span>
           <div className="flex gap-2">
             {(["even", "amount", "item"] as SplitType[]).map((type) => {
               const label = type === "even" ? "Even" : type === "amount" ? "Amount" : "Item";
@@ -468,7 +514,7 @@ export default function PaymentDrawer({
         {splitType === "even" && (
           <div className="px-4 pt-5 flex flex-col gap-4 shrink-0">
             <div className="flex items-center justify-between">
-              <span className="text-sm font-medium text-gray-700">Split into guests</span>
+              <span className="text-sm font-medium text-gray-700">{P.splitIntoGuests}</span>
               <div className="flex items-center gap-3">
                 <button type="button" onClick={() => setSplitGuestCount(Math.max(2, splitGuestCount - 1))} disabled={splitGuestCount <= 2}
                   className="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center disabled:opacity-30 active:bg-gray-100"><Minus size={15} /></button>
@@ -478,7 +524,7 @@ export default function PaymentDrawer({
               </div>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-sm font-medium text-gray-700">Each pays</span>
+              <span className="text-sm font-medium text-gray-700">{P.eachPays}</span>
               <span className="text-sm font-semibold text-gray-900">${splitEachPay.toFixed(2)}</span>
             </div>
           </div>
@@ -486,22 +532,22 @@ export default function PaymentDrawer({
 
         {splitType === "amount" && (
           <div className="px-4 pt-5 flex flex-col gap-3 shrink-0">
-            <span className="text-sm font-medium text-gray-700">First payment amount</span>
+            <span className="text-sm font-medium text-gray-700">{P.firstPayment}</span>
             <div className="flex items-center gap-2">
               <span className="text-sm font-medium text-gray-600">$</span>
               <input ref={splitAmountInputRef} type="text" inputMode="decimal" value={splitAmountInput}
                 onChange={(e) => setSplitAmountInput(e.target.value)} placeholder="0.00"
                 className="flex-1 h-12 px-3 rounded-xl text-sm focus:outline-none" style={{ border: "1.5px solid #6B7280" }} />
             </div>
-            <span className="text-xs text-gray-500">Order total: ${orderBaseTotal.toFixed(2)}</span>
+            <span className="text-xs text-gray-500">{P.orderTotal}: ${orderBaseTotal.toFixed(2)}</span>
           </div>
         )}
 
         {splitType === "item" && (
           <div className="px-4 pt-4 flex flex-col gap-3 flex-1 min-h-0 overflow-hidden">
             <div className="flex justify-between shrink-0">
-              <span className="text-sm font-medium text-gray-700">Select items for this check</span>
-              <span className="text-xs text-gray-500">{selectedItemUnits.length} selected</span>
+              <span className="text-sm font-medium text-gray-700">{P.selectItems}</span>
+              <span className="text-xs text-gray-500">{selectedItemUnits.length} {P.selected}</span>
             </div>
             <div className="flex-1 overflow-y-auto rounded-xl border border-gray-200 bg-gray-50">
               {itemizedUnits.map((unit) => {
@@ -532,7 +578,7 @@ export default function PaymentDrawer({
             </div>
             {selectedItemUnits.length > 0 && (
               <div className="flex justify-between shrink-0 pt-1">
-                <span className="text-sm font-medium text-gray-700">Current check total</span>
+                <span className="text-sm font-medium text-gray-700">{P.currentCheckTotal}</span>
                 <span className="text-sm font-semibold text-gray-900">${itemizedSelectedTotal.toFixed(2)}</span>
               </div>
             )}
@@ -557,31 +603,31 @@ export default function PaymentDrawer({
     const cashConfirmDisabled = cashTenderIdx === null && !cashExact && (!cashCustomTender || !cashCustomTenderVal);
     return (
       <FullPanel>
-        <FullHeader title="Cash" />
+        <FullHeader title=P.cash />
 
         <div className="px-5 pb-3 shrink-0">
           <div className="flex items-baseline justify-between">
-            <span className="font-medium text-black" style={{ fontSize: 36, lineHeight: "44px" }}>Total</span>
+            <span className="font-medium text-black" style={{ fontSize: 36, lineHeight: "44px" }}>{P.total}</span>
             <span className="font-medium text-black" style={{ fontSize: 36, lineHeight: "44px" }}>${discountedTotal.toFixed(2)}</span>
           </div>
           {cashDiscountAmount > 0 && (
             <div className="flex justify-between mt-1">
-              <span className="text-sm text-[#49454F]">Discount</span>
+              <span className="text-sm text-[#49454F]">{P.discount}</span>
               <span className="text-sm text-[#49454F]">−${cashDiscountAmount.toFixed(2)}</span>
             </div>
           )}
         </div>
 
         <div className="px-4 pb-3 shrink-0">
-          <span className="text-base font-medium" style={{ color: "#1D1B20" }}>Cash payment</span>
+          <span className="text-base font-medium" style={{ color: "#1D1B20" }}>{P.cashPayment}</span>
         </div>
 
         <div className="flex-1 overflow-y-auto px-4 flex flex-col gap-6 pb-4">
           {/* Discount */}
           <div className="flex flex-col gap-1.5">
             <div className="flex items-center gap-2">
-              <span className="text-base font-medium" style={{ color: "#1D1B20" }}>Discount</span>
-              <span className="text-xs text-[#49454F]">Optional</span>
+              <span className="text-base font-medium" style={{ color: "#1D1B20" }}>{P.discount}</span>
+              <span className="text-xs text-[#49454F]">{P.optional}</span>
             </div>
             <div className="flex gap-1.5">
               {DISCOUNT_PRESETS.map((preset, idx) => {
@@ -600,7 +646,7 @@ export default function PaymentDrawer({
                 onClick={() => { if (cashCustomDiscount) { setCashCustomDiscount(false); setCashCustomDiscountVal(""); } else { setCashDiscountIdx(null); setCashCustomDiscount(true); } }}
                 className="flex-1 h-[52px] rounded-lg flex items-center justify-start pl-3 relative"
                 style={{ background: cashCustomDiscount ? "#E8DEF8" : "#FFF", border: cashCustomDiscount ? "1px solid #515151" : "1px solid #DADADA" }}>
-                <span className="text-sm text-black">Other</span>
+                <span className="text-sm text-black">{P.other}</span>
                 {cashCustomDiscount && <Check size={16} className="absolute right-2 top-1/2 -translate-y-1/2" style={{ color: "#4A4459" }} />}
               </button>
             </div>
@@ -625,7 +671,7 @@ export default function PaymentDrawer({
 
           {/* Tender */}
           <div className="flex flex-col gap-1.5">
-            <span className="text-base font-medium" style={{ color: "#1D1B20" }}>Tendered</span>
+            <span className="text-base font-medium" style={{ color: "#1D1B20" }}>{P.tendered}</span>
             <div className="flex gap-1.5">
               {[tenderPreset1, tenderPreset2].map((amount, idx) => {
                 const isSel = cashTenderIdx === idx && !cashExact && !cashCustomTender;
@@ -643,14 +689,14 @@ export default function PaymentDrawer({
                 onClick={() => { setCashTenderIdx(null); setCashExact(true); setCashCustomTender(false); setCashCustomTenderVal(""); }}
                 className="flex-1 h-[52px] rounded-lg flex items-center justify-start pl-3 relative"
                 style={{ background: cashExact ? "#E8DEF8" : "#FFF", border: cashExact ? "1px solid #515151" : "1px solid #DADADA" }}>
-                <span className="text-sm text-black">Exact</span>
+                <span className="text-sm text-black">{P.exact}</span>
                 {cashExact && <Check size={16} className="absolute right-2 top-1/2 -translate-y-1/2" style={{ color: "#4A4459" }} />}
               </button>
               <button type="button"
                 onClick={() => { setCashTenderIdx(null); setCashExact(false); setCashCustomTender(true); }}
                 className="flex-1 h-[52px] rounded-lg flex items-center justify-start pl-3 relative"
                 style={{ background: cashCustomTender ? "#E8DEF8" : "#FFF", border: cashCustomTender ? "1px solid #515151" : "1px solid #DADADA" }}>
-                <span className="text-sm text-black">Other</span>
+                <span className="text-sm text-black">{P.other}</span>
                 {cashCustomTender && <Check size={16} className="absolute right-2 top-1/2 -translate-y-1/2" style={{ color: "#4A4459" }} />}
               </button>
             </div>
@@ -667,7 +713,7 @@ export default function PaymentDrawer({
           {/* Change due */}
           {changeDue !== null && (
             <div className="flex items-center justify-between">
-              <span className="text-base font-medium" style={{ color: "#1D1B20" }}>{changeDue >= 0 ? "Change due" : "Balance due"}</span>
+              <span className="text-base font-medium" style={{ color: "#1D1B20" }}>{changeDue >= 0 ? P.changeDue : P.balanceDue}</span>
               <span className="text-base font-medium" style={{ color: "#1D1B20" }}>${Math.abs(changeDue).toFixed(2)}</span>
             </div>
           )}
@@ -679,7 +725,7 @@ export default function PaymentDrawer({
             className="w-full h-14 rounded-full flex items-center justify-center active:opacity-80 disabled:opacity-40"
             style={{ background: "#00B618" }}>
             <span className="text-base font-medium text-white">
-              {cashTenderAmount > 0 ? `Collect $${cashTenderAmount.toFixed(2)}` : "Confirm"}
+              {cashTenderAmount > 0 ? `{P.collect}${cashTenderAmount.toFixed(2)}` : P.confirm}
             </span>
           </button>
         </div>
@@ -695,17 +741,17 @@ export default function PaymentDrawer({
     const ccTotalWithTip = payableTotal + ccTipAmount;
     return (
       <FullPanel>
-        <FullHeader title="Credit Card" />
+        <FullHeader title=P.creditCard />
 
         <div className="flex justify-between items-baseline px-5 pb-4 shrink-0">
-          <span className="font-medium text-black" style={{ fontSize: 36, lineHeight: "44px" }}>Total</span>
+          <span className="font-medium text-black" style={{ fontSize: 36, lineHeight: "44px" }}>{P.total}</span>
           <span className="font-medium text-black" style={{ fontSize: 36, lineHeight: "44px" }}>${payableTotal.toFixed(2)}</span>
         </div>
 
         {ccStep === "tap" && (
           <>
             <div className="px-4 shrink-0">
-              <span className="text-base font-medium" style={{ color: "#1D1B20" }}>Credit Card</span>
+              <span className="text-base font-medium" style={{ color: "#1D1B20" }}>{P.creditCard}</span>
             </div>
             <div className="mx-5 mt-3 mb-5 flex items-center justify-center cursor-pointer active:opacity-70 shrink-0"
               style={{ height: 220, borderRadius: 29, border: "1px dashed rgba(0,0,0,0.54)" }}
@@ -721,7 +767,7 @@ export default function PaymentDrawer({
                   <path d="M22.8994 10.0001C26.1921 13.9532 27.9952 18.9353 27.9952 24.0801C27.9952 29.2249 26.1921 34.207 22.8994 38.1601M29.9994 2.84009C35.1515 8.68494 37.9941 16.2087 37.9941 24.0001C37.9941 31.7915 35.1515 39.3152 29.9994 45.1601M15.7794 17.0601C17.2219 19.0905 17.9969 21.5194 17.9969 24.0101C17.9969 26.5007 17.2219 28.9297 15.7794 30.9601"
                     stroke="#1E1E1E" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
-                <span className="font-medium text-black" style={{ fontSize: 22, lineHeight: "28px" }}>Tap to pay</span>
+                <span className="font-medium text-black" style={{ fontSize: 22, lineHeight: "28px" }}>{P.tapToPay}</span>
               </div>
             </div>
           </>
@@ -731,12 +777,12 @@ export default function PaymentDrawer({
           <div className="flex flex-col flex-1 pb-4">
             <div className="flex flex-col items-center justify-center flex-1 gap-6">
               <div className="animate-spin" style={{ width: 80, height: 80, borderRadius: "50%", border: "6px solid #E8DEF8", borderTopColor: "#6750A4" }} />
-              <span className="font-semibold text-black" style={{ fontSize: 22 }}>Processing payment</span>
+              <span className="font-semibold text-black" style={{ fontSize: 22 }}>{P.processingPayment}</span>
             </div>
             <div className="px-5 w-full">
               <button type="button" className="w-full h-14 rounded-full flex items-center justify-center" style={{ background: "#FFCDD2" }}
                 onClick={() => { if (ccTimerRef.current) clearTimeout(ccTimerRef.current); setCcStep("tap"); }}>
-                <span className="text-base font-medium" style={{ color: "#B71C1C" }}>Cancel</span>
+                <span className="text-base font-medium" style={{ color: "#B71C1C" }}>{P.cancel}</span>
               </button>
             </div>
           </div>
@@ -745,14 +791,14 @@ export default function PaymentDrawer({
         {ccStep === "processed" && (
           <div className="flex flex-col items-center justify-center flex-1 gap-6 pb-8">
             <Check size={72} strokeWidth={2.5} color="#1D1B20" />
-            <span className="font-semibold text-black" style={{ fontSize: 22 }}>Payment processed</span>
+            <span className="font-semibold text-black" style={{ fontSize: 22 }}>{P.paymentProcessed}</span>
           </div>
         )}
 
         {ccStep === "tip" && (
           <div className="flex flex-col flex-1 pb-5">
             <div className="px-4 mt-2">
-              <span className="text-base font-medium" style={{ color: "#1D1B20" }}>Add tip</span>
+              <span className="text-base font-medium" style={{ color: "#1D1B20" }}>{P.addTip}</span>
               <div className="flex gap-1.5 mt-2">
                 {TIP_PRESETS.map((preset, idx) => {
                   const isSel = ccTipIdx === idx;
@@ -767,7 +813,7 @@ export default function PaymentDrawer({
                 })}
                 <button type="button" onClick={() => setCcTipIdx(null)}
                   className="flex-1 h-[52px] rounded-lg flex items-center pl-3" style={{ background: "#FFF", border: "1px solid #DADADA" }}>
-                  <span className="text-sm text-black">Other</span>
+                  <span className="text-sm text-black">{P.other}</span>
                 </button>
               </div>
             </div>
@@ -778,7 +824,7 @@ export default function PaymentDrawer({
                   <span className="text-sm text-[#49454F]">${ccTipAmount.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-sm font-medium text-black">Total with tip</span>
+                  <span className="text-sm font-medium text-black">{P.totalWithTip}</span>
                   <span className="text-sm font-medium text-black">${ccTotalWithTip.toFixed(2)}</span>
                 </div>
               </div>
@@ -786,11 +832,11 @@ export default function PaymentDrawer({
             <div className="px-5 mt-auto pt-6 flex flex-col gap-3">
               <button type="button" className="w-full h-14 rounded-full flex items-center justify-center bg-[#00B618] active:opacity-80"
                 onClick={() => showComplete(ccTotalWithTip, ccTotalWithTip)}>
-                <span className="text-base font-medium text-white">Confirm Tip</span>
+                <span className="text-base font-medium text-white">{P.confirmTip}</span>
               </button>
               <button type="button" className="w-full h-12 flex items-center justify-center active:opacity-60"
                 onClick={() => showComplete(payableTotal, payableTotal)}>
-                <span className="text-base font-semibold text-black">Skip Tip</span>
+                <span className="text-base font-semibold text-black">{P.skipTip}</span>
               </button>
             </div>
           </div>
@@ -805,28 +851,28 @@ export default function PaymentDrawer({
   if (view === "gift") {
     return (
       <FullPanel>
-        <FullHeader title="Gift Card" />
+        <FullHeader title=P.giftCard />
 
         <div className="flex justify-between items-baseline px-5 pb-4 shrink-0">
-          <span className="font-medium text-black" style={{ fontSize: 36, lineHeight: "44px" }}>Total</span>
+          <span className="font-medium text-black" style={{ fontSize: 36, lineHeight: "44px" }}>{P.total}</span>
           <span className="font-medium text-black" style={{ fontSize: 36, lineHeight: "44px" }}>${payableTotal.toFixed(2)}</span>
         </div>
 
         {gcStep === "input" && (
           <div className="px-4 mt-2 flex flex-col gap-5 flex-1">
             <div className="flex flex-col gap-1.5">
-              <span className="text-base font-medium" style={{ color: "#1D1B20" }}>Gift Card</span>
+              <span className="text-base font-medium" style={{ color: "#1D1B20" }}>{P.giftCard}</span>
             </div>
             <div className="flex flex-col gap-1.5">
-              <label className="text-sm font-medium" style={{ color: "#49454F" }}>Serial number</label>
+              <label className="text-sm font-medium" style={{ color: "#49454F" }}>{P.serialNumber}</label>
               <input ref={gcSerialRef} type="text" inputMode="text" autoComplete="off" value={gcSerial}
-                onChange={(e) => setGcSerial(e.target.value)} placeholder="Enter serial number"
+                onChange={(e) => setGcSerial(e.target.value)} placeholder={P.enterSerial}
                 className="h-[52px] px-3 rounded-lg text-sm focus:outline-none" style={{ border: "1px solid #515151" }} />
             </div>
             <div className="flex flex-col gap-1.5">
-              <label className="text-sm font-medium" style={{ color: "#49454F" }}>PIN</label>
+              <label className="text-sm font-medium" style={{ color: "#49454F" }}>{P.pin}</label>
               <input type="text" inputMode="numeric" pattern="[0-9]*" autoComplete="off" maxLength={6}
-                value={gcPin} onChange={(e) => setGcPin(e.target.value.replace(/\D/g, ""))} placeholder="4-6 digit PIN"
+                value={gcPin} onChange={(e) => setGcPin(e.target.value.replace(/\D/g, ""))} placeholder={P.pinPlaceholder}
                 className="h-[44px] w-40 px-3 rounded-lg text-sm focus:outline-none" style={{ border: "1px solid #515151" }} />
             </div>
             {gcResult && !gcResult.success && (
@@ -839,7 +885,7 @@ export default function PaymentDrawer({
           <div className="flex flex-col items-center justify-center flex-1 gap-6 py-16">
             <div className="animate-spin" style={{ width: 60, height: 60, borderRadius: "50%", border: "5px solid #E8DEF8", borderTopColor: "#6750A4" }} />
             <span className="font-semibold text-black" style={{ fontSize: 18 }}>
-              {gcStep === "processing" ? "Verifying gift card..." : "Applying gift card..."}
+              {gcStep === "processing" ? P.verifying : P.applying}
             </span>
           </div>
         )}
@@ -847,11 +893,11 @@ export default function PaymentDrawer({
         {gcStep === "balance" && gcResult?.success && (
           <div className="px-4 mt-3 flex flex-col gap-4 flex-1 overflow-y-auto">
             <div className="flex justify-between items-center">
-              <span className="text-base font-medium" style={{ color: "#1D1B20" }}>Card balance</span>
+              <span className="text-base font-medium" style={{ color: "#1D1B20" }}>{P.cardBalance}</span>
               <span className="text-base font-semibold" style={{ color: "#00B618" }}>${gcCardBalance.toFixed(2)}</span>
             </div>
             <div className="flex flex-col gap-1.5">
-              <span className="text-base font-medium" style={{ color: "#1D1B20" }}>Add tip</span>
+              <span className="text-base font-medium" style={{ color: "#1D1B20" }}>{P.addTip}</span>
               <div className="flex gap-1.5">
                 {TIP_PRESETS.map((preset, idx) => {
                   const isSel = gcTipIdx === idx;
@@ -873,23 +919,23 @@ export default function PaymentDrawer({
               )}
             </div>
             <div className="flex flex-col gap-1.5">
-              <span className="text-base font-medium" style={{ color: "#1D1B20" }}>Amount to apply</span>
+              <span className="text-base font-medium" style={{ color: "#1D1B20" }}>{P.amountToApply}</span>
               <div className="flex items-center gap-2">
                 <span className="text-base font-medium">$</span>
                 <input type="text" inputMode="decimal" value={gcApplyAmount || gcMaxApply.toFixed(2)}
                   onChange={(e) => setGcApplyAmount(e.target.value)}
                   className="flex-1 h-[44px] px-3 rounded-lg text-sm focus:outline-none" style={{ border: "1px solid #515151" }} />
               </div>
-              <span className="text-xs text-[#49454F]">Max: ${gcMaxApply.toFixed(2)}</span>
+              <span className="text-xs text-[#49454F]">{P.max}: ${gcMaxApply.toFixed(2)}</span>
             </div>
             <div className="flex flex-col gap-1.5 pt-2 border-t border-gray-100">
               <div className="flex justify-between">
-                <span className="text-sm text-[#49454F]">Card balance after</span>
+                <span className="text-sm text-[#49454F]">{P.cardBalanceAfter}</span>
                 <span className="text-sm text-[#49454F]">${gcBalanceAfter.toFixed(2)}</span>
               </div>
               {gcOrderRemaining > 0.01 && (
                 <div className="flex justify-between">
-                  <span className="text-sm font-medium" style={{ color: "#B71C1C" }}>Remaining to pay</span>
+                  <span className="text-sm font-medium" style={{ color: "#B71C1C" }}>{P.remainingToPay}</span>
                   <span className="text-sm font-medium" style={{ color: "#B71C1C" }}>${gcOrderRemaining.toFixed(2)}</span>
                 </div>
               )}
@@ -902,11 +948,11 @@ export default function PaymentDrawer({
             <div className="flex items-center justify-center" style={{ width: 64, height: 64, borderRadius: "50%", background: "#00B618" }}>
               <Check size={32} color="white" strokeWidth={2.5} />
             </div>
-            <span className="font-semibold text-black" style={{ fontSize: 18 }}>Gift card applied</span>
+            <span className="font-semibold text-black" style={{ fontSize: 18 }}>{P.giftCardApplied}</span>
             <div className="flex flex-col items-center gap-1">
-              <span className="text-sm text-[#49454F]">Amount charged: ${gcEffectiveApply.toFixed(2)}</span>
-              {gcTipAmount > 0 && <span className="text-sm text-[#49454F]">Includes tip: ${gcTipAmount.toFixed(2)}</span>}
-              <span className="text-sm text-[#49454F]">Remaining card balance: ${gcBalanceAfter.toFixed(2)}</span>
+              <span className="text-sm text-[#49454F]">{P.amountCharged}{gcEffectiveApply.toFixed(2)}</span>
+              {gcTipAmount > 0 && <span className="text-sm text-[#49454F]">{P.includesTip}{gcTipAmount.toFixed(2)}</span>}
+              <span className="text-sm text-[#49454F]">{P.remainingCardBalance}{gcBalanceAfter.toFixed(2)}</span>
             </div>
           </div>
         )}
@@ -929,7 +975,7 @@ export default function PaymentDrawer({
               }}
               className="w-full h-14 rounded-full flex items-center justify-center active:opacity-80 disabled:opacity-40"
               style={{ background: "#00B618" }}>
-              <span className="text-base font-medium text-white">Verify Gift Card</span>
+              <span className="text-base font-medium text-white">{P.verifyGiftCard}</span>
             </button>
           )}
           {gcStep === "balance" && gcResult?.success && (
@@ -937,7 +983,7 @@ export default function PaymentDrawer({
               onClick={() => { setGcStep("applying"); setTimeout(() => setGcStep("done"), 1200); }}
               className="w-full h-14 rounded-full flex items-center justify-center active:opacity-80 disabled:opacity-40"
               style={{ background: "#00B618" }}>
-              <span className="text-base font-medium text-white">Apply ${gcEffectiveApply.toFixed(2)}</span>
+              <span className="text-base font-medium text-white">{P.applyAmount}{gcEffectiveApply.toFixed(2)}</span>
             </button>
           )}
           {gcStep === "done" && gcResult?.success && (
@@ -952,7 +998,7 @@ export default function PaymentDrawer({
               className="w-full h-14 rounded-full flex items-center justify-center active:opacity-80"
               style={{ background: "#00B618" }}>
               <span className="text-base font-medium text-white">
-                {gcOrderRemaining < 0.01 ? "Done" : "Continue to remaining balance"}
+                {gcOrderRemaining < 0.01 ? P.done : P.continueRemaining}
               </span>
             </button>
           )}
@@ -967,13 +1013,13 @@ export default function PaymentDrawer({
   return (
     <FullPanel>
       <div className="flex justify-between items-baseline px-5 pt-5 shrink-0">
-        <span className="font-medium text-black" style={{ fontSize: 36, lineHeight: "44px" }}>Total</span>
+        <span className="font-medium text-black" style={{ fontSize: 36, lineHeight: "44px" }}>{P.total}</span>
         <span className="font-medium text-black" style={{ fontSize: 36, lineHeight: "44px" }}>${completedTotal.toFixed(2)}</span>
       </div>
 
       {completedChange !== null && completedChange >= 0 && (
         <div className="px-5 mt-2 flex justify-between shrink-0">
-          <span className="text-base font-medium" style={{ color: "#1D1B20" }}>Change due</span>
+          <span className="text-base font-medium" style={{ color: "#1D1B20" }}>{P.changeDue}</span>
           <span className="text-base font-medium" style={{ color: "#1D1B20" }}>${completedChange.toFixed(2)}</span>
         </div>
       )}
@@ -982,13 +1028,13 @@ export default function PaymentDrawer({
         <div className="flex items-center justify-center" style={{ width: 89, height: 89, borderRadius: "50%", background: "#00B618" }}>
           <Check size={44} color="white" strokeWidth={2.5} />
         </div>
-        <span className="font-medium text-black" style={{ fontSize: 24, lineHeight: "32px" }}>Payment complete</span>
+        <span className="font-medium text-black" style={{ fontSize: 24, lineHeight: "32px" }}>{P.paymentComplete}</span>
       </div>
 
       <div className="px-5 mt-8 shrink-0">
         <button type="button" className="w-full h-14 rounded-full flex items-center justify-center active:opacity-70"
           style={{ background: "#F3F3F3", border: "1px solid #D8D8D8" }}>
-          <span className="text-base font-medium text-black">Print receipt</span>
+          <span className="text-base font-medium text-black">{P.printReceipt}</span>
         </button>
       </div>
 
@@ -996,7 +1042,7 @@ export default function PaymentDrawer({
         <button type="button" onClick={onPaymentComplete}
           className="w-full h-14 rounded-full flex items-center justify-center active:opacity-80"
           style={{ background: "#00B618" }}>
-          <span className="text-base font-medium text-white">Close order</span>
+          <span className="text-base font-medium text-white">{P.closeOrder}</span>
         </button>
       </div>
     </FullPanel>
