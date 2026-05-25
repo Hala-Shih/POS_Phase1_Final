@@ -82,7 +82,7 @@ function buildItemizedUnits(items: CartItem[]): ItemizedUnit[] {
 }
 
 export default function PaymentScreen({ onClose: externalClose }: { onClose?: () => void } = {}) {
-  const { cartItems, cartTotal, cartCount, guestCount, selectedTable, currentStaff, setScreen, resetOrder, setStaff, setTable, setOpenMenuOnArrival } =
+  const { cartItems, cartTotal, cartCount, guestCount, selectedTable, currentStaff, setScreen, resetOrder, setStaff, setTable, setOpenMenuOnArrival, setOpenPaymentOnArrival } =
     useOrderStore();
 
   const goBack = externalClose ?? (() => setScreen("check"));
@@ -256,6 +256,8 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
           : 0
         : itemizedSelectedSubtotal
     : subtotal;
+  // When user enters a partial pay amount, tip should be based on that amount
+  const effectiveTipBase = partialPayAmount != null ? partialPayAmount : tipBaseSubtotal;
   const displaySubtotal = confirmedSplit ? tipBaseSubtotal : subtotal;
   const displayTax = confirmedSplit ? roundCurrency(splitEachPay - tipBaseSubtotal) : tax;
   const displayTotal = displayTotalWithTip;
@@ -263,8 +265,8 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
     ? itemizedRemainingBaseTotal
     : Math.max(0, payableTotal - cumulativePaid);
 
-  // Tender presets computed from payable total (including tip for cash)
-  const cashBaseTotal = payableTotal + tip;
+  // Tender presets computed from the amount being charged (partial or full, including tip)
+  const cashBaseTotal = (partialPayAmount != null ? partialPayAmount : payableTotal) + tip;
   const tenderPreset1 = Math.ceil(cashBaseTotal / 10) * 10;
   const tenderPreset2Raw = Math.ceil(cashBaseTotal / 20) * 20;
   const tenderPreset2 = tenderPreset2Raw === tenderPreset1 ? tenderPreset1 + 20 : tenderPreset2Raw;
@@ -310,7 +312,10 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
   const drawerChargeAmount = partialPayAmount != null ? partialPayAmount : remainingBalance;
 
   const openCashDrawerDirect = () => {
-    capturePartialPay();
+    // Only capture partial pay if not already set (e.g. from tip flow)
+    if (partialPayAmount == null) {
+      capturePartialPay();
+    }
     setSelectedDiscountIdx(null);
     setIsCustomDiscount(false);
     setCustomDiscountValue("");
@@ -324,6 +329,8 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
 
   const handleOpenCashDrawer = () => {
     if (tip === 0) {
+      // Capture partial pay first so tip is based on the entered amount
+      capturePartialPay();
       // Show tip drawer first, then transition to cash drawer
       setPendingCashAfterTip(true);
       handleOpenTipDrawer();
@@ -336,7 +343,7 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
   const handleOpenTipDrawer = () => {
     if (tip > 0) {
       const matchedIdx = TIP_PRESETS.findIndex(
-        (p) => Math.abs(tipBaseSubtotal * p.value - tip) < 0.01
+        (p) => Math.abs(effectiveTipBase * p.value - tip) < 0.01
       );
       if (matchedIdx >= 0) {
         setSelectedTipPreset(matchedIdx);
@@ -370,18 +377,17 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
     if (isCustomTip) {
       const parsed = parseFloat(customTipValue);
       if (!isNaN(parsed) && parsed > 0) {
-        setTip(customTipMode === "%" ? tipBaseSubtotal * (parsed / 100) : parsed);
+        setTip(customTipMode === "%" ? effectiveTipBase * (parsed / 100) : parsed);
       } else {
         setTip(0);
       }
     } else if (selectedTipPreset !== null) {
-      setTip(tipBaseSubtotal * TIP_PRESETS[selectedTipPreset].value);
+      setTip(effectiveTipBase * TIP_PRESETS[selectedTipPreset].value);
     }
     setShowTipDrawer(false);
     if (pendingCashAfterTip) {
       setPendingCashAfterTip(false);
-      // Small delay to let tip drawer animate out before opening cash drawer
-      setTimeout(() => openCashDrawerDirect(), 300);
+      openCashDrawerDirect();
     }
   };
 
@@ -393,7 +399,7 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
     setShowTipDrawer(false);
     if (pendingCashAfterTip) {
       setPendingCashAfterTip(false);
-      setTimeout(() => openCashDrawerDirect(), 300);
+      openCashDrawerDirect();
     }
   };
 
@@ -470,12 +476,12 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
   const previewTip = isCustomTip
     ? (() => {
         const parsed = parseFloat(customTipValue) || 0;
-        return customTipMode === "%" ? tipBaseSubtotal * (parsed / 100) : parsed;
+        return customTipMode === "%" ? effectiveTipBase * (parsed / 100) : parsed;
       })()
     : selectedTipPreset !== null
-    ? tipBaseSubtotal * TIP_PRESETS[selectedTipPreset].value
+    ? effectiveTipBase * TIP_PRESETS[selectedTipPreset].value
     : 0;
-  const drawerTotal = payableTotal + previewTip;
+  const drawerTotal = (partialPayAmount != null ? partialPayAmount : payableTotal) + previewTip;
 
   // Amount input helpers for the numpad
   const displayAmountValue = (parseInt(amountInput || "0") / 100).toFixed(2);
@@ -500,12 +506,14 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
       {/* Header */}
       <Header
         onBack={handleClose}
+        disableBack={showPaymentComplete}
         serverName={currentStaff?.name}
         tableName={selectedTable?.name}
         guestCount={guestCount}
         checkTotal={orderBaseTotal}
-        onGuestCountTap={() => setScreen("guest-count")}
-        onTableTap={() => setScreen("tables")}
+        onGuestCountTap={() => { setOpenPaymentOnArrival(true); setScreen("guest-count"); goBack(); }}
+        onTableTap={() => {}}
+        onCollapseDrawers={() => goBack()}
         onLogout={() => { resetOrder(); setScreen("login"); }}
         onTransfer={(staff) => setStaff(staff)}
         staffList={staffData as Staff[]}
@@ -614,6 +622,19 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
                 </div>
               ))
             )}
+          </div>
+        )}
+
+        {/* Split indicator */}
+        {confirmedSplit && (
+          <div className="px-4 py-2 flex items-center gap-2 border-b border-gray-100">
+            <span className="text-sm font-semibold text-[#6750A4]">
+              {confirmedSplit.type === "even"
+                ? `Guest ${activeGuestIdx + 1}/${confirmedSplit.guests}`
+                : confirmedSplit.type === "amount"
+                ? `Split by amount`
+                : `Split by item`}
+            </span>
           </div>
         )}
 
@@ -947,19 +968,19 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
       </div>
 
       {/* Print / Split / Load row */}
-      <div className="shrink-0 px-3 pt-2 pb-3 grid grid-cols-3 gap-2 border-t border-gray-300">
-        <button className="h-[48px] rounded-xl bg-white border border-gray-800 text-[13px] font-medium active:opacity-70 transition-colors">Print</button>
+      <div className="shrink-0 px-3 py-3 grid grid-cols-3 gap-2 border-t border-gray-300 items-center">
+        <button className="h-[48px] rounded-xl bg-white border border-gray-800 text-[13px] font-medium active:opacity-70 transition-colors flex items-center justify-center">Print</button>
         <button
           onClick={() => {
             setSplitType(null);
             setSplitGuestCount(Math.max(2, guestCount));
             setShowSplitDrawer(true);
           }}
-          className="h-[48px] rounded-xl bg-white border border-gray-800 text-[13px] font-medium active:opacity-70 transition-colors"
+          className="h-[48px] rounded-xl bg-white border border-gray-800 text-[13px] font-medium active:opacity-70 transition-colors flex items-center justify-center"
         >
           Split
         </button>
-        <button onClick={() => { setOpenMenuOnArrival(true); if (externalClose) externalClose(); setScreen("check"); }} className="h-[48px] rounded-xl bg-white border border-gray-800 text-[13px] font-medium active:opacity-70 transition-colors">Load menu</button>
+        <button onClick={() => { setOpenMenuOnArrival(true); if (externalClose) externalClose(); setScreen("check"); }} className="h-[48px] rounded-xl bg-white border border-gray-800 text-[13px] font-medium active:opacity-70 transition-colors flex items-center justify-center">Load menu</button>
       </div>
 
       {/* Numpad + Payment Buttons Footer */}
@@ -1126,7 +1147,7 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
           <button onClick={() => handleNumpadKey("1")} className="h-11 rounded-2xl bg-white text-lg font-medium active:bg-gray-100 transition-colors">1</button>
           <button onClick={() => handleNumpadKey("2")} className="h-11 rounded-2xl bg-white text-lg font-medium active:bg-gray-100 transition-colors">2</button>
           <button onClick={() => handleNumpadKey("3")} className="h-11 rounded-2xl bg-white text-lg font-medium active:bg-gray-100 transition-colors">3</button>
-          <button onClick={() => handleNumpadKey("00")} className="h-11 rounded-2xl bg-white text-lg font-medium active:bg-gray-100 transition-colors">00</button>
+          <button onClick={() => setAmountInput(String(Math.round(remainingBalance * 100)))} className="h-11 rounded-2xl bg-white text-sm font-medium active:bg-gray-100 transition-colors">Balance $</button>
           {/* Row 2 */}
           <button onClick={() => handleNumpadKey("4")} className="h-11 rounded-2xl bg-white text-lg font-medium active:bg-gray-100 transition-colors">4</button>
           <button onClick={() => handleNumpadKey("5")} className="h-11 rounded-2xl bg-white text-lg font-medium active:bg-gray-100 transition-colors">5</button>
@@ -1242,21 +1263,21 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
             <button
               onClick={handleOpenCashDrawer}
               className="flex-1 h-12 rounded-full text-sm font-semibold active:opacity-80 transition-colors"
-              style={{ background: "#dcfce7", color: "#15803d" }}
+              style={{ background: "#14AE5C", color: "#ffffff" }}
             >
               Cash
             </button>
             <button
               onClick={() => { capturePartialPay(); setLastChangeDue(null); setCcStep("tap"); setCcTipIdx(null); setShowCreditCardDrawer(true); }}
               className="flex-1 h-12 rounded-full text-sm font-semibold active:opacity-80 transition-colors"
-              style={{ background: "#dcfce7", color: "#15803d" }}
+              style={{ background: "#14AE5C", color: "#ffffff" }}
             >
               Credit Card
             </button>
             <button
               onClick={() => { capturePartialPay(); setLastChangeDue(null); setGcSerial(""); setGcPin(""); setGcStep("input"); setGcResult(null); setShowGiftCardDrawer(true); }}
               className="flex-1 h-12 rounded-full text-sm font-semibold active:opacity-80 transition-colors"
-              style={{ background: "#dcfce7", color: "#15803d" }}
+              style={{ background: "#14AE5C", color: "#ffffff" }}
             >
               Gift Card
             </button>
@@ -1266,51 +1287,35 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
 
       </div>
 
-      {/* Gift Card Drawer */}
+      {/* Shared backdrop for all full-height payment drawers */}
       <AnimatePresence>
-        {showGiftCardDrawer && (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 0.4 }}
-              exit={{ opacity: 0 }}
-              onClick={() => { setShowGiftCardDrawer(false); setPartialPayAmount(null); }}
-              className="absolute inset-0 bg-black z-40"
-            />
-            <motion.div
-              initial={{ y: "100%" }}
-              animate={{ y: 0 }}
-              exit={{ y: "100%" }}
-              transition={{ type: "spring", damping: 25, stiffness: 300 }}
-              drag="y"
-              dragControls={giftCardDrag}
-              dragListener={false}
-              dragConstraints={{ top: 0, bottom: 0 }}
-              dragElastic={{ top: 0, bottom: 0.6 }}
-              onDragEnd={(_, info) => {
-                if (info.offset.y > 100 || info.velocity.y > 500) {
-                  setShowGiftCardDrawer(false);
-                  setPartialPayAmount(null);
-                }
-              }}
-              className="absolute bottom-0 left-0 right-0 bg-white z-50 flex flex-col"
-              style={{
-                borderRadius: "20px 20px 0 0",
-                boxShadow: "0px -2px 9px rgba(0, 0, 0, 0.25)",
-              }}
-              onAnimationComplete={() => {
-                if (gcStep === "input" && gcSerialRef.current) {
-                  gcSerialRef.current.focus();
-                }
-              }}
-            >
-              {/* Handle */}
-              <div
-                onPointerDown={(e) => giftCardDrag.start(e)}
-                style={{ touchAction: "none" }}
-                className="flex justify-center pt-3"
-              >
-                <div className="rounded-full" style={{ width: 96, height: 6, background: "#B6B6B6" }} />
+        {(showGiftCardDrawer || showCreditCardDrawer || showTipDrawer || showCashDrawer || showPaymentComplete) && (
+          <motion.div
+            key="payment-backdrop"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 0.4 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 bg-black z-40"
+            style={{ top: 48 }}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Gift Card Drawer */}
+      {showGiftCardDrawer && (
+        <div
+          className="absolute left-0 right-0 bottom-0 bg-white z-50 flex flex-col"
+          style={{ top: 48 }}
+        >
+              {/* Top row: title + close */}
+              <div className="flex items-center justify-between px-4 pt-3">
+                <span className="text-base font-semibold" style={{ color: "#1D1B20", letterSpacing: "0.15px" }}>Gift Card</span>
+                <button
+                  onClick={() => { setShowGiftCardDrawer(false); setPartialPayAmount(null); }}
+                  className="w-8 h-8 flex items-center justify-center rounded-full active:bg-gray-100"
+                >
+                  <X size={20} />
+                </button>
               </div>
 
               {/* Total row */}
@@ -1324,11 +1329,6 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
               {/* Step 1: Serial + PIN input */}
               {gcStep === "input" && (
                 <div className="px-4 mt-4 flex flex-col gap-5 flex-1">
-                  <div className="flex flex-col gap-1.5">
-                    <span className="text-base font-medium" style={{ color: "#1D1B20", letterSpacing: "0.15px" }}>
-                      Gift Card
-                    </span>
-                  </div>
 
                   <div className="flex flex-col gap-1.5">
                     <label className="text-sm font-medium" style={{ color: "#49454F" }}>
@@ -1550,6 +1550,16 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
                     </span>
                   </button>
                 )}
+                {gcStep === "input" && (
+                  <button
+                    onClick={() => { setShowGiftCardDrawer(false); setPartialPayAmount(null); }}
+                    className="w-full h-14 rounded-full flex items-center justify-center active:bg-gray-100 transition-colors bg-white"
+                  >
+                    <span className="text-base font-medium text-black" style={{ letterSpacing: "0.15px" }}>
+                      Cancel
+                    </span>
+                  </button>
+                )}
                 {gcStep === "balance" && gcResult?.success && (() => {
                   const cardBalance = gcResult.balance || 0;
                   const gcTipAmount = gcTipIdx !== null ? drawerChargeAmount * TIP_PRESETS[gcTipIdx].value : 0;
@@ -1606,10 +1616,8 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
                   );
                 })()}
               </div>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
+        </div>
+      )}
 
       {/* Split Check Drawer */}
       <AnimatePresence>
@@ -1918,6 +1926,14 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
                     Confirm
                   </span>
                 </button>
+                <button
+                  onClick={() => setShowSplitDrawer(false)}
+                  className="w-full h-14 rounded-full flex items-center justify-center active:bg-gray-100 transition-colors bg-white"
+                >
+                  <span className="text-base font-medium text-black" style={{ letterSpacing: "0.15px" }}>
+                    Cancel
+                  </span>
+                </button>
               </div>
             </motion.div>
           </>
@@ -1925,46 +1941,20 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
       </AnimatePresence>
 
       {/* Credit Card Drawer */}
-      <AnimatePresence>
-        {showCreditCardDrawer && (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 0.4 }}
-              exit={{ opacity: 0 }}
-              onClick={() => { setShowCreditCardDrawer(false); setPartialPayAmount(null); }}
-              className="absolute inset-0 bg-black z-40"
-            />
-            <motion.div
-              initial={{ y: "100%" }}
-              animate={{ y: 0 }}
-              exit={{ y: "100%" }}
-              transition={{ type: "spring", damping: 25, stiffness: 300 }}
-              drag="y"
-              dragControls={ccDrag}
-              dragListener={false}
-              dragConstraints={{ top: 0, bottom: 0 }}
-              dragElastic={{ top: 0, bottom: 0.6 }}
-              onDragEnd={(_, info) => {
-                if (info.offset.y > 100 || info.velocity.y > 500) {
-                  setShowCreditCardDrawer(false);
-                  setPartialPayAmount(null);
-                }
-              }}
-              className="absolute bottom-0 left-0 right-0 bg-white z-50 flex flex-col"
-              style={{
-                borderRadius: "20px 20px 0 0",
-                boxShadow: "0px -2px 9px rgba(0, 0, 0, 0.25)",
-                minHeight: 480,
-              }}
-            >
-              {/* Handle */}
-              <div
-                onPointerDown={(e) => ccDrag.start(e)}
-                style={{ touchAction: "none" }}
-                className="flex justify-center pt-3"
-              >
-                <div className="rounded-full" style={{ width: 96, height: 6, background: "#B6B6B6" }} />
+      {showCreditCardDrawer && (
+        <div
+          className="absolute left-0 right-0 bottom-0 bg-white z-50 flex flex-col"
+          style={{ top: 48 }}
+        >
+              {/* Top row: title + close */}
+              <div className="flex items-center justify-between px-4 pt-3">
+                <span className="text-base font-semibold" style={{ color: "#1D1B20", letterSpacing: "0.15px" }}>Credit Card</span>
+                <button
+                  onClick={() => { setShowCreditCardDrawer(false); setPartialPayAmount(null); }}
+                  className="w-8 h-8 flex items-center justify-center rounded-full active:bg-gray-100"
+                >
+                  <X size={20} />
+                </button>
               </div>
 
               {/* Total row */}
@@ -1978,11 +1968,6 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
               {/* Step: Tap to pay */}
               {ccStep === "tap" && (
                 <>
-                  <div className="px-4 mt-3">
-                    <span className="text-base font-medium" style={{ color: "#1D1B20", letterSpacing: "0.15px" }}>
-                      Credit Card
-                    </span>
-                  </div>
                   <div
                     className="mx-5 mt-3 mb-5 flex items-center justify-center cursor-pointer active:opacity-70"
                     style={{ height: 313, borderRadius: 29, border: "1px dashed rgba(0,0,0,0.54)" }}
@@ -2005,6 +1990,16 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
                         Tap to pay
                       </span>
                     </div>
+                  </div>
+                  <div className="px-5 pb-6 mt-auto">
+                    <button
+                      onClick={() => { setShowCreditCardDrawer(false); setPartialPayAmount(null); }}
+                      className="w-full h-14 rounded-full flex items-center justify-center active:bg-gray-100 transition-colors bg-white"
+                    >
+                      <span className="text-base font-medium text-black" style={{ letterSpacing: "0.15px" }}>
+                        Cancel
+                      </span>
+                    </button>
                   </div>
                 </>
               )}
@@ -2147,51 +2142,24 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
                   </div>
                 );
               })()}
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
+        </div>
+      )}
 
       {/* Tip Drawer */}
-      <AnimatePresence>
-        {showTipDrawer && (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 0.4 }}
-              exit={{ opacity: 0 }}
-              onClick={() => { setShowTipDrawer(false); setPendingCashAfterTip(false); }}
-              className="absolute inset-0 bg-black z-40"
-            />
-            <motion.div
-              initial={{ y: "100%" }}
-              animate={{ y: 0 }}
-              exit={{ y: "100%" }}
-              transition={{ type: "spring", damping: 25, stiffness: 300 }}
-              drag="y"
-              dragControls={tipDrag}
-              dragListener={false}
-              dragConstraints={{ top: 0, bottom: 0 }}
-              dragElastic={{ top: 0, bottom: 0.6 }}
-              onDragEnd={(_, info) => {
-                if (info.offset.y > 100 || info.velocity.y > 500) {
-                  setShowTipDrawer(false);
-                  setPendingCashAfterTip(false);
-                }
-              }}
-              className="absolute bottom-0 left-0 right-0 bg-white z-50 flex flex-col"
-              style={{
-                borderRadius: "20px 20px 0 0",
-                boxShadow: "0px -2px 9px rgba(0, 0, 0, 0.25)",
-              }}
-            >
-              {/* Handle */}
-              <div
-                onPointerDown={(e) => tipDrag.start(e)}
-                style={{ touchAction: "none" }}
-                className="flex justify-center pt-3 pb-2"
-              >
-                <div className="rounded-full" style={{ width: 96, height: 6, background: "#B6B6B6" }} />
+      {showTipDrawer && (
+        <div
+          className="absolute left-0 right-0 bottom-0 bg-white z-50 flex flex-col"
+          style={{ top: 48 }}
+        >
+              {/* Top row: title + close */}
+              <div className="flex items-center justify-between px-4 pt-3">
+                <span className="text-base font-semibold" style={{ color: "#1D1B20", letterSpacing: "0.15px" }}>Tip</span>
+                <button
+                  onClick={() => { setShowTipDrawer(false); setPendingCashAfterTip(false); }}
+                  className="w-8 h-8 flex items-center justify-center rounded-full active:bg-gray-100"
+                >
+                  <X size={20} />
+                </button>
               </div>
 
               {/* Total display */}
@@ -2297,7 +2265,7 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
               </div>
 
               {/* Action buttons */}
-              <div className="px-5 pt-4 pb-5 flex flex-col gap-2">
+              <div className="px-5 pt-4 pb-5 flex flex-col gap-2 mt-auto">
                 <button
                   onClick={handleAddTip}
                   disabled={selectedTipPreset === null && !isCustomTip}
@@ -2316,55 +2284,33 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
                     No tip
                   </span>
                 </button>
+                <button
+                  onClick={() => { setShowTipDrawer(false); setPartialPayAmount(null); }}
+                  className="w-full h-14 rounded-full flex items-center justify-center active:bg-gray-100 transition-colors bg-white"
+                >
+                  <span className="text-base font-medium text-black" style={{ letterSpacing: "0.15px" }}>
+                    Cancel
+                  </span>
+                </button>
               </div>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
+        </div>
+      )}
 
       {/* Cash Payment Drawer */}
-      <AnimatePresence>
-        {showCashDrawer && (
-          <>
-            {/* Backdrop */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 0.4 }}
-              exit={{ opacity: 0 }}
-              onClick={() => { setShowCashDrawer(false); setPartialPayAmount(null); }}
-              className="absolute inset-0 bg-black z-40"
-            />
-
-            {/* Drawer */}
-            <motion.div
-              initial={{ y: "100%" }}
-              animate={{ y: 0 }}
-              exit={{ y: "100%" }}
-              transition={{ type: "spring", damping: 25, stiffness: 300 }}
-              drag="y"
-              dragControls={cashDrag}
-              dragListener={false}
-              dragConstraints={{ top: 0, bottom: 0 }}
-              dragElastic={{ top: 0, bottom: 0.6 }}
-              onDragEnd={(_, info) => {
-                if (info.offset.y > 100 || info.velocity.y > 500) {
-                  setShowCashDrawer(false);
-                  setPartialPayAmount(null);
-                }
-              }}
-              className="absolute bottom-0 left-0 right-0 bg-white z-50 flex flex-col"
-              style={{
-                borderRadius: "20px 20px 0 0",
-                boxShadow: "0px -2px 9px rgba(0, 0, 0, 0.25)",
-              }}
-            >
-              {/* Handle */}
-              <div
-                onPointerDown={(e) => cashDrag.start(e)}
-                style={{ touchAction: "none" }}
-                className="flex justify-center pt-3"
-              >
-                <div className="rounded-full" style={{ width: 96, height: 6, background: "#B6B6B6" }} />
+      {showCashDrawer && (
+        <div
+          className="absolute left-0 right-0 bottom-0 bg-white z-50 flex flex-col"
+          style={{ top: 48 }}
+        >
+              {/* Top row: title + close */}
+              <div className="flex items-center justify-between px-4 pt-3">
+                <span className="text-base font-semibold" style={{ color: "#1D1B20", letterSpacing: "0.15px" }}>Cash</span>
+                <button
+                  onClick={() => { setShowCashDrawer(false); setPartialPayAmount(null); }}
+                  className="w-8 h-8 flex items-center justify-center rounded-full active:bg-gray-100"
+                >
+                  <X size={20} />
+                </button>
               </div>
 
               {/* Total display */}
@@ -2374,22 +2320,21 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
                     {partialPayAmount != null ? "Amount" : "Total"}
                   </span>
                   <span className="font-medium text-black" style={{ fontSize: 36, lineHeight: "44px" }}>
-                    ${(partialPayAmount != null ? partialPayAmount : discountedTotal).toFixed(2)}
+                    ${(partialPayAmount != null ? partialPayAmount + tip : discountedTotal).toFixed(2)}
                   </span>
                 </div>
+                {tip > 0 && partialPayAmount != null && (
+                  <div className="flex justify-between mt-1">
+                    <span className="text-sm text-[#49454F]">Tip</span>
+                    <span className="text-sm text-[#49454F]">${tip.toFixed(2)}</span>
+                  </div>
+                )}
                 {cashDiscountAmount > 0 && (
                   <div className="flex justify-between mt-1">
                     <span className="text-sm text-[#49454F]">Discount</span>
                     <span className="text-sm text-[#49454F]">−${cashDiscountAmount.toFixed(2)}</span>
                   </div>
                 )}
-              </div>
-
-              {/* Title */}
-              <div className="px-4 pb-3">
-                <span className="text-base font-medium" style={{ color: "#1D1B20", letterSpacing: "0.15px" }}>
-                  Cash payment
-                </span>
               </div>
 
               {/* Sections */}
@@ -2595,7 +2540,7 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
               </div>
 
               {/* Confirm button */}
-              <div className="px-5 pt-5 pb-6">
+              <div className="px-5 pt-5 pb-6 mt-auto">
                 <button
                   disabled={
                     selectedTenderIdx === null &&
@@ -2620,51 +2565,24 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
                       : "Confirm"}
                   </span>
                 </button>
+                <button
+                  onClick={() => { setShowCashDrawer(false); setPartialPayAmount(null); }}
+                  className="w-full h-14 rounded-full flex items-center justify-center active:bg-gray-100 transition-colors bg-white mt-2"
+                >
+                  <span className="text-base font-medium text-black" style={{ letterSpacing: "0.15px" }}>
+                    Cancel
+                  </span>
+                </button>
               </div>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
+        </div>
+      )}
 
       {/* Payment Complete Drawer */}
-      <AnimatePresence>
-        {showPaymentComplete && (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 0.4 }}
-              exit={{ opacity: 0 }}
-              className="absolute inset-0 bg-black z-40"
-            />
-            <motion.div
-              initial={{ y: "100%" }}
-              animate={{ y: 0 }}
-              exit={{ y: "100%" }}
-              transition={{ type: "spring", damping: 25, stiffness: 300 }}
-              drag="y"
-              dragControls={completeDrag}
-              dragListener={false}
-              dragConstraints={{ top: 0, bottom: 0 }}
-              dragElastic={{ top: 0, bottom: 0.6 }}
-              onDragEnd={(_, info) => {
-                if (info.offset.y > 100 || info.velocity.y > 500) {
-                  setShowPaymentComplete(false);
-                }
-              }}
-              className="absolute bottom-0 left-0 right-0 bg-white z-50 flex flex-col"
-              style={{
-                borderRadius: "20px 20px 0 0",
-                boxShadow: "0px -2px 9px rgba(0, 0, 0, 0.25)",
-              }}
-            >
-              {/* Handle */}
-              <div
-                onPointerDown={(e) => completeDrag.start(e)}
-                style={{ touchAction: "none" }}
-                className="flex justify-center pt-3"
-              >
-                <div className="rounded-full" style={{ width: 96, height: 6, background: "#B6B6B6" }} />
-              </div>
+      {showPaymentComplete && (
+        <div
+          className="absolute left-0 right-0 bottom-0 bg-white z-50 flex flex-col"
+          style={{ top: 48 }}
+        >
 
               {/* Total row — justify-between */}
               <div className="flex justify-between items-baseline px-5 pt-4">
@@ -2744,7 +2662,7 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
               </div>
 
               {/* Print receipt button */}
-              <div className="px-5 mt-10">
+              <div className="px-5 mt-auto">
                 <button
                   className="w-full h-14 rounded-full flex items-center justify-center active:opacity-70 transition-colors"
                   style={{ background: "#F3F3F3", border: "1px solid #D8D8D8" }}
@@ -2756,7 +2674,7 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
               </div>
 
               {/* Close order / Proceed to next */}
-              <div className="px-5 mt-[10px] pb-5">
+              <div className="px-5 mt-2 pb-5">
                 {confirmedSplit && confirmedSplit.type === "even" && paidGuests.size < confirmedSplit.guests ? (
                   <button
                     onClick={() => {
@@ -2841,10 +2759,8 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
                   </button>
                 )}
               </div>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
+        </div>
+      )}
 
       {/* Leave payment toast */}
       <AnimatePresence>

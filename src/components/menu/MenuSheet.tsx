@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect, useRef } from "react";
-import { ChevronLeft, ChevronRight, UtensilsCrossed, Minus, Plus, Check, Trash2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, UtensilsCrossed, Minus, Plus, Check, Trash2, ArrowLeft } from "lucide-react";
 import { useOrderStore } from "@/store/order-store";
 import menuData from "@/data/menu.json";
 import { MenuBook, MenuItem, CartItemModifier, Modifier } from "@/lib/types";
@@ -14,6 +14,7 @@ interface MenuSheetProps {
   open: boolean;
   onClose: () => void;
   actionButtons?: React.ReactNode;
+  initialConfigItemId?: string | null;
 }
 
 interface OrderConfig {
@@ -25,13 +26,34 @@ function formatUpcharge(price: number) {
   return Number.isInteger(price) ? price.toString() : price.toFixed(2);
 }
 
-export default function MenuSheet({ open, onClose, actionButtons }: MenuSheetProps) {
+export default function MenuSheet({ open, onClose, actionButtons, initialConfigItemId }: MenuSheetProps) {
   const { addItem, updateItemModifiers, updateComboSelections, updateQuantity, removeItem, cartItems } = useOrderStore();
 
   const [activeBookId, setActiveBookId] = useState<string | null>(null);
   const [activeCatId, setActiveCatId] = useState<string | null>(null);
   const [configItem, setConfigItem] = useState<MenuItem | null>(null);
   const [comboItem, setComboItem] = useState<MenuItem | null>(null);
+  const [editingExisting, setEditingExisting] = useState(false);
+
+  // Auto-open modifier/combo config when initialConfigItemId is provided
+  const prevInitialIdRef = useRef<string | null>(null);
+  if (open && initialConfigItemId && initialConfigItemId !== prevInitialIdRef.current) {
+    prevInitialIdRef.current = initialConfigItemId;
+    const allItems = menuBooks.flatMap((b) => b.categories.flatMap((c) => c.items));
+    const found = allItems.find((i) => i.id === initialConfigItemId);
+    if (found) {
+      setEditingExisting(true);
+      if (found.isCombo && found.comboGroups && found.comboGroups.length > 0) {
+        setComboItem(found);
+      } else if (found.modifierGroups.length > 0) {
+        setConfigItem(found);
+      }
+    }
+  }
+  if (!open && prevInitialIdRef.current !== null) {
+    prevInitialIdRef.current = null;
+    if (editingExisting) setEditingExisting(false);
+  }
 
   // Modifier config state
   const [orders, setOrders] = useState<OrderConfig[]>([{ selections: {} }]);
@@ -262,12 +284,15 @@ export default function MenuSheet({ open, onClose, actionButtons }: MenuSheetPro
   };
 
   const goBack = () => {
+    if (editingExisting) { handleClose(); return; }
     if (configItem) setConfigItem(null);
     else { setActiveBookId(null); setActiveCatId(null); }
   };
 
   const handleClose = () => {
     setConfigItem(null);
+    setComboItem(null);
+    setEditingExisting(false);
     onClose();
   };
 
@@ -339,18 +364,29 @@ export default function MenuSheet({ open, onClose, actionButtons }: MenuSheetPro
     <>
       {open && (
         <>
+          {/* Dark backdrop when modifier config is open */}
+          {configItem && (
+            <div className="absolute inset-0 bg-black/30 z-40" onClick={editingExisting ? handleClose : goBack} />
+          )}
           <div
-            className="absolute bottom-0 left-0 right-0 bg-white z-50 flex flex-col overflow-hidden"
-            style={{ height: "55%" }}
+            className={`absolute bottom-0 left-0 right-0 z-50 flex flex-col overflow-hidden ${
+              configItem ? "bg-white rounded-t-2xl" : "bg-[#F5F5F5]"
+            }`}
+            style={configItem
+              ? { height: "75%", boxShadow: "0 -8px 32px -4px rgba(0,0,0,0.18)" }
+              : { height: "55%" }
+            }
           >
-            {/* Action buttons banner */}
-            <div className="bg-[#F0EFF4] shrink-0 border-t border-gray-300">
-              {actionButtons}
-            </div>
+            {/* Action buttons banner — hidden when modifier config is open */}
+            {!configItem && (
+              <div className="bg-[#F0EFF4] shrink-0 border-t border-gray-300">
+                {actionButtons}
+              </div>
+            )}
 
-            {/* Header — at Level 2 the header merges with category pills into one row */}
-            {level !== 2 && (
-              <div className="flex items-center justify-between pr-2 py-1.5 border-b border-gray-100 shrink-0 bg-[#F5F5F5]" style={{ minHeight: 48, paddingLeft: 20 }}>
+            {/* Header — hidden at Level 2 (merged with pills) and Level 3 (inside overlay) */}
+            {level === 1 && (
+              <div className="flex items-center justify-between pr-2 shrink-0 border-b border-gray-100 bg-[#F5F5F5] py-1.5 mt-1" style={{ minHeight: 57, paddingLeft: 20 }}>
                 <div className="flex items-center gap-1 min-w-0">
                   {level > 1 && (
                     <button onClick={goBack} className="w-8 h-8 flex items-center justify-center rounded-full active:bg-gray-100 shrink-0">
@@ -388,11 +424,11 @@ export default function MenuSheet({ open, onClose, actionButtons }: MenuSheetPro
                 {/* Level 2 — Combined header + category pills row, then item grid */}
                 {activeBookId != null && activeBook && (
                   <div className="absolute inset-0 flex flex-col">
-                    <div className="flex items-center gap-1 pl-2 py-1.5 border-b border-gray-100 shrink-0">
-                      <button onClick={goBack} className="w-8 h-8 flex items-center justify-center rounded-full active:bg-gray-100 shrink-0" style={{ marginRight: -6 }}>
+                    <div className="flex items-center gap-1 pl-2 py-1.5 border-b border-gray-100 shrink-0 mt-1">
+                      <button onClick={goBack} className="flex items-center gap-0.5 rounded-full active:bg-gray-100 shrink-0 pl-1 pr-1 py-1" style={{ marginRight: 4 }}>
                         <ChevronLeft size={20} />
+                        <span className="text-[14px] font-semibold text-[#1D1B20]">{activeBook.name}</span>
                       </button>
-                      <span className="text-[14px] font-semibold text-[#1D1B20] shrink-0 mr-2.5">{activeBook.name}</span>
                       <div className="flex-1 flex items-center gap-1.5 overflow-x-auto overflow-y-hidden no-scrollbar pr-2">
                         {activeBook.categories.map((cat) => {
                           const active = (activeCatId ?? activeBook.categories[0]?.id) === cat.id;
@@ -525,6 +561,22 @@ export default function MenuSheet({ open, onClose, actionButtons }: MenuSheetPro
               {/* Level 3 — Modifier drill-in, instant (no animation) */}
               {configItem && (
                   <div className="absolute inset-0 bg-white flex flex-col" style={{ zIndex: 10 }}>
+                    {/* Drag handle */}
+                    <div className="flex justify-center pt-2.5 pb-1 cursor-pointer shrink-0" onClick={editingExisting ? handleClose : goBack}>
+                      <div className="w-9 h-1 rounded-full bg-[#CAC4D0]" />
+                    </div>
+                    {/* Header — back arrow + item name */}
+                    <div className="flex items-center gap-2 px-4 pb-2">
+                      <button
+                        onClick={editingExisting ? handleClose : goBack}
+                        className="w-8 h-8 rounded-full flex items-center justify-center active:bg-gray-100 shrink-0"
+                      >
+                        <ArrowLeft size={20} />
+                      </button>
+                      <div className="flex-1 min-w-0">
+                        <h2 className="text-base font-semibold">{configItem.name}</h2>
+                      </div>
+                    </div>
                     {/* Qty editor lives in the sheet header (next to X) */}
                     <div className="shrink-0">
                       {/* Order tabs row — always visible */}
@@ -666,7 +718,7 @@ export default function MenuSheet({ open, onClose, actionButtons }: MenuSheetPro
             <ComboConfigSheet
               item={comboItem}
               existingCartItems={cartItems.filter((ci) => ci.menuItemId === comboItem.id)}
-              onClose={() => setComboItem(null)}
+              onClose={() => { if (editingExisting) handleClose(); else setComboItem(null); }}
               onAdd={(comboSelections) => {
                 addItem({
                   menuItemId: comboItem.id,

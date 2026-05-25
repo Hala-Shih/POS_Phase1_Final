@@ -10,6 +10,9 @@ import {
   Minus,
   Plus,
   Trash2,
+  BookOpen,
+  Printer,
+  LayoutGrid,
 } from "lucide-react";
 import { useOrderStore } from "@/store/order-store";
 import { getPriceBreakdown, formatCurrency, formatSignedCurrency } from "@/lib/pricing";
@@ -272,52 +275,58 @@ export default function CheckSummaryScreen({ menuOpen: externalMenuOpen, setMenu
       </div>
 
       {/* Full action grid — visible on check summary (no drawer open) */}
-      <div className={`px-3 pb-3 pt-3 bg-[#F0EFF4] shrink-0 ${fullHeightDrawerOpen ? "hidden" : ""}`} style={{ boxShadow: '0 -4px 12px rgba(0,0,0,0.08)' }}>
+      <div className={`px-3 pb-3 pt-3 bg-[#F0EFF4] shrink-0 border-t border-gray-300 ${fullHeightDrawerOpen ? "hidden" : ""}`}>
         <div className="grid grid-cols-2 gap-2">
-          <button
-            onClick={() => setMenuOpen(true)}
-            className="flex items-center justify-center h-[48px] rounded-xl border border-gray-800 text-[13px] font-medium bg-white transition-colors active:opacity-70"
-          >
-            Load menu
-          </button>
           <button
             onClick={() => { markAllSent(); }}
             disabled={unsentItems.length === 0}
-            className="flex items-center justify-center h-[48px] rounded-xl border border-gray-800 text-[13px] font-medium bg-white transition-colors active:opacity-70 disabled:opacity-40"
+            className="flex items-center gap-2.5 px-3 h-[48px] rounded-xl border border-gray-200 text-[13px] font-medium bg-white transition-colors active:opacity-70 disabled:opacity-40"
           >
+            <Send size={18} className="text-gray-500 shrink-0" />
             Send
           </button>
           <button
-            disabled={isEmpty}
-            className="flex items-center justify-center h-[48px] rounded-xl border border-gray-800 text-[13px] font-medium bg-white transition-colors active:opacity-70 disabled:opacity-40"
+            onClick={() => setMenuOpen(true)}
+            className="flex items-center gap-2.5 px-3 h-[48px] rounded-xl border border-gray-200 text-[13px] font-medium bg-white transition-colors active:opacity-70"
           >
+            <BookOpen size={18} className="text-gray-500 shrink-0" />
+            Load menu
+          </button>
+          <button
+            disabled={isEmpty}
+            className="flex items-center gap-2.5 px-3 h-[48px] rounded-xl border border-gray-200 text-[13px] font-medium bg-white transition-colors active:opacity-70 disabled:opacity-40"
+          >
+            <Printer size={18} className="text-gray-500 shrink-0" />
             Print check
           </button>
           <button
             onClick={handlePay}
             disabled={isEmpty}
-            className="flex items-center justify-center h-[48px] rounded-xl border border-gray-800 text-[13px] font-medium bg-white transition-colors active:opacity-70 disabled:opacity-40"
+            className="flex items-center gap-2.5 px-3 h-[48px] rounded-xl border border-gray-200 text-[13px] font-medium bg-white transition-colors active:opacity-70 disabled:opacity-40"
           >
+            <CreditCard size={18} className="text-gray-500 shrink-0" />
             Pay
           </button>
           <button
             disabled={isEmpty}
-            className="flex items-center justify-center h-[48px] rounded-xl border border-gray-800 text-[13px] font-medium bg-white transition-colors active:opacity-70 disabled:opacity-40"
+            className="flex items-center gap-2.5 px-3 h-[48px] rounded-xl border border-gray-200 text-[13px] font-medium bg-white transition-colors active:opacity-70 disabled:opacity-40"
           >
+            <GitFork size={18} className="text-gray-500 shrink-0" />
             Split check
           </button>
           <div className="relative">
             <button
               onClick={() => setShowTableActions(!showTableActions)}
-              className="w-full flex items-center justify-center h-[48px] rounded-xl border border-gray-800 text-[13px] font-medium bg-white transition-colors active:opacity-70"
+              className="w-full flex items-center gap-2.5 px-3 h-[48px] rounded-xl border border-gray-200 text-[13px] font-medium bg-white transition-colors active:opacity-70"
             >
+              <LayoutGrid size={18} className="text-gray-500 shrink-0" />
               Table actions
             </button>
             {showTableActions && (
               <>
                 <div className="fixed inset-0 z-[60]" onClick={() => setShowTableActions(false)} />
                 <div className="absolute bottom-full left-0 right-0 mb-1 bg-white rounded-xl shadow-lg border border-gray-200 z-[61] py-1 overflow-hidden">
-                  {["Share Table", "Switch Table", "Clear Table", "Combine Table"].map((action) => (
+                  {["Share Table", "Transfer Table", "Clear Table", "Combine Table"].map((action) => (
                     <button
                       key={action}
                       onClick={() => setShowTableActions(false)}

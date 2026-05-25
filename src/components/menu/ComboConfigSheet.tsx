@@ -351,6 +351,8 @@ export default function ComboConfigSheet({
 
   return (
     <>
+      {/* Dark backdrop */}
+      <div className="absolute inset-0 bg-black/30 z-40" onClick={onClose} />
       {/* Sheet */}
       <div
         className="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl z-50 flex flex-col overflow-hidden"
