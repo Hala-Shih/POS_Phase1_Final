@@ -519,7 +519,7 @@ export default function MenuSheet({ open, onClose, actionButtons, initialConfigI
                                   {n(item)}
                                 </span>
                                 {item.soldOut && (
-                                  <span className="text-[10px] text-[var(--error)] font-medium shrink-0">Sold out</span>
+                                  <span className="text-[10px] text-[var(--error)] font-medium shrink-0">{language === "zh" ? "售罄" : "Sold out"}</span>
                                 )}
                                 {count > 0 && (
                                   <span

@@ -19,6 +19,7 @@ function BreaklineIcon({ size = 16, color = "currentColor" }: { size?: number; c
  *   badge.
  */
 function CartPriceColumn({ item }: { item: CartItem }) {
+  const language = useOrderStore((s) => s.language);
   const breakdown = getPriceBreakdown(item);
 
   if (breakdown.isComped) {
@@ -28,7 +29,7 @@ function CartPriceColumn({ item }: { item: CartItem }) {
           {formatCurrency(breakdown.basePrice)}
         </span>
         <span className="text-xs font-semibold px-1.5 py-0.5 rounded-full bg-[#E8DEF8] text-[#6750A4]">
-          COMP
+          {language === "zh" ? "招待" : "COMP"}
         </span>
       </div>
     );
@@ -60,6 +61,7 @@ function CartPriceColumn({ item }: { item: CartItem }) {
  * Override suppresses inline deltas and shows a single "Override" label.
  */
 function CartItemDescription({ item, dim }: { item: CartItem; dim?: boolean }) {
+  const language = useOrderStore((s) => s.language);
   const breakdown = getPriceBreakdown(item);
   const overrideActive = breakdown.hasOverride;
   const dimClass = dim ? "opacity-60" : "";
@@ -86,7 +88,7 @@ function CartItemDescription({ item, dim }: { item: CartItem; dim?: boolean }) {
             return (
               <span key={`${g.groupId}-${m.id}`}>
                 {i > 0 && ", "}
-                {m.name}
+                {language === "zh" && m.nameCn ? m.nameCn : m.name}
                 {d ? (
                   <span className="ml-1 text-[var(--primary)] font-medium">
                     {formatSignedCurrency(d)}
@@ -106,7 +108,7 @@ function CartItemDescription({ item, dim }: { item: CartItem; dim?: boolean }) {
             return (
               <span key={`${s.groupId}-${s.component.id}-${ci}`}>
                 {ci > 0 && " · "}
-                {s.component.name}
+                {language === "zh" && s.component.nameCn ? s.component.nameCn : s.component.name}
                 {compDelta ? (
                   <span className="ml-1 text-[var(--primary)] font-medium">
                     {formatSignedCurrency(compDelta)}
@@ -120,7 +122,7 @@ function CartItemDescription({ item, dim }: { item: CartItem; dim?: boolean }) {
                       return (
                         <span key={`${g.groupId}-${m.id}`}>
                           {mi > 0 && ", "}
-                          {m.name}
+                          {language === "zh" && m.nameCn ? m.nameCn : m.name}
                           {d ? (
                             <span className="ml-1 text-[var(--primary)] font-medium">
                               {formatSignedCurrency(d)}
@@ -140,7 +142,7 @@ function CartItemDescription({ item, dim }: { item: CartItem; dim?: boolean }) {
 
       {item.note && (
         <p className={`text-xs text-[var(--primary)] italic ${dimClass}`}>
-          Note: {item.note}
+          {language === "zh" ? "備註" : "Note"}: {item.note}
           {!overrideActive && breakdown.noteAdjustment ? (
             <span className="ml-1 not-italic font-medium">
               {formatSignedCurrency(breakdown.noteAdjustment.amount)}
@@ -159,7 +161,7 @@ function CartItemDescription({ item, dim }: { item: CartItem; dim?: boolean }) {
       )}
 
       {overrideActive && (
-        <p className={`text-xs text-[var(--primary)] italic ${dimClass}`}>Override</p>
+        <p className={`text-xs text-[var(--primary)] italic ${dimClass}`}>{language === "zh" ? "改價" : "Override"}</p>
       )}
     </>
   );
@@ -1092,7 +1094,7 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
                             <button onClick={() => saveNote(item.id)}
                               disabled={!noteValue.trim() && !priceAdjValue.trim()}
                               className="w-full py-1.5 rounded-lg bg-[var(--primary)] text-white text-sm font-medium disabled:opacity-40"
-                            >Save</button>
+                            >{language === "zh" ? "儲存" : "Save"}</button>
                           </div>
                         )}
                         </div>
@@ -1114,13 +1116,13 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
                 }}
                 className="border-t border-[var(--outline-variant)] px-4 py-2 flex justify-between items-center cursor-pointer active:bg-gray-50"
               >
-                <span className="text-xs text-[var(--outline)]">Total</span>
+                <span className="text-xs text-[var(--outline)]">{language === "zh" ? "合計" : "Total"}</span>
                 <span className="text-sm font-bold">${total.toFixed(2)}</span>
               </div>
             ) : (
               <div className="border-t border-[var(--outline-variant)] px-4 py-3">
                 <div className="flex justify-between items-center mb-3">
-                  <span className="text-sm text-[var(--outline)]">Total</span>
+                  <span className="text-sm text-[var(--outline)]">{language === "zh" ? "合計" : "Total"}</span>
                   <span className="text-lg font-bold">
                     ${total.toFixed(2)}
                   </span>
@@ -1168,10 +1170,10 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
         {/* Content */}
         <div className="px-4 pt-4 pb-1">
           <p className="text-2xl font-medium text-black leading-8">
-            You have {unsentItems.length} unsent {unsentItems.length === 1 ? "item" : "items"}
+            {language === "zh" ? `您有 ${unsentItems.length} 項未送出的品項` : `You have ${unsentItems.length} unsent ${unsentItems.length === 1 ? "item" : "items"}`}
           </p>
           <p className="text-base text-black leading-6 mt-1" style={{ letterSpacing: "0.5px" }}>
-            Send items to kitchen before proceeding to pay.
+            {language === "zh" ? "請先將品項送至廨房再進行結帳。" : "Send items to kitchen before proceeding to pay."}
           </p>
         </div>
 

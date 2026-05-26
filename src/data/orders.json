@@ -4,13 +4,178 @@
     "orderNumber": "#0001",
     "tableId": "t1",
     "tableName": "T1",
-    "guestCount": 2,
+    "guestCount": 4,
     "serverId": "s1",
     "serverName": "James K.",
-    "items": [],
-    "status": "editing",
+    "items": [
+      {
+        "id": "oi-1",
+        "menuItemId": "item-nx-soup-dumpling",
+        "name": "Nan Xiang Soup Dumplings (6)",
+        "basePrice": 9.95,
+        "quantity": 1,
+        "modifiers": [],
+        "sent": true,
+        "totalPrice": 9.95
+      },
+      {
+        "id": "oi-2",
+        "menuItemId": "item-spring-rolls",
+        "name": "Fried Vegetable / Shrimp Spring Rolls (3)",
+        "basePrice": 5.95,
+        "quantity": 1,
+        "modifiers": [
+          {
+            "groupId": "mg-spring-roll-type",
+            "groupName": "Choose Type",
+            "modifiers": [{ "id": "mod-sr-veg", "name": "Vegetable", "price": 0, "nameCn": "蔬菜" }]
+          }
+        ],
+        "sent": true,
+        "totalPrice": 5.95
+      },
+      {
+        "id": "oi-3",
+        "menuItemId": "item-cucumber-salad",
+        "name": "Cucumber Salad w. Garlic",
+        "basePrice": 8.25,
+        "quantity": 1,
+        "modifiers": [],
+        "sent": true,
+        "totalPrice": 8.25
+      },
+      {
+        "id": "oi-4",
+        "menuItemId": "item-steak-combo",
+        "name": "Steak Combo",
+        "basePrice": 42,
+        "quantity": 1,
+        "modifiers": [],
+        "comboSelections": [
+          {
+            "groupId": "cg-steak-pick",
+            "groupName": "Choose Your Steak",
+            "component": { "id": "cc-ribeye", "name": "Ribeye 14oz", "nameCn": "肋眼牛排 14oz", "price": 6, "modifierGroups": [] },
+            "modifiers": [
+              {
+                "groupId": "mg-cc-rib-temp",
+                "groupName": "Temperature",
+                "modifiers": [{ "id": "mod-cc-rib-mr", "name": "Medium Rare", "price": 0, "nameCn": "三分熟" }]
+              }
+            ]
+          },
+          {
+            "groupId": "cg-steak-side",
+            "groupName": "Choose Your Side",
+            "component": { "id": "cc-side-mash", "name": "Garlic Mashed Potatoes", "nameCn": "蒜香薯泥", "price": 0, "modifierGroups": [] },
+            "modifiers": []
+          },
+          {
+            "groupId": "cg-steak-drink",
+            "groupName": "Choose Your Drink",
+            "component": { "id": "cc-drink-beer", "name": "Draft Beer", "nameCn": "生啤酒", "price": 3, "modifierGroups": [] },
+            "modifiers": []
+          }
+        ],
+        "sent": true,
+        "totalPrice": 51
+      },
+      {
+        "id": "oi-5",
+        "menuItemId": "item-seafood-combo",
+        "name": "Seafood Combo",
+        "basePrice": 38,
+        "quantity": 1,
+        "modifiers": [],
+        "comboSelections": [
+          {
+            "groupId": "cg-sea-pick",
+            "groupName": "Choose Your Seafood",
+            "component": { "id": "cc-salmon", "name": "Grilled Salmon", "nameCn": "烤三文魚", "price": 0, "modifierGroups": [] },
+            "modifiers": [
+              {
+                "groupId": "mg-cc-sal-cook",
+                "groupName": "Doneness",
+                "modifiers": [{ "id": "mod-cc-sal-med", "name": "Medium", "price": 0, "nameCn": "五分熟" }]
+              }
+            ]
+          },
+          {
+            "groupId": "cg-sea-side",
+            "groupName": "Choose Your Side",
+            "component": { "id": "cc-sea-side-rice", "name": "Jasmine Rice", "nameCn": "茉莉香米飯", "price": 0, "modifierGroups": [] },
+            "modifiers": []
+          },
+          {
+            "groupId": "cg-sea-drink",
+            "groupName": "Choose Your Drink",
+            "component": { "id": "cc-sea-drink-tea", "name": "Iced Tea", "nameCn": "冰茶", "price": 0, "modifierGroups": [] },
+            "modifiers": []
+          }
+        ],
+        "sent": true,
+        "totalPrice": 38
+      },
+      {
+        "id": "oi-6",
+        "menuItemId": "item-nx-fried-rice",
+        "name": "Nan Xiang Fried Rice",
+        "basePrice": 15,
+        "quantity": 1,
+        "modifiers": [],
+        "sent": true,
+        "totalPrice": 15
+      },
+      {
+        "id": "oi-7",
+        "menuItemId": "item-pork-chop-noodle",
+        "name": "Pork Chop Noodle Soup",
+        "basePrice": 13.5,
+        "quantity": 1,
+        "modifiers": [],
+        "sent": true,
+        "totalPrice": 13.5
+      },
+      {
+        "id": "oi-8",
+        "menuItemId": "item-rice-cake-pork",
+        "name": "Stir-Fried Rice Cakes w. Shredded Pork",
+        "basePrice": 13.75,
+        "quantity": 1,
+        "modifiers": [],
+        "sent": true,
+        "totalPrice": 13.75
+      },
+      {
+        "id": "oi-9",
+        "menuItemId": "item-soybean-milk",
+        "name": "Soybean Milk",
+        "basePrice": 3.95,
+        "quantity": 1,
+        "modifiers": [
+          {
+            "groupId": "mg-soybean-temp",
+            "groupName": "Temperature",
+            "modifiers": [{ "id": "mod-soy-hot", "name": "Hot", "price": 0, "nameCn": "熱" }]
+          }
+        ],
+        "sent": true,
+        "totalPrice": 3.95
+      },
+      {
+        "id": "oi-10",
+        "menuItemId": "item-savory-soybean-milk",
+        "name": "Savory Soybean Milk",
+        "basePrice": 4.75,
+        "quantity": 1,
+        "modifiers": [],
+        "sent": true,
+        "totalPrice": 4.75
+      }
+    ],
+    "status": "sent",
     "orderType": "dine-in",
-    "total": 115,
+    "total": 164.1,
     "createdAt": "2026-04-02T02:53:51Z"
   },
   {

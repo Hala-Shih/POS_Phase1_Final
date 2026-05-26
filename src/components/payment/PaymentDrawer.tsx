@@ -11,7 +11,7 @@ import DragHandle from "@/components/ui/DragHandle";
 import { getPriceBreakdown, formatCurrency, formatSignedCurrency } from "@/lib/pricing";
 
 /* ── helpers (mirror PaymentScreen) ── */
-const TAX_RATE = 0.0875;
+const TAX_RATE = 0.08875;
 function roundCurrency(v: number) { return Math.round(v * 100) / 100; }
 
 interface ItemizedUnit {
@@ -19,13 +19,14 @@ interface ItemizedUnit {
   unitTotal: number; source: CartItem;
 }
 
-function buildItemizedUnits(items: CartItem[]): ItemizedUnit[] {
+function buildItemizedUnits(items: CartItem[], language: string): ItemizedUnit[] {
   return items.flatMap((item) => {
     const totalCents = Math.round(item.totalPrice * 100);
     const baseCents = Math.floor(totalCents / item.quantity);
     const remainderCents = totalCents - baseCents * item.quantity;
+    const displayName = language === "zh" && item.nameCn ? item.nameCn : item.name;
     return Array.from({ length: item.quantity }, (_, i) => ({
-      unitId: `${item.id}:${i}`, name: item.name, unitIndex: i, unitCount: item.quantity,
+      unitId: `${item.id}:${i}`, name: displayName, unitIndex: i, unitCount: item.quantity,
       unitTotal: (baseCents + (i < remainderCents ? 1 : 0)) / 100,
       source: item,
     }));
@@ -36,6 +37,7 @@ function buildItemizedUnits(items: CartItem[]): ItemizedUnit[] {
  * Rule 15 inline-delta description for a payment-drawer unit row.
  */
 function UnitDescription({ item }: { item: CartItem }) {
+  const language = useOrderStore((s) => s.language);
   const breakdown = getPriceBreakdown(item);
   const overrideActive = breakdown.hasOverride;
 
@@ -52,7 +54,7 @@ function UnitDescription({ item }: { item: CartItem }) {
             return (
               <span key={`${g.groupId}-${m.id}`}>
                 {i > 0 && ", "}
-                {m.name}
+                {language === "zh" && m.nameCn ? m.nameCn : m.name}
                 {d ? (
                   <span className="ml-1 font-medium" style={{ color: "#6750A4" }}>
                     {formatSignedCurrency(d)}
@@ -72,7 +74,7 @@ function UnitDescription({ item }: { item: CartItem }) {
             return (
               <span key={`${s.groupId}-${s.component.id}-${ci}`}>
                 {ci > 0 && " · "}
-                {s.component.name}
+                {language === "zh" && s.component.nameCn ? s.component.nameCn : s.component.name}
                 {compDelta ? (
                   <span className="ml-1 font-medium" style={{ color: "#6750A4" }}>
                     {formatSignedCurrency(compDelta)}
@@ -86,7 +88,7 @@ function UnitDescription({ item }: { item: CartItem }) {
                       return (
                         <span key={`${g.groupId}-${m.id}`}>
                           {mi > 0 && ", "}
-                          {m.name}
+                          {language === "zh" && m.nameCn ? m.nameCn : m.name}
                           {d ? (
                             <span className="ml-1 font-medium" style={{ color: "#6750A4" }}>
                               {formatSignedCurrency(d)}
@@ -106,7 +108,7 @@ function UnitDescription({ item }: { item: CartItem }) {
 
       {item.note && (
         <p className="text-xs italic mt-0.5" style={{ color: "#6750A4" }}>
-          Note: {item.note}
+          {language === "zh" ? "備註" : "Note"}: {item.note}
           {!overrideActive && breakdown.noteAdjustment ? (
             <span className="ml-1 not-italic font-medium">
               {formatSignedCurrency(breakdown.noteAdjustment.amount)}
@@ -168,7 +170,7 @@ const DISCOUNT_PRESETS = [
   { label: "-5%", value: 0.05 },
 ];
 const MOCK_GIFT_CARDS: Record<string, { pin: string; balance: number }> = {
-  abc1234: { pin: "1234", balance: 150.0 },
+  abc1234: { pin: "1234", balance: 100.0 },
 };
 
 /* ── types ── */
@@ -316,7 +318,7 @@ export default function PaymentDrawer({
   const rawSubtotal    = cartTotal();
   const orderBaseTotal = roundCurrency(rawSubtotal * (1 + TAX_RATE));
   const payableTotal   = orderBaseTotal;
-  const itemizedUnits  = buildItemizedUnits(cartItems);
+  const itemizedUnits  = buildItemizedUnits(cartItems, language);
   const maxGuests      = Math.max(guestCount, 2);
 
   /* tender presets */
@@ -589,7 +591,7 @@ export default function PaymentDrawer({
           <button type="button" disabled={splitConfirmDisabled} onClick={() => { onSplit(); setView("main"); }}
             className="w-full py-3.5 rounded-full text-sm font-semibold text-white active:opacity-80 disabled:opacity-40"
             style={{ background: splitConfirmDisabled ? "#CFCFCF" : "#00B618" }}>
-            Confirm
+            {P.confirm}
           </button>
         </div>
       </Panel>

@@ -708,71 +708,217 @@ export const useOrderStore = create<OrderState>((set, get) => ({
 
   loadTableOrder: (table) => {
     const isSent = table.orderStatus === "sent";
-    // Order #0001 (T1) — steak content per design spec.
+    // Order #0001 (T1) — Nan Xiang menu items for a table of 4.
     if (table.id === "t1") {
-      const steakItems: CartItem[] = [
+      const t1Items: CartItem[] = [
         {
           id: generateId(),
-          menuItemId: "item-filet-mignon",
-          name: "Filet Mignon",
-          basePrice: 56,
-          quantity: 1,
-          modifiers: [
-            {
-              groupId: "mg-filet-temp",
-              groupName: "Temperature",
-              modifiers: [{ id: "mod-filet-mr", name: "Medium Rare", price: 0 }],
-            },
-            {
-              groupId: "mg-filet-sauce",
-              groupName: "Sauce",
-              modifiers: [{ id: "mod-filet-peppercorn", name: "Peppercorn", price: 0 }],
-            },
-          ],
-          sent: isSent,
-          totalPrice: 56,
-        },
-        {
-          id: generateId(),
-          menuItemId: "item-calamari",
-          name: "Calamari",
-          basePrice: 14,
+          menuItemId: "item-nx-soup-dumpling",
+          name: "Nan Xiang Soup Dumplings (6)",
+          basePrice: 9.95,
           quantity: 1,
           modifiers: [],
           sent: isSent,
-          totalPrice: 14,
+          totalPrice: 9.95,
         },
         {
           id: generateId(),
-          menuItemId: "item-truffle-fries",
-          name: "Truffle Fries",
-          basePrice: 13,
-          quantity: 1,
-          modifiers: [],
-          sent: isSent,
-          totalPrice: 13,
-        },
-        {
-          id: generateId(),
-          menuItemId: "item-fully-loaded-burger",
-          name: "The Fully Loaded Super Deluxe Double Bacon Cheeseburger",
-          basePrice: 32,
+          menuItemId: "item-spring-rolls",
+          name: "Fried Vegetable / Shrimp Spring Rolls (3)",
+          basePrice: 5.95,
           quantity: 1,
           modifiers: [
             {
-              groupId: "mg-fully-loaded-temp",
-              groupName: "Temperature",
-              modifiers: [{ id: "mod-fl-med", name: "Medium", price: 0 }],
+              groupId: "mg-spring-roll-type",
+              groupName: "Choose Type",
+              modifiers: [{ id: "mod-sr-veg", name: "Vegetable", nameCn: "蔬菜", price: 0 }],
             },
           ],
           sent: isSent,
-          totalPrice: 32,
+          totalPrice: 5.95,
+        },
+        {
+          id: generateId(),
+          menuItemId: "item-cucumber-salad",
+          name: "Cucumber Salad w. Garlic",
+          basePrice: 8.25,
+          quantity: 1,
+          modifiers: [],
+          sent: isSent,
+          totalPrice: 8.25,
+        },
+        {
+          id: generateId(),
+          menuItemId: "item-steak-combo",
+          name: "Steak Combo",
+          basePrice: 42,
+          quantity: 1,
+          modifiers: [],
+          comboSelections: [
+            {
+              groupId: "cg-steak-pick",
+              groupName: "Choose Your Steak",
+              component: { id: "cc-ribeye", name: "Ribeye 14oz", nameCn: "肋眼牛排 14oz", price: 6, modifierGroups: [] },
+              modifiers: [
+                {
+                  groupId: "mg-cc-rib-temp",
+                  groupName: "Temperature",
+                  modifiers: [{ id: "mod-cc-rib-mr", name: "Medium Rare", nameCn: "三分熟", price: 0 }],
+                },
+              ],
+            },
+            {
+              groupId: "cg-steak-side",
+              groupName: "Choose Your Side",
+              component: { id: "cc-side-mash", name: "Garlic Mashed Potatoes", nameCn: "蒜香薯泥", price: 0, modifierGroups: [] },
+              modifiers: [],
+            },
+            {
+              groupId: "cg-steak-drink",
+              groupName: "Choose Your Drink",
+              component: { id: "cc-drink-beer", name: "Draft Beer", nameCn: "生啤酒", price: 3, modifierGroups: [] },
+              modifiers: [],
+            },
+          ],
+          sent: isSent,
+          totalPrice: 51,
+        },
+        {
+          id: generateId(),
+          menuItemId: "item-seafood-combo",
+          name: "Seafood Combo",
+          basePrice: 38,
+          quantity: 1,
+          modifiers: [],
+          comboSelections: [
+            {
+              groupId: "cg-sea-pick",
+              groupName: "Choose Your Seafood",
+              component: { id: "cc-salmon", name: "Grilled Salmon", nameCn: "烤三文魚", price: 0, modifierGroups: [] },
+              modifiers: [
+                {
+                  groupId: "mg-cc-sal-cook",
+                  groupName: "Doneness",
+                  modifiers: [{ id: "mod-cc-sal-med", name: "Medium", nameCn: "五分熟", price: 0 }],
+                },
+              ],
+            },
+            {
+              groupId: "cg-sea-side",
+              groupName: "Choose Your Side",
+              component: { id: "cc-sea-side-rice", name: "Jasmine Rice", nameCn: "茉莉香米飯", price: 0, modifierGroups: [] },
+              modifiers: [],
+            },
+            {
+              groupId: "cg-sea-drink",
+              groupName: "Choose Your Drink",
+              component: { id: "cc-sea-drink-tea", name: "Iced Tea", nameCn: "冰茶", price: 0, modifierGroups: [] },
+              modifiers: [],
+            },
+          ],
+          sent: isSent,
+          totalPrice: 38,
+        },
+        {
+          id: generateId(),
+          menuItemId: "item-nx-fried-rice",
+          name: "Nan Xiang Fried Rice",
+          basePrice: 15,
+          quantity: 1,
+          modifiers: [],
+          sent: isSent,
+          totalPrice: 15,
+        },
+        {
+          id: generateId(),
+          menuItemId: "item-pork-chop-noodle",
+          name: "Pork Chop Noodle Soup",
+          basePrice: 13.5,
+          quantity: 1,
+          modifiers: [],
+          sent: isSent,
+          totalPrice: 13.5,
+        },
+        {
+          id: generateId(),
+          menuItemId: "item-rice-cake-pork",
+          name: "Stir-Fried Rice Cakes w. Shredded Pork",
+          basePrice: 13.75,
+          quantity: 1,
+          modifiers: [],
+          sent: isSent,
+          totalPrice: 13.75,
+        },
+        {
+          id: generateId(),
+          menuItemId: "item-soybean-milk",
+          name: "Soybean Milk",
+          basePrice: 3.95,
+          quantity: 1,
+          modifiers: [
+            {
+              groupId: "mg-soybean-temp",
+              groupName: "Temperature",
+              modifiers: [{ id: "mod-soy-hot", name: "Hot", nameCn: "熱", price: 0 }],
+            },
+          ],
+          sent: isSent,
+          totalPrice: 3.95,
+        },
+        {
+          id: generateId(),
+          menuItemId: "item-savory-soybean-milk",
+          name: "Savory Soybean Milk",
+          basePrice: 4.75,
+          quantity: 1,
+          modifiers: [],
+          sent: isSent,
+          totalPrice: 4.75,
         },
       ];
       set({
         selectedTable: table,
-        guestCount: table.guestCount || 1,
-        cartItems: steakItems,
+        guestCount: table.guestCount || 4,
+        cartItems: t1Items,
+      });
+      return;
+    }
+    // Order for T12 — 2 sent items, table appears available/unoccupied.
+    if (table.id === "t12") {
+      const t12Items: CartItem[] = [
+        {
+          id: generateId(),
+          menuItemId: "item-crab-pork-soup-dumpling",
+          name: "Crab Meat & Pork Soup Dumplings (6)",
+          nameCn: "蟹粉小籠包(六粒）",
+          basePrice: 10.95,
+          quantity: 1,
+          modifiers: [],
+          sent: true,
+          totalPrice: 10.95,
+        },
+        {
+          id: generateId(),
+          menuItemId: "item-soybean-milk",
+          name: "Soybean Milk",
+          nameCn: "熱/ 冰豆漿",
+          basePrice: 3.95,
+          quantity: 1,
+          modifiers: [
+            {
+              groupId: "mg-soybean-temp",
+              groupName: "Temperature",
+              modifiers: [{ id: "mod-soy-hot", name: "Hot", nameCn: "熱", price: 0 }],
+            },
+          ],
+          sent: true,
+          totalPrice: 3.95,
+        },
+      ];
+      set({
+        selectedTable: table,
+        guestCount: table.guestCount || 2,
+        cartItems: t12Items,
       });
       return;
     }

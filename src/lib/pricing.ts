@@ -50,7 +50,8 @@ function round2(n: number) {
  * Build a Rule-15-compliant per-unit price breakdown from a cart item.
  * All amounts are per unit (not multiplied by quantity).
  */
-export function getPriceBreakdown(item: CartItem): PriceBreakdown {
+export function getPriceBreakdown(item: CartItem, language?: string): PriceBreakdown {
+  const zh = language === "zh";
   const basePrice = item.basePrice;
 
   // Modifier upcharges (only non-zero ones become lines).
@@ -60,7 +61,7 @@ export function getPriceBreakdown(item: CartItem): PriceBreakdown {
       if (m.price && m.price !== 0) {
         modifierLines.push({
           key: `mod-${group.groupId}-${m.id}`,
-          label: m.name,
+          label: zh && m.nameCn ? m.nameCn : m.name,
           amount: m.price,
         });
       }
@@ -72,7 +73,7 @@ export function getPriceBreakdown(item: CartItem): PriceBreakdown {
     if (sel.component.price && sel.component.price !== 0) {
       modifierLines.push({
         key: `combo-${sel.groupId}-${sel.component.id}`,
-        label: `${sel.groupName}: ${sel.component.name}`,
+        label: `${sel.groupName}: ${zh && sel.component.nameCn ? sel.component.nameCn : sel.component.name}`,
         amount: sel.component.price,
       });
     }
@@ -81,7 +82,7 @@ export function getPriceBreakdown(item: CartItem): PriceBreakdown {
         if (m.price && m.price !== 0) {
           modifierLines.push({
             key: `combo-mod-${sel.component.id}-${group.groupId}-${m.id}`,
-            label: m.name,
+            label: zh && m.nameCn ? m.nameCn : m.name,
             amount: m.price,
           });
         }
@@ -95,7 +96,7 @@ export function getPriceBreakdown(item: CartItem): PriceBreakdown {
     item.priceAdjustment && item.priceAdjustment !== 0
       ? {
           key: "note-adjustment",
-          label: "Note adjustment",
+          label: zh ? "備註調整" : "Note adjustment",
           amount: item.priceAdjustment,
         }
       : null;
@@ -110,14 +111,14 @@ export function getPriceBreakdown(item: CartItem): PriceBreakdown {
       const amount = -round2(preDiscountUnit * (item.discount.value / 100));
       discount = {
         key: "discount",
-        label: `${item.discount.value}% off`,
+        label: zh ? `${item.discount.value}% 折扣` : `${item.discount.value}% off`,
         amount,
       };
     } else {
       const amount = -Math.min(preDiscountUnit, item.discount.value);
       discount = {
         key: "discount",
-        label: `$${item.discount.value.toFixed(2)} off`,
+        label: zh ? `$${item.discount.value.toFixed(2)} 折扣` : `$${item.discount.value.toFixed(2)} off`,
         amount: round2(amount),
       };
     }
@@ -127,7 +128,7 @@ export function getPriceBreakdown(item: CartItem): PriceBreakdown {
     item.priceOverride != null
       ? {
           key: "override",
-          label: "Override",
+          label: zh ? "改價" : "Override",
           amount: item.priceOverride,
         }
       : null;

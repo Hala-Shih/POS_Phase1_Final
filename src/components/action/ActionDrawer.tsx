@@ -13,7 +13,7 @@ const allMenuItems: MenuItem[] = (menuData as MenuBook[]).flatMap((b) =>
   b.categories.flatMap((c) => c.items)
 );
 
-const TAX_RATE = 0.0875;
+const TAX_RATE = 0.08875;
 
 function roundCurrency(value: number) {
   return Math.round(value * 100) / 100;
@@ -490,7 +490,7 @@ export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMul
                 <p
                   className={showModifySheet ? "text-[15px] font-semibold text-[#1D1B20] leading-tight break-words" : "text-[13px] font-medium leading-snug truncate"}
                   style={showModifySheet ? { display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical" as const, overflow: "hidden" } : undefined}
-                >{cartItem.name}</p>
+                >{n(cartItem)}</p>
               </div>
               {!showModifySheet && (
                 <>
@@ -1585,6 +1585,7 @@ function ActionPriceColumn({ item }: { item: import("@/lib/types").CartItem }) {
  * shows a single "Override" label.
  */
 function ActionItemDescription({ item }: { item: import("@/lib/types").CartItem }) {
+  const language = useOrderStore((s) => s.language);
   const breakdown = getPriceBreakdown(item);
   const overrideActive = breakdown.hasOverride;
 
@@ -1601,7 +1602,7 @@ function ActionItemDescription({ item }: { item: import("@/lib/types").CartItem 
             return (
               <span key={`${g.groupId}-${m.id}`}>
                 {i > 0 && ", "}
-                {m.name}
+                {language === "zh" && m.nameCn ? m.nameCn : m.name}
                 {d ? (
                   <span className="ml-1 text-[var(--primary)] font-medium">
                     {formatSignedCurrency(d)}
@@ -1621,7 +1622,7 @@ function ActionItemDescription({ item }: { item: import("@/lib/types").CartItem 
             return (
               <span key={`${s.groupId}-${s.component.id}-${ci}`}>
                 {ci > 0 && " · "}
-                {s.component.name}
+                {language === "zh" && s.component.nameCn ? s.component.nameCn : s.component.name}
                 {compDelta ? (
                   <span className="ml-1 text-[var(--primary)] font-medium">
                     {formatSignedCurrency(compDelta)}
@@ -1635,7 +1636,7 @@ function ActionItemDescription({ item }: { item: import("@/lib/types").CartItem 
                       return (
                         <span key={`${g.groupId}-${m.id}`}>
                           {mi > 0 && ", "}
-                          {m.name}
+                          {language === "zh" && m.nameCn ? m.nameCn : m.name}
                           {d ? (
                             <span className="ml-1 text-[var(--primary)] font-medium">
                               {formatSignedCurrency(d)}
@@ -1655,7 +1656,7 @@ function ActionItemDescription({ item }: { item: import("@/lib/types").CartItem 
 
       {item.note && (
         <p className="text-[11px] text-[var(--primary)] italic leading-relaxed">
-          Note: {item.note}
+          {language === "zh" ? "備註" : "Note"}: {item.note}
           {!overrideActive && breakdown.noteAdjustment ? (
             <span className="ml-1 not-italic font-medium">
               {formatSignedCurrency(breakdown.noteAdjustment.amount)}
@@ -1674,7 +1675,7 @@ function ActionItemDescription({ item }: { item: import("@/lib/types").CartItem 
       )}
 
       {overrideActive && (
-        <p className="text-[11px] text-[var(--primary)] italic leading-relaxed">Override</p>
+        <p className="text-[11px] text-[var(--primary)] italic leading-relaxed">{language === "zh" ? "改價" : "Override"}</p>
       )}
     </>
   );

@@ -135,7 +135,7 @@ export default function CheckSummaryScreen({ menuOpen: externalMenuOpen, setMenu
     : 0;
   const discountedSubtotal = Math.max(0, subtotal - checkDiscountAmount);
   const discountTotal = itemDiscountTotal + checkDiscountAmount;
-  const tax = Math.round(discountedSubtotal * 0.0875 * 100) / 100;
+  const tax = Math.round(discountedSubtotal * 0.08875 * 100) / 100;
   const tip = checkTip;
   const grandTotal = discountedSubtotal + tax + tip;
   const fullHeightDrawerOpen = menuOpen || searchOpen || cartOpen;
@@ -279,7 +279,7 @@ export default function CheckSummaryScreen({ menuOpen: externalMenuOpen, setMenu
                   muted
                 />
               )}
-              <TotalsRow label={`${language === "zh" ? "稅" : "Tax"} (8.75%)`} value={`$${tax.toFixed(2)}`} muted />
+              <TotalsRow label={`${language === "zh" ? "稅" : "Tax"} (8.875%)`} value={`$${tax.toFixed(2)}`} muted />
               <TotalsRow
                 label={tip > 0 && subtotal > 0 ? `${language === "zh" ? "小費" : "Tip"} (${(tip / subtotal * 100).toFixed(tip / subtotal * 100 >= 10 ? 0 : 1)}%)` : (language === "zh" ? "小費" : "Tip")}
                 value={`$${tip.toFixed(2)}`}
@@ -344,7 +344,10 @@ export default function CheckSummaryScreen({ menuOpen: externalMenuOpen, setMenu
               <>
                 <div className="fixed inset-0 z-[60]" onClick={() => setShowTableActions(false)} />
                 <div className="absolute bottom-full left-0 right-0 mb-1 bg-white rounded-xl shadow-lg border border-gray-200 z-[61] py-1 overflow-hidden">
-                  {["Share Table", "Transfer Table", "Clear Table", "Combine Table"].map((action) => (
+                  {(language === "zh"
+                    ? ["共享桌位", "轉移桌位", "清除桌位", "合併桌位"]
+                    : ["Share Table", "Transfer Table", "Clear Table", "Combine Table"]
+                  ).map((action) => (
                     <button
                       key={action}
                       onClick={() => setShowTableActions(false)}
@@ -743,7 +746,7 @@ function CheckItem({
                       : "border-[var(--outline-variant)]"
                   }`}
                 >
-                  <StickyNote size={11} /> Notes
+                  <StickyNote size={11} /> {language === "zh" ? "備註" : "Notes"}
                 </button>
                 {showNoteFlyout && (() => {
                   const rect = noteBtnRef.current?.getBoundingClientRect();
@@ -756,12 +759,12 @@ function CheckItem({
                         className="fixed z-[201] bg-white rounded-xl shadow-lg border border-gray-200 p-3 w-[260px]"
                         style={{ bottom: `${window.innerHeight - top}px`, left: `${Math.min(left, window.innerWidth - 276)}px` }}
                       >
-                        <p className="text-[12px] text-[var(--outline)] mb-1.5">Add a note for the kitchen</p>
+                        <p className="text-[12px] text-[var(--outline)] mb-1.5">{language === "zh" ? "新增廨房備註" : "Add a note for the kitchen"}</p>
                         <textarea
                           autoFocus
                           value={noteDraft}
                           onChange={(e) => setNoteDraft(e.target.value)}
-                          placeholder="Add notes"
+                          placeholder={language === "zh" ? "輸入備註" : "Add notes"}
                           rows={2}
                           className="w-full rounded-lg border border-[var(--outline-variant)] px-3 py-2 text-[13px] outline-none resize-none focus:border-[var(--primary)]"
                         />
@@ -770,7 +773,7 @@ function CheckItem({
                             onClick={() => setShowNoteFlyout(false)}
                             className="flex-1 h-9 rounded-lg border border-[var(--outline-variant)] text-[12px] font-medium active:bg-gray-50"
                           >
-                            Cancel
+                            {language === "zh" ? "取消" : "Cancel"}
                           </button>
                           <button
                             onClick={() => {
@@ -780,7 +783,7 @@ function CheckItem({
                             className="flex-1 h-9 rounded-lg text-[12px] font-semibold text-white active:opacity-80"
                             style={{ background: "#6750A4" }}
                           >
-                            Save
+                            {language === "zh" ? "儲存" : "Save"}
                           </button>
                         </div>
                       </div>
@@ -789,13 +792,13 @@ function CheckItem({
                 })()}
               </div>
               <button className="flex items-center gap-1 px-2.5 h-[44px] rounded-lg border border-[var(--outline-variant)] text-[11px] font-medium shrink-0 active:bg-gray-100">
-                <ArrowLeft size={11} className="rotate-90" /> Breakline
+                <ArrowLeft size={11} className="rotate-90" /> {language === "zh" ? "分隔線" : "Breakline"}
               </button>
               <button className="flex items-center gap-1 px-2.5 h-[44px] rounded-lg border border-[var(--outline-variant)] text-[11px] font-medium shrink-0 active:bg-gray-100">
-                <CreditCard size={11} /> Price
+                <CreditCard size={11} /> {language === "zh" ? "價格" : "Price"}
               </button>
               <button className="flex items-center gap-1 px-2.5 h-[44px] rounded-lg border border-[var(--outline-variant)] text-[11px] font-medium shrink-0 active:bg-gray-100">
-                <GitFork size={11} /> Comp
+                <GitFork size={11} /> {language === "zh" ? "招待" : "Comp"}
               </button>
             </div>
           </div>
@@ -841,6 +844,7 @@ function ItemDescription({
 }: {
   item: ReturnType<typeof useOrderStore.getState>["cartItems"][number];
 }) {
+  const language = useOrderStore((s) => s.language);
   const breakdown = getPriceBreakdown(item);
   const overrideActive = breakdown.hasOverride;
 
@@ -867,7 +871,7 @@ function ItemDescription({
             return (
               <span key={`${g.groupId}-${m.id}`}>
                 {i > 0 && ", "}
-                {m.name}
+                {language === "zh" && m.nameCn ? m.nameCn : m.name}
                 {d ? (
                   <span className="ml-1 text-[var(--primary)] font-medium">
                     {formatSignedCurrency(d)}
@@ -887,7 +891,7 @@ function ItemDescription({
             return (
               <span key={`${s.groupId}-${s.component.id}-${ci}`}>
                 {ci > 0 && " · "}
-                {s.component.name}
+                {language === "zh" && s.component.nameCn ? s.component.nameCn : s.component.name}
                 {compDelta ? (
                   <span className="ml-1 text-[var(--primary)] font-medium">
                     {formatSignedCurrency(compDelta)}
@@ -901,7 +905,7 @@ function ItemDescription({
                       return (
                         <span key={`${g.groupId}-${m.id}`}>
                           {mi > 0 && ", "}
-                          {m.name}
+                          {language === "zh" && m.nameCn ? m.nameCn : m.name}
                           {d ? (
                             <span className="ml-1 text-[var(--primary)] font-medium">
                               {formatSignedCurrency(d)}
@@ -921,7 +925,7 @@ function ItemDescription({
 
       {item.note && (
         <p className="text-[11px] text-[var(--primary)] italic mt-0.5">
-          Note: {item.note}
+          {language === "zh" ? "備註" : "Note"}: {item.note}
           {!overrideActive && breakdown.noteAdjustment ? (
             <span className="ml-1 not-italic font-medium">
               {formatSignedCurrency(breakdown.noteAdjustment.amount)}
@@ -940,11 +944,11 @@ function ItemDescription({
       )}
 
       {overrideActive && (
-        <p className="text-[11px] text-[var(--primary)] italic mt-0.5">Override</p>
+        <p className="text-[11px] text-[var(--primary)] italic mt-0.5">{language === "zh" ? "改價" : "Override"}</p>
       )}
 
       {breakdown.isComped && (
-        <p className="text-[11px] text-[var(--primary)] italic mt-0.5">Comped</p>
+        <p className="text-[11px] text-[var(--primary)] italic mt-0.5">{language === "zh" ? "招待" : "Comped"}</p>
       )}
     </>
   );

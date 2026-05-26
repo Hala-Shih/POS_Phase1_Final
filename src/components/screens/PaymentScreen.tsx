@@ -9,7 +9,7 @@ import staffData from "@/data/staff.json";
 import tablesData from "@/data/tables.json";
 import type { CartItem, Staff, Table } from "@/lib/types";
 
-const TAX_RATE = 0.0875; // 8.75% tax
+const TAX_RATE = 0.08875; // 8.875% tax
 const TIP_PRESETS = [
   { label: "15%", value: 0.15 },
   { label: "18%", value: 0.18 },
@@ -22,7 +22,7 @@ const DISCOUNT_PRESETS = [
 
 // Mock gift card database for demo
 const MOCK_GIFT_CARDS: Record<string, { pin: string; balance: number }> = {
-  abc1234: { pin: "1234", balance: 150.0 },
+  abc1234: { pin: "1234", balance: 100.0 },
 };
 
 type SplitType = "even" | "amount" | "item";
@@ -48,22 +48,23 @@ function roundCurrency(value: number) {
   return Math.round(value * 100) / 100;
 }
 
-function buildItemizedUnits(items: CartItem[]): ItemizedUnit[] {
+function buildItemizedUnits(items: CartItem[], language: "en" | "zh"): ItemizedUnit[] {
   return items.flatMap((item) => {
     const totalCents = Math.round(item.totalPrice * 100);
     const baseCents = Math.floor(totalCents / item.quantity);
     const remainderCents = totalCents - baseCents * item.quantity;
     const modifiers = item.modifiers.flatMap((group) =>
-      group.modifiers.map((modifier) => modifier.name)
+      group.modifiers.map((modifier) => language === "zh" && modifier.nameCn ? modifier.nameCn : modifier.name)
     );
     const comboSelections = (item.comboSelections || []).map((selection) => {
       const modifierNames = selection.modifiers.flatMap((group) =>
-        group.modifiers.map((modifier) => modifier.name)
+        group.modifiers.map((modifier) => language === "zh" && modifier.nameCn ? modifier.nameCn : modifier.name)
       );
+      const compName = language === "zh" && selection.component.nameCn ? selection.component.nameCn : selection.component.name;
 
       return modifierNames.length > 0
-        ? `${selection.component.name} (${modifierNames.join(", ")})`
-        : selection.component.name;
+        ? `${compName} (${modifierNames.join(", ")})`
+        : compName;
     });
 
     return Array.from({ length: item.quantity }, (_, unitIndex) => ({
@@ -259,7 +260,7 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
     }
   }, [showOrderActions, showOrderDiscountPanel, showOrderPriceOverridePanel]);
 
-  const itemizedUnits = buildItemizedUnits(cartItems);
+  const itemizedUnits = buildItemizedUnits(cartItems, language);
   const unpaidItemUnits = itemizedUnits.filter((unit) => !paidItemUnitIds.has(unit.unitId));
   const selectedItemUnits = itemizedUnits.filter(
     (unit) => selectedItemUnitIds.has(unit.unitId) && !paidItemUnitIds.has(unit.unitId)

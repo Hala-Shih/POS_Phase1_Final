@@ -470,7 +470,7 @@ export default function SearchDrawer({ open, onClose }: SearchDrawerProps) {
                       }`}
                     >
                       {complete && <Check size={12} className="text-[var(--primary)]" />}
-                      Order {i + 1}
+                      {L.order} {i + 1}
                     </button>
                   );
                 })}
@@ -580,7 +580,7 @@ export default function SearchDrawer({ open, onClose }: SearchDrawerProps) {
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search item"
+                  placeholder={L.searchPlaceholder}
                   className="flex-1 bg-transparent text-base outline-none placeholder:text-[var(--outline-variant)]"
                 />
                 {searchQuery && (
@@ -600,10 +600,10 @@ export default function SearchDrawer({ open, onClose }: SearchDrawerProps) {
                 searchResults.length > 0 ? (
                   searchResults.map(renderItem)
                 ) : (
-                  <p className="text-sm text-[var(--outline)] text-center mt-8">No items found</p>
+                  <p className="text-sm text-[var(--outline)] text-center mt-8">{language === "zh" ? "找不到品項" : "No items found"}</p>
                 )
               ) : (
-                <p className="text-sm text-[var(--outline)] text-center mt-8">No search result</p>
+                <p className="text-sm text-[var(--outline)] text-center mt-8">{language === "zh" ? "搜尋菜單" : "No search result"}</p>
               )}
             </div>
           </>
