@@ -9,8 +9,8 @@ import staffData from "@/data/staff.json";
 import { Table, Staff } from "@/lib/types";
 import { Map, Keyboard } from "lucide-react";
 
-const tables = tablesData as Table[];
-const areas = ["All", ...Array.from(new Set(tables.map((t) => t.area)))];
+const baseTables = tablesData as Table[];
+const areas = ["All", ...Array.from(new Set(baseTables.map((t) => t.area)))];
 
 // Area prefix buttons for table search keypad
 const areaPrefixes = [
@@ -29,7 +29,9 @@ export default function TablesScreen() {
   const [keypadValue, setKeypadValue] = useState("");
   const [keypadPrefix, setKeypadPrefix] = useState("");
   const [keypadError, setKeypadError] = useState(false);
-  const { currentStaff, setStaff, setTable, resetOrder, setScreen, loadTableOrder, setOpenMenuOnArrival, language } = useOrderStore();
+  const { currentStaff, setStaff, setTable, resetOrder, setScreen, loadTableOrder, setOpenMenuOnArrival, language, getEffectiveTables } = useOrderStore();
+
+  const tables = getEffectiveTables(tablesData as Table[]);
 
   const L = language === "zh"
     ? { enterTable: "輸入桌號", refresh: "清除", select: "選擇", tableNotFound: "找不到桌位", guests: "位客人",

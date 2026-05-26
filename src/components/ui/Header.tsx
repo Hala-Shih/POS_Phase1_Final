@@ -58,6 +58,7 @@ export default function Header({
   const menuRef = useRef<HTMLDivElement>(null);
   const tableMenuRef = useRef<HTMLDivElement>(null);
   const setTransferSheetOpen = useOrderStore((s) => s.setTransferSheetOpen);
+  const language = useOrderStore((s) => s.language);
 
   // Sync transfer-table sheet open state with the global store so app-level
   // chrome (e.g., FooterNav) can react to it.
@@ -518,8 +519,8 @@ export default function Header({
                   }`}
                 >
                   {selectedTransferTableId
-                    ? `Confirm transfer to ${selectedTable?.name ?? ""}`
-                    : "Select a table"}
+                    ? (language === "zh" ? `確認轉移至 ${selectedTable?.name ?? ""}` : `Confirm transfer to ${selectedTable?.name ?? ""}`)
+                    : (language === "zh" ? "選擇桌位" : "Select a table")}
                 </button>
               </div>
             </motion.div>

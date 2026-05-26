@@ -83,7 +83,7 @@ function buildItemizedUnits(items: CartItem[], language: "en" | "zh"): ItemizedU
 }
 
 export default function PaymentScreen({ onClose: externalClose }: { onClose?: () => void } = {}) {
-  const { cartItems, cartTotal, cartCount, guestCount, selectedTable, currentStaff, setScreen, resetOrder, setStaff, setTable, setOpenMenuOnArrival, setOpenPaymentOnArrival, language } =
+  const { cartItems, cartTotal, cartCount, guestCount, selectedTable, currentStaff, setScreen, resetOrder, setStaff, setTable, setOpenMenuOnArrival, setOpenPaymentOnArrival, language, transferTable, getEffectiveTables } =
     useOrderStore();
 
   const P = language === "zh" ? {
@@ -585,9 +585,9 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
         onTransfer={(staff) => setStaff(staff)}
         staffList={staffData as Staff[]}
         currentStaffId={currentStaff?.id}
-        onTransferTable={(table) => setTable(table)}
+        onTransferTable={(table) => transferTable(table)}
         onVoidOrder={() => { resetOrder(); setScreen("tables"); }}
-        tableList={tablesData as Table[]}
+        tableList={getEffectiveTables(tablesData as Table[])}
         currentTableId={selectedTable?.id}
       />
 

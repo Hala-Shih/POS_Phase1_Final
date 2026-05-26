@@ -10,7 +10,7 @@
   { "id": "t9", "name": "T9", "area": "Main", "status": "available", "shape": "rect", "x": 2, "y": 52, "w": 52, "h": 90 },
   { "id": "t10", "name": "T10", "area": "Main", "status": "available", "shape": "circle", "x": 30, "y": 54, "w": 44, "h": 44 },
   { "id": "t11", "name": "T11", "area": "Main", "status": "available", "shape": "circle", "x": 62, "y": 54, "w": 44, "h": 44 },
-  { "id": "t12", "name": "T12", "area": "Main", "status": "available", "shape": "circle", "x": 30, "y": 70, "w": 44, "h": 44, "guestCount": 2, "serverName": "James K.", "hasActiveOrder": true, "orderStatus": "sent" },
+  { "id": "t12", "name": "T12", "area": "Main", "status": "available", "shape": "circle", "x": 30, "y": 70, "w": 44, "h": 44 },
   { "id": "t13", "name": "T13", "area": "Main", "status": "occupied", "shape": "circle", "x": 62, "y": 70, "w": 48, "h": 48, "guestCount": 3, "serverName": "James K.", "hasActiveOrder": true, "orderStatus": "editing" },
 
   { "id": "b1", "name": "B1", "area": "Bar", "status": "occupied", "shape": "circle", "x": 12, "y": 8, "w": 48, "h": 48, "guestCount": 2, "serverName": "Mike R.", "hasActiveOrder": true, "orderStatus": "sent" },

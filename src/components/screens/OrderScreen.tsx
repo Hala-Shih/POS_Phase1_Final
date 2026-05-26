@@ -37,6 +37,8 @@ export default function OrderScreen() {
     setStaff,
     setTable,
     language,
+    transferTable,
+    getEffectiveTables,
   } = useOrderStore();
 
   const n = (item: { name: string; nameCn?: string }) =>
@@ -190,7 +192,7 @@ export default function OrderScreen() {
   };
 
   const handleTransferTable = (table: Table) => {
-    setTable(table);
+    transferTable(table);
   };
 
   const handleVoidOrder = () => {
@@ -212,7 +214,7 @@ export default function OrderScreen() {
         currentStaffId={currentStaff?.id}
         onTransferTable={handleTransferTable}
         onVoidOrder={handleVoidOrder}
-        tableList={tablesData as Table[]}
+        tableList={getEffectiveTables(tablesData as Table[])}
         currentTableId={selectedTable?.id}
       />
 
@@ -424,7 +426,7 @@ export default function OrderScreen() {
               currentStaffId={currentStaff?.id}
               onTransferTable={handleTransferTable}
               onVoidOrder={handleVoidOrder}
-              tableList={tablesData as Table[]}
+              tableList={getEffectiveTables(tablesData as Table[])}
               currentTableId={selectedTable?.id}
             />
 

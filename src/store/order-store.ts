@@ -232,6 +232,18 @@ interface OrderState {
   // Reset all
   resetOrder: () => void;
   loadTableOrder: (table: Table) => void;
+
+  // Dynamic table overrides — lets us change table status at runtime
+  // without mutating the static JSON. Keys are table ids.
+  tableOverrides: Record<string, Partial<Table>>;
+  setTableOverride: (tableId: string, patch: Partial<Table>) => void;
+  getEffectiveTables: (baseTables: Table[]) => Table[];
+
+  // Transfer table — moves current order from selectedTable to targetTable
+  transferTable: (targetTable: Table) => void;
+
+  // Orders that were transferred to a table (keyed by table id)
+  transferredOrders: Record<string, { cartItems: CartItem[]; guestCount: number; serverName?: string }>;
 }
 
 export const useOrderStore = create<OrderState>((set, get) => ({
@@ -706,7 +718,51 @@ export const useOrderStore = create<OrderState>((set, get) => ({
       activeCategoryId: null,
     }),
 
+  tableOverrides: {},
+  setTableOverride: (tableId, patch) =>
+    set((s) => ({
+      tableOverrides: { ...s.tableOverrides, [tableId]: { ...s.tableOverrides[tableId], ...patch } },
+    })),
+  getEffectiveTables: (baseTables) => {
+    const overrides = get().tableOverrides;
+    return baseTables.map((t) => (overrides[t.id] ? { ...t, ...overrides[t.id] } : t));
+  },
+
+  transferredOrders: {},
+
+  transferTable: (targetTable) => {
+    const { selectedTable, cartItems, guestCount, currentStaff } = get();
+    if (!selectedTable) return;
+    const serverName = currentStaff?.name ?? selectedTable.serverName;
+    // Save current cart to transferred orders keyed by target table id
+    set((s) => ({
+      transferredOrders: {
+        ...s.transferredOrders,
+        [targetTable.id]: { cartItems: [...cartItems], guestCount, serverName },
+      },
+      // Mark old table as available
+      tableOverrides: {
+        ...s.tableOverrides,
+        [selectedTable.id]: { status: "available" as const, hasActiveOrder: false, guestCount: undefined, serverName: undefined, orderStatus: undefined },
+        // Mark new table as occupied with sent order
+        [targetTable.id]: { status: "occupied" as const, hasActiveOrder: true, guestCount, serverName, orderStatus: "sent" as const },
+      },
+      // Update selected table to the new one
+      selectedTable: { ...targetTable, status: "occupied" as const, hasActiveOrder: true, guestCount, serverName, orderStatus: "sent" as const },
+    }));
+  },
+
   loadTableOrder: (table) => {
+    // Check for a transferred order first
+    const transferred = get().transferredOrders[table.id];
+    if (transferred) {
+      set({
+        selectedTable: table,
+        guestCount: transferred.guestCount,
+        cartItems: transferred.cartItems,
+      });
+      return;
+    }
     const isSent = table.orderStatus === "sent";
     // Order #0001 (T1) — Nan Xiang menu items for a table of 4.
     if (table.id === "t1") {
@@ -880,45 +936,6 @@ export const useOrderStore = create<OrderState>((set, get) => ({
         selectedTable: table,
         guestCount: table.guestCount || 4,
         cartItems: t1Items,
-      });
-      return;
-    }
-    // Order for T12 — 2 sent items, table appears available/unoccupied.
-    if (table.id === "t12") {
-      const t12Items: CartItem[] = [
-        {
-          id: generateId(),
-          menuItemId: "item-crab-pork-soup-dumpling",
-          name: "Crab Meat & Pork Soup Dumplings (6)",
-          nameCn: "蟹粉小籠包(六粒）",
-          basePrice: 10.95,
-          quantity: 1,
-          modifiers: [],
-          sent: true,
-          totalPrice: 10.95,
-        },
-        {
-          id: generateId(),
-          menuItemId: "item-soybean-milk",
-          name: "Soybean Milk",
-          nameCn: "熱/ 冰豆漿",
-          basePrice: 3.95,
-          quantity: 1,
-          modifiers: [
-            {
-              groupId: "mg-soybean-temp",
-              groupName: "Temperature",
-              modifiers: [{ id: "mod-soy-hot", name: "Hot", nameCn: "熱", price: 0 }],
-            },
-          ],
-          sent: true,
-          totalPrice: 3.95,
-        },
-      ];
-      set({
-        selectedTable: table,
-        guestCount: table.guestCount || 2,
-        cartItems: t12Items,
       });
       return;
     }

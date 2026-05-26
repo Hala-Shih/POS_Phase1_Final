@@ -165,7 +165,9 @@ export default function CheckSummaryScreen({ menuOpen: externalMenuOpen, setMenu
   };
 
   const handleTransfer = (staff: Staff) => setStaff(staff);
-  const handleTransferTable = (table: Table) => setTable(table);
+  const transferTable = useOrderStore((s) => s.transferTable);
+  const getEffectiveTables = useOrderStore((s) => s.getEffectiveTables);
+  const handleTransferTable = (table: Table) => transferTable(table);
   const handleVoidOrder = () => { resetOrder(); setScreen("tables"); };
 
   return (
@@ -183,7 +185,7 @@ export default function CheckSummaryScreen({ menuOpen: externalMenuOpen, setMenu
         currentStaffId={currentStaff?.id}
         onTransferTable={handleTransferTable}
         onVoidOrder={handleVoidOrder}
-        tableList={tablesData as Table[]}
+        tableList={getEffectiveTables(tablesData as Table[])}
         currentTableId={selectedTable?.id}
         onCollapseDrawers={collapseToCheck}
         checkTotal={grandTotal}
