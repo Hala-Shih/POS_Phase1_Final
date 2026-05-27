@@ -24,7 +24,7 @@ function buildItemizedUnits(items: CartItem[], language: string): ItemizedUnit[]
     const totalCents = Math.round(item.totalPrice * 100);
     const baseCents = Math.floor(totalCents / item.quantity);
     const remainderCents = totalCents - baseCents * item.quantity;
-    const displayName = language === "zh" && item.nameCn ? item.nameCn : item.name;
+    const displayName = language === "zh" && (item as any).nameCn ? (item as any).nameCn : item.name;
     return Array.from({ length: item.quantity }, (_, i) => ({
       unitId: `${item.id}:${i}`, name: displayName, unitIndex: i, unitCount: item.quantity,
       unitTotal: (baseCents + (i < remainderCents ? 1 : 0)) / 100,
@@ -127,7 +127,7 @@ function UnitDescription({ item }: { item: CartItem }) {
       )}
 
       {overrideActive && (
-        <p className="text-xs italic mt-0.5" style={{ color: "#6750A4" }}>{P.override}</p>
+        <p className="text-xs italic mt-0.5" style={{ color: "#6750A4" }}>{language === "zh" ? "改價" : "Override"}</p>
       )}
     </>
   );
@@ -192,15 +192,6 @@ interface PaymentDrawerProps {
   onSubviewChange?: (active: boolean) => void;
 }
 
-  const mainButtons = [
-    { id: "cash",     label: P.cash,        icon: DollarSign },
-    { id: "split",    label: P.splitCheck,   icon: Split      },
-    { id: "credit",   label: P.creditCard,   icon: CreditCard },
-    { id: "multiple", label: P.multiPay,     icon: WalletCards},
-    { id: "gift",     label: P.giftCard,     icon: Gift       },
-    { id: "print",    label: P.print,        icon: Printer    },
-  ] as const;
-
 export default function PaymentDrawer({
   open, onClose, onSplit, onMultiplePayment, onPrint, onPaymentComplete,
   onSubviewChange,
@@ -230,28 +221,37 @@ export default function PaymentDrawer({
     paymentComplete: "付款完成", printReceipt: "列印收據", closeOrder: "結束訂單",
     note: "備註", override: "改價"
   } : {
-    payment: "Payment", cash: P.cash, splitCheck: "Split check", creditCard: P.creditCard,
-    multiPay: "Multi-pay", giftCard: P.giftCard, print: "Print", close: "Close",
-    total: P.total, splitCheckBy: "Split Check by", even: "Even", amount: "Amount", item: "Item",
-    splitIntoGuests: "Split into guests", eachPays: P.eachPays, firstPayment: P.firstPayment,
+    payment: "Payment", cash: "Cash", splitCheck: "Split check", creditCard: "Credit Card",
+    multiPay: "Multi-pay", giftCard: "Gift Card", print: "Print", close: "Close",
+    total: "Total", splitCheckBy: "Split Check by", even: "Even", amount: "Amount", item: "Item",
+    splitIntoGuests: "Split into guests", eachPays: "Each pays", firstPayment: "First payment amount",
     orderTotal: "Order total", selectItems: "Select items for this check", selected: "selected",
-    allItemsPaid: "All items in this order have already been paid.", currentCheckTotal: "Current check total", confirm: P.confirm,
-    discount: P.discount, cashPayment: P.cashPayment, optional: "Optional", other: "Other",
+    allItemsPaid: "All items in this order have already been paid.", currentCheckTotal: "Current check total", confirm: "Confirm",
+    discount: "Discount", cashPayment: "Cash Payment", optional: "Optional", other: "Other",
     tendered: "Tendered", exact: "Exact", changeDue: "Change due", balanceDue: "Balance due",
-    collect: "{P.collect}", tapToPay: "Tap to pay", processingPayment: "Processing payment",
+    collect: "Collect $", tapToPay: "Tap to pay", processingPayment: "Processing payment",
     cancel: "Cancel", paymentProcessed: "Payment processed", addTip: "Add tip", tip: "Tip",
     totalWithTip: "Total with tip", confirmTip: "Confirm Tip", skipTip: "Skip Tip",
     serialNumber: "Serial number", enterSerial: "Enter serial number", pin: "PIN", pinPlaceholder: "4-6 digit PIN",
     cardBalance: "Card balance", amountToApply: "Amount to apply", max: "Max",
     cardBalanceAfter: "Card balance after", remainingToPay: "Remaining to pay",
-    giftCardApplied: "Gift card applied", amountCharged: "{P.amountCharged}",
-    includesTip: "{P.includesTip}", remainingCardBalance: "{P.remainingCardBalance}",
-    verifyGiftCard: "Verify Gift Card", applyAmount: "{P.applyAmount}",
-    verifying: P.verifying, applying: P.applying,
+    giftCardApplied: "Gift card applied", amountCharged: "Amount charged: $",
+    includesTip: "Includes tip: $", remainingCardBalance: "Remaining card balance: $",
+    verifyGiftCard: "Verify Gift Card", applyAmount: "Apply $",
+    verifying: "Verifying gift card...", applying: "Applying...",
     done: "Done", continueRemaining: "Continue to remaining balance",
     paymentComplete: "Payment complete", printReceipt: "Print receipt", closeOrder: "Close order",
     note: "Note", override: "Override"
   };
+
+  const mainButtons = [
+    { id: "cash",     label: P.cash,        icon: DollarSign },
+    { id: "split",    label: P.splitCheck,   icon: Split      },
+    { id: "credit",   label: P.creditCard,   icon: CreditCard },
+    { id: "multiple", label: P.multiPay,     icon: WalletCards},
+    { id: "gift",     label: P.giftCard,     icon: Gift       },
+    { id: "print",    label: P.print,        icon: Printer    },
+  ] as const;
 
   /* ── view state ── */
   const [view, setView] = useState<ViewType>("main");
@@ -605,7 +605,7 @@ export default function PaymentDrawer({
     const cashConfirmDisabled = cashTenderIdx === null && !cashExact && (!cashCustomTender || !cashCustomTenderVal);
     return (
       <FullPanel>
-        <FullHeader title=P.cash />
+        <FullHeader title={P.cash} />
 
         <div className="px-5 pb-3 shrink-0">
           <div className="flex items-baseline justify-between">
@@ -743,7 +743,7 @@ export default function PaymentDrawer({
     const ccTotalWithTip = payableTotal + ccTipAmount;
     return (
       <FullPanel>
-        <FullHeader title=P.creditCard />
+        <FullHeader title={P.creditCard} />
 
         <div className="flex justify-between items-baseline px-5 pb-4 shrink-0">
           <span className="font-medium text-black" style={{ fontSize: 36, lineHeight: "44px" }}>{P.total}</span>
@@ -853,7 +853,7 @@ export default function PaymentDrawer({
   if (view === "gift") {
     return (
       <FullPanel>
-        <FullHeader title=P.giftCard />
+        <FullHeader title={P.giftCard} />
 
         <div className="flex justify-between items-baseline px-5 pb-4 shrink-0">
           <span className="font-medium text-black" style={{ fontSize: 36, lineHeight: "44px" }}>{P.total}</span>

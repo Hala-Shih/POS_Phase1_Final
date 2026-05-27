@@ -77,7 +77,7 @@ function buildItemizedUnits(items: CartItem[], language: "en" | "zh"): ItemizedU
       modifiers,
       comboSelections,
       note: item.note,
-      breakline: item.breakline,
+      breakline: (item as any).breakline,
     }));
   });
 }
@@ -636,7 +636,7 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
               )
             ) : (
               cartItems.map((item) => (
-                <div key={item.id} className={item.breakline ? "" : "border-b border-gray-100"}>
+                <div key={item.id} className={(item as any).breakline ? "" : "border-b border-gray-100"}>
                   <div className="flex justify-between px-4 py-2">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-1.5">
@@ -683,7 +683,7 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
                       )}
                     </div>
                   </div>
-                  {item.breakline && (
+                  {(item as any).breakline && (
                     <div className="mx-4 mt-0.5 mb-0" style={{ height: 3, borderRadius: 2, background: "var(--foreground)" }} />
                   )}
                 </div>

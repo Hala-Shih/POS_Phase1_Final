@@ -393,20 +393,6 @@ export default function MenuSheet({ open, onClose, actionButtons, initialConfigI
             )}
 
             {/* Header — hidden at Level 2 (merged with pills) and Level 3 (inside overlay) */}
-            {level === 1 && (
-              <div className="flex items-center justify-between pr-2 shrink-0 border-b border-gray-100 bg-[#F5F5F5] py-1.5 mt-1" style={{ minHeight: 57, paddingLeft: 20 }}>
-                <div className="flex items-center gap-1 min-w-0">
-                  {level > 1 && (
-                    <button onClick={goBack} className="w-8 h-8 flex items-center justify-center rounded-full active:bg-gray-100 shrink-0">
-                      <ChevronLeft size={20} />
-                    </button>
-                  )}
-                  <span className="text-[15px] font-semibold text-[#1D1B20] leading-tight break-words" style={{ display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{headerTitle}</span>
-                </div>
-                <div className="flex items-center gap-2 shrink-0">
-                </div>
-              </div>
-            )}
 
             {/* Content area */}
             <div className="flex-1 min-h-0 relative overflow-hidden bg-[#F5F5F5]">

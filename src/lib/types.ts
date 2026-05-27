@@ -1,3 +1,6 @@
+// Language
+export type Language = "en" | "zh";
+
 // Menu hierarchy
 export interface Modifier {
   id: string;

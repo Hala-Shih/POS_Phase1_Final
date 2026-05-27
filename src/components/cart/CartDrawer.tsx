@@ -195,8 +195,8 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
     useOrderStore();
 
   const L = language === "zh"
-    ? { cart: "購物車", editing: "編輯中", sentToKitchen: "已送廚房", newItems: "新品項", noItems: "購物車是空的", discount: "折扣", comp: "招待", priceOverride: "改價", reset: "重設", confirm: "確認", saves: "節省", send: "送單", hold: "保留", pay: "結帳", note: "備註", override: "改價", newPrice: "新價格（每項）" }
-    : { cart: "Cart", editing: "Editing", sentToKitchen: "Sent to Kitchen", newItems: "New Items", noItems: "No items in cart", discount: "Discount", comp: "Comp", priceOverride: "Price Override", reset: "RESET", confirm: "Confirm", saves: "Saves", send: "Send", hold: "Hold", pay: "Pay", note: "Note", override: "Override", newPrice: "New price (per item)" };
+    ? { cart: "購物車", editing: "編輯中", sentToKitchen: "已送廚房", newItems: "新品項", noItems: "購物車是空的", discount: "折扣", comp: "招待", priceOverride: "改價", reset: "重設", confirm: "確認", saves: "節省", send: "送單", hold: "保留", pay: "結帳", note: "備註", override: "改價", newPrice: "新價格（每項）", sent: "已送" }
+    : { cart: "Cart", editing: "Editing", sentToKitchen: "Sent to Kitchen", newItems: "New Items", noItems: "No items in cart", discount: "Discount", comp: "Comp", priceOverride: "Price Override", reset: "RESET", confirm: "Confirm", saves: "Saves", send: "Send", hold: "Hold", pay: "Pay", note: "Note", override: "Override", newPrice: "New price (per item)", sent: "Sent" };
 
   const cartItemName = (item: CartItem) => {
     if (language === "zh") {

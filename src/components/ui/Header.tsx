@@ -24,6 +24,7 @@ interface HeaderProps {
   onCollapseDrawers?: () => void;
   checkTotal?: number;
   disableBack?: boolean;
+  onLogout?: () => void;
 }
 
 export default function Header({
