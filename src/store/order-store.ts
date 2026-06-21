@@ -262,7 +262,7 @@ export const useOrderStore = create<OrderState>((set, get) => ({
   transferSheetOpen: false,
   setTransferSheetOpen: (val) => set({ transferSheetOpen: val }),
 
-  language: "en",
+  language: "zh",
   toggleLanguage: () =>
     set((s) => ({ language: s.language === "en" ? "zh" : "en" })),
 

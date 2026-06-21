@@ -62,6 +62,8 @@ export default function Header({
   const tableMenuRef = useRef<HTMLDivElement>(null);
   const setTransferSheetOpen = useOrderStore((s) => s.setTransferSheetOpen);
   const language = useOrderStore((s) => s.language);
+  const currentScreen = useOrderStore((s) => s.currentScreen);
+  const homeOptionDisabled = currentScreen === "tables" || currentScreen === "home";
 
   // Sync transfer-table sheet open state with the global store so app-level
   // chrome (e.g., FooterNav) can react to it.
@@ -219,17 +221,23 @@ export default function Header({
                       className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-[var(--foreground)] hover:bg-gray-50 active:bg-gray-100"
                     >
                       <ArrowRightLeft size={16} className="text-[var(--outline)]" />
-                      Transfer server
+                      {language === "zh" ? "更換服務生" : "Transfer server"}
                     </button>
                   )}
                   {onBackToHome && (
                     <div className={onTransfer ? "border-t border-[var(--outline-variant)]" : ""}>
                       <button
                         onClick={() => {
+                          if (homeOptionDisabled) return;
                           setShowMenu(false);
                           onBackToHome();
                         }}
-                        className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-[var(--foreground)] hover:bg-gray-50 active:bg-gray-100"
+                        disabled={homeOptionDisabled}
+                        className={`w-full flex items-center gap-2 px-3 py-2.5 text-sm text-[var(--foreground)] ${
+                          homeOptionDisabled
+                            ? "opacity-40 cursor-default"
+                            : "hover:bg-gray-50 active:bg-gray-100"
+                        }`}
                       >
                         <House size={16} className="text-[var(--outline)]" />
                         {language === "zh" ? "返回首頁" : "Back to home"}

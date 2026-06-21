@@ -589,7 +589,7 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
         onVoidOrder={() => { resetOrder(); setScreen("tables"); }}
         tableList={getEffectiveTables(tablesData as Table[])}
         currentTableId={selectedTable?.id}
-        onBackToHome={() => setScreen("home")}
+        onBackToHome={() => setScreen("tables")}
       />
 
       {/* Content */}
@@ -2816,7 +2816,7 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
                       setLastChangeDue(null);
                       resetOrder();
                       if (externalClose) externalClose();
-                      setScreen("home");
+                      setScreen("tables");
                     }}
                     className="w-full h-14 rounded-full flex items-center justify-center active:opacity-80 transition-colors"
                     style={{ background: "#00B618" }}

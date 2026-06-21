@@ -1,19 +1,18 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { Map, ClipboardList, FileText } from "lucide-react";
 import { useOrderStore } from "@/store/order-store";
 import LoginScreen from "@/components/screens/LoginScreen";
-import HomeScreen from "@/components/screens/HomeScreen";
 import TablesScreen from "@/components/screens/TablesScreen";
 import GuestCountScreen from "@/components/screens/GuestCountScreen";
 import CheckSummaryScreen from "@/components/screens/CheckSummaryScreen";
 import OrderScreen from "@/components/screens/OrderScreen";
 import PaymentScreen from "@/components/screens/PaymentScreen";
 import OrdersScreen from "@/components/screens/OrdersScreen";
-import FooterNav, { type FooterTab } from "@/components/ui/FooterNav";
 import ActionDrawer from "@/components/action/ActionDrawer";
 
-const screensWithFooter = ["check", "order"];
+const pivotScreens = ["tables", "orders"];
 
 // Rule 1 (System-Wide Rules): only one drawer may be open at a time.
 // All drawer state is centralized here as a single `activeDrawer` value so
@@ -29,6 +28,7 @@ const DRAWER_TO_TAB: Record<Exclude<ActiveDrawer, "none">, FooterTab> = {
 export default function App() {
   const currentScreen = useOrderStore((s) => s.currentScreen);
   const setScreen = useOrderStore((s) => s.setScreen);
+  const language = useOrderStore((s) => s.language);
   const resetOrder = useOrderStore((s) => s.resetOrder);
   const transferSheetOpen = useOrderStore((s) => s.transferSheetOpen);
 
@@ -44,10 +44,7 @@ export default function App() {
   const actionOpen = activeDrawer === "action";
 
   // Footer tab is derived from active drawer to satisfy Rule 3 (tab/drawer sync).
-  const footerTab: FooterTab =
-    activeDrawer === "none" ? "check" : DRAWER_TO_TAB[activeDrawer];
-
-  const showFooter = screensWithFooter.includes(currentScreen) && !showPaymentFlow;
+  const showPivot = pivotScreens.includes(currentScreen) && !showPaymentFlow;
 
   // Rule 1 enforcement: a single entry point for opening drawers.
   // Switching drawers is a handoff — the previous drawer is replaced atomically.
@@ -106,27 +103,12 @@ export default function App() {
     else if (searchOpen) closeDrawers();
   };
 
-  const handleFooterSelect = (tab: FooterTab) => {
-    // Rule 3: tapping the active drawer's tab toggles it closed.
-    if (tab === "check") {
-      closeDrawers();
-      return;
-    }
-
-    const target: ActiveDrawer = tab as ActiveDrawer;
-    if (activeDrawer === target) {
-      closeDrawers();
-    } else {
-      openDrawer(target);
-    }
-  };
-
   const renderScreen = () => {
     switch (currentScreen) {
       case "login":
         return <LoginScreen />;
       case "home":
-        return <HomeScreen />;
+        return <TablesScreen />;
       case "tables":
         return <TablesScreen />;
       case "guest-count":
@@ -156,7 +138,13 @@ export default function App() {
     }
   };
 
-  if (!showFooter && !showPaymentFlow) return renderScreen();
+  if (!showPivot && !showPaymentFlow) return renderScreen();
+
+  const pivotItems = [
+    { id: "tables", label: language === "zh" ? "樓面圖" : "Floormap", icon: Map },
+    { id: "orders", label: language === "zh" ? "訂單" : "Orders", icon: ClipboardList },
+    { id: "check", label: language === "zh" ? "總結" : "Summary", icon: FileText },
+  ] as const;
 
   return (
     <div className="h-full flex flex-col">
@@ -177,6 +165,32 @@ export default function App() {
           </div>
         )}
       </div>
+      {showPivot && (
+        <nav className="h-14 shrink-0 border-t border-[var(--outline-variant)] bg-white flex items-center justify-around px-2">
+          {pivotItems.map((item) => {
+            const active = currentScreen === item.id;
+            const isSummary = item.id === "check";
+            const Icon = item.icon;
+            return (
+              <button
+                key={item.id}
+                onClick={() => {
+                  if (isSummary) return;
+                  setScreen(item.id);
+                }}
+                className={`h-9 px-4 rounded-full text-sm font-medium transition-colors inline-flex items-center gap-1.5 ${
+                  active
+                    ? "bg-[var(--primary-light)] text-[var(--primary)]"
+                    : "text-[var(--outline)] active:bg-gray-100"
+                }`}
+              >
+                <Icon size={14} />
+                {item.label}
+              </button>
+            );
+          })}
+        </nav>
+      )}
     </div>
   );
 }

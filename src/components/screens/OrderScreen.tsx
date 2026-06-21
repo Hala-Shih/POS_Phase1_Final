@@ -216,7 +216,7 @@ export default function OrderScreen() {
         onVoidOrder={handleVoidOrder}
         tableList={getEffectiveTables(tablesData as Table[])}
         currentTableId={selectedTable?.id}
-        onBackToHome={() => setScreen("home")}
+        onBackToHome={() => setScreen("tables")}
       />
 
       <div className="flex items-center justify-between px-3 pt-2 pb-1">
@@ -429,7 +429,7 @@ export default function OrderScreen() {
               onVoidOrder={handleVoidOrder}
               tableList={getEffectiveTables(tablesData as Table[])}
               currentTableId={selectedTable?.id}
-              onBackToHome={() => setScreen("home")}
+              onBackToHome={() => setScreen("tables")}
             />
 
             {/* Search input */}

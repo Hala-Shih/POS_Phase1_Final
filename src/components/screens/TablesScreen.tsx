@@ -324,7 +324,7 @@ export default function TablesScreen() {
         }}
         serverName={currentStaff?.name}
         onTransfer={(staff) => setStaff(staff)}
-        onBackToHome={() => setScreen("home")}
+        onBackToHome={() => setScreen("tables")}
         staffList={staffData as Staff[]}
         currentStaffId={currentStaff?.id}
       />

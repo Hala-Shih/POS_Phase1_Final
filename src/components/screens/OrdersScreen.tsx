@@ -103,12 +103,12 @@ export default function OrdersScreen() {
   return (
     <div className="h-full flex flex-col bg-white">
       <Header
-        onBack={() => setScreen("home")}
+        onBack={() => setScreen("tables")}
         serverName={currentStaff?.name}
         onTransfer={(staff) => setStaff(staff)}
         staffList={staffData as Staff[]}
         currentStaffId={currentStaff?.id}
-        onBackToHome={() => setScreen("home")}
+        onBackToHome={() => setScreen("tables")}
       />
 
       {/* Filter tabs */}

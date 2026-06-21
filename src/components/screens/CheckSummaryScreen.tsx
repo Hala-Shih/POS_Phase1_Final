@@ -189,7 +189,7 @@ export default function CheckSummaryScreen({ menuOpen: externalMenuOpen, setMenu
         currentTableId={selectedTable?.id}
         onCollapseDrawers={collapseToCheck}
         checkTotal={grandTotal}
-        onBackToHome={() => setScreen("home")}
+        onBackToHome={() => setScreen("tables")}
       />
 
       {/* Scrollable check body — viewport is reduced when a drawer is open

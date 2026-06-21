@@ -32,7 +32,7 @@ export default function GuestCountScreen() {
         onTransfer={(staff) => setStaff(staff)}
         staffList={staffData as Staff[]}
         currentStaffId={currentStaff?.id}
-        onBackToHome={() => setScreen("home")}
+        onBackToHome={() => setScreen("tables")}
       />
 
       <div className="flex-1 flex flex-col items-center justify-center">
