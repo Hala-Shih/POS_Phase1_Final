@@ -320,10 +320,11 @@ export default function TablesScreen() {
       <Header
         onBack={() => {
           resetOrder();
-          setScreen("home");
+          setScreen("login");
         }}
         serverName={currentStaff?.name}
         onTransfer={(staff) => setStaff(staff)}
+        onBackToHome={() => setScreen("home")}
         staffList={staffData as Staff[]}
         currentStaffId={currentStaff?.id}
       />

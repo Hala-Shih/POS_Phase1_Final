@@ -589,6 +589,7 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
         onVoidOrder={() => { resetOrder(); setScreen("tables"); }}
         tableList={getEffectiveTables(tablesData as Table[])}
         currentTableId={selectedTable?.id}
+        onBackToHome={() => setScreen("home")}
       />
 
       {/* Content */}

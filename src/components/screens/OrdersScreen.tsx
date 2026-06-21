@@ -108,6 +108,7 @@ export default function OrdersScreen() {
         onTransfer={(staff) => setStaff(staff)}
         staffList={staffData as Staff[]}
         currentStaffId={currentStaff?.id}
+        onBackToHome={() => setScreen("home")}
       />
 
       {/* Filter tabs */}

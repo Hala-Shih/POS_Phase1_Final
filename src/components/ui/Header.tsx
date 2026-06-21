@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { ArrowLeft, Users, MapPin, ArrowRightLeft, X, Ban, Check, ClipboardList, Share2, Repeat, Trash2, Merge } from "lucide-react";
+import { ArrowLeft, Users, MapPin, ArrowRightLeft, House, X, Ban, Check, ClipboardList, Share2, Repeat, Trash2, Merge } from "lucide-react";
 import { motion, AnimatePresence, useDragControls } from "framer-motion";
 import { Staff, Table } from "@/lib/types";
 import { useOrderStore } from "@/store/order-store";
@@ -25,6 +25,7 @@ interface HeaderProps {
   checkTotal?: number;
   disableBack?: boolean;
   onLogout?: () => void;
+  onBackToHome?: () => void;
 }
 
 export default function Header({
@@ -45,6 +46,7 @@ export default function Header({
   onCollapseDrawers,
   checkTotal,
   disableBack,
+  onBackToHome,
 }: HeaderProps) {
   const transferStaffDrag = useDragControls();
   const transferTableDrag = useDragControls();
@@ -219,6 +221,20 @@ export default function Header({
                       <ArrowRightLeft size={16} className="text-[var(--outline)]" />
                       Transfer server
                     </button>
+                  )}
+                  {onBackToHome && (
+                    <div className={onTransfer ? "border-t border-[var(--outline-variant)]" : ""}>
+                      <button
+                        onClick={() => {
+                          setShowMenu(false);
+                          onBackToHome();
+                        }}
+                        className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-[var(--foreground)] hover:bg-gray-50 active:bg-gray-100"
+                      >
+                        <House size={16} className="text-[var(--outline)]" />
+                        {language === "zh" ? "返回首頁" : "Back to home"}
+                      </button>
+                    </div>
                   )}
                 </div>
               )}

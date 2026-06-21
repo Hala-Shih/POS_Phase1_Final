@@ -37,10 +37,10 @@ export default function HomeScreen() {
 
         <button
           onClick={toggleLanguage}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full active:bg-gray-100"
+          className="relative h-8 w-24 rounded-full active:bg-gray-100"
         >
-          <Globe size={16} className="text-[var(--foreground)]" />
-          <span className="text-sm font-medium">{t.language}</span>
+          <Globe size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--foreground)]" />
+          <span className="absolute inset-0 flex items-center justify-center text-sm font-medium leading-none">{t.language}</span>
         </button>
 
         <span className="text-sm font-medium truncate max-w-[80px]">

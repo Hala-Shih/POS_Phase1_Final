@@ -68,10 +68,11 @@ export default function MenuSheet({ open, onClose, actionButtons, initialConfigI
   const [activeOrderIndex, setActiveOrderIndex] = useState(0);
   const [changedOrderIds, setChangedOrderIds] = useState<Set<string>>(new Set());
 
-  // Long-press amount editor
+  // Swipe-to-edit amount editor
   const [longPressItemId, setLongPressItemId] = useState<string | null>(null);
-  const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const longPressTriggeredRef = useRef(false);
+  const swipeStartRef = useRef<{ x: number; itemId: string } | null>(null);
+  const swipeTriggeredRef = useRef(false);
+  const SWIPE_THRESHOLD = 40; // pixels needed to trigger swipe
 
   const activeBook = activeBookId ? menuBooks.find((b) => b.id === activeBookId) : null;
   const activeCategory = activeBook
@@ -321,20 +322,25 @@ export default function MenuSheet({ open, onClose, actionButtons, initialConfigI
     }
   }, [addItem, comboItem, configItem]);
 
-  // Long-press handlers
-  const startLongPress = useCallback((itemId: string) => {
-    longPressTriggeredRef.current = false;
-    longPressTimerRef.current = setTimeout(() => {
-      longPressTriggeredRef.current = true;
-      setLongPressItemId(itemId);
-    }, 500);
+  // Swipe handlers
+  const startSwipeDetection = useCallback((itemId: string, x: number) => {
+    if (swipeTriggeredRef.current) return; // already triggered in this gesture
+    swipeStartRef.current = { x, itemId };
+    swipeTriggeredRef.current = false;
   }, []);
 
-  const cancelLongPress = useCallback(() => {
-    if (longPressTimerRef.current) {
-      clearTimeout(longPressTimerRef.current);
-      longPressTimerRef.current = null;
+  const handleSwipeMove = useCallback((x: number) => {
+    if (!swipeStartRef.current || swipeTriggeredRef.current) return;
+    const delta = Math.abs(x - swipeStartRef.current.x);
+    if (delta >= SWIPE_THRESHOLD) {
+      swipeTriggeredRef.current = true;
+      setLongPressItemId(swipeStartRef.current.itemId);
     }
+  }, [SWIPE_THRESHOLD]);
+
+  const cancelSwipe = useCallback(() => {
+    swipeStartRef.current = null;
+    swipeTriggeredRef.current = false;
   }, []);
 
   const handleEditorAdd = useCallback((item: MenuItem) => {
@@ -357,11 +363,12 @@ export default function MenuSheet({ open, onClose, actionButtons, initialConfigI
     }
   }, [cartItems, updateQuantity]);
 
-  // Clear long-press editor on navigation
+  // Clear swipe editor on navigation
   useEffect(() => {
     setLongPressItemId(null);
-    return () => { if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current); };
-  }, [activeBookId, activeCatId, configItem]);
+    cancelSwipe();
+    return cancelSwipe;
+  }, [activeBookId, activeCatId, configItem, cancelSwipe]);
 
   const level = configItem ? 3 : 2;
 
@@ -429,7 +436,7 @@ export default function MenuSheet({ open, onClose, actionButtons, initialConfigI
                       </div>
                     </div>
 
-                    <div className="flex-1 overflow-y-auto thin-scrollbar p-3" onClick={() => longPressItemId && setLongPressItemId(null)}>
+                    <div className="flex-1 overflow-y-auto thin-scrollbar p-3" onClick={() => longPressItemId && (setLongPressItemId(null), cancelSwipe())}>
                       {activeCategory && (
                         <div className="grid grid-cols-2 gap-2">
                           {activeCategory.items.map((item) => {
@@ -449,11 +456,13 @@ export default function MenuSheet({ open, onClose, actionButtons, initialConfigI
                                     background: "#F3EDF7",
                                   }}
                                   onClick={(e) => e.stopPropagation()}
-                                  onPointerDown={() => {
-                                    longPressTimerRef.current = setTimeout(() => setLongPressItemId(null), 500);
+                                  onPointerDown={(e) => {
+                                    const delay = setTimeout(() => setLongPressItemId(null), 500);
+                                    return () => clearTimeout(delay);
                                   }}
-                                  onPointerUp={cancelLongPress}
-                                  onPointerCancel={cancelLongPress}
+                                  onPointerUp={cancelSwipe}
+                                  onPointerCancel={cancelSwipe}
+                                  onTouchMove={cancelSwipe}
                                   onContextMenu={(e) => e.preventDefault()}
                                 >
                                   <button
@@ -479,14 +488,22 @@ export default function MenuSheet({ open, onClose, actionButtons, initialConfigI
                             return (
                               <button
                                 key={item.id}
-                                onPointerDown={() => { if (!item.soldOut) startLongPress(item.id); }}
-                                onPointerUp={cancelLongPress}
-                                onPointerCancel={cancelLongPress}
-                                onTouchMove={cancelLongPress}
+                                onPointerDown={(e) => {
+                                  if (!item.soldOut) {
+                                    const touch = e.touches?.[0] || (e as any);
+                                    startSwipeDetection(item.id, touch.clientX);
+                                  }
+                                }}
+                                onPointerMove={(e) => {
+                                  const touch = e.touches?.[0] || (e as any);
+                                  handleSwipeMove(touch.clientX);
+                                }}
+                                onPointerUp={cancelSwipe}
+                                onPointerCancel={cancelSwipe}
                                 onContextMenu={(e) => e.preventDefault()}
                                 onClick={() => {
-                                  if (longPressTriggeredRef.current) {
-                                    longPressTriggeredRef.current = false;
+                                  if (swipeTriggeredRef.current) {
+                                    swipeTriggeredRef.current = false;
                                     return;
                                   }
                                   if (longPressItemId) setLongPressItemId(null);
