@@ -18,12 +18,8 @@ const pivotScreens = ["tables", "orders"];
 // All drawer state is centralized here as a single `activeDrawer` value so
 // opening one drawer mechanically closes any other.
 type ActiveDrawer = "none" | "menu" | "search" | "action";
-
-const DRAWER_TO_TAB: Record<Exclude<ActiveDrawer, "none">, FooterTab> = {
-  menu: "menu",
-  search: "search",
-  action: "action",
-};
+type ReturnDrawer = "none" | "menu" | "search";
+type PaymentStartMode = "default" | "split";
 
 export default function App() {
   const currentScreen = useOrderStore((s) => s.currentScreen);
@@ -33,10 +29,12 @@ export default function App() {
   const transferSheetOpen = useOrderStore((s) => s.transferSheetOpen);
 
   const [activeDrawer, setActiveDrawer] = useState<ActiveDrawer>("none");
+  const [returnDrawer, setReturnDrawer] = useState<ReturnDrawer>("none");
   const [actionItem, setActionItem] = useState<{ id: string; name: string } | null>(null);
 
   // Fullscreen payment flow overlay — opened by "Pay" button, closed by back.
   const [showPaymentFlow, setShowPaymentFlow] = useState(false);
+  const [paymentStartMode, setPaymentStartMode] = useState<PaymentStartMode>("default");
 
   // Derived drawer flags (kept for prop compatibility with child screens).
   const menuOpen = activeDrawer === "menu";
@@ -58,16 +56,27 @@ export default function App() {
 
   const closeDrawers = useCallback(() => {
     setActiveDrawer("none");
+    setReturnDrawer("none");
     setActionItem(null);
   }, []);
+
+  const closeActionDrawer = useCallback(() => {
+    if (currentScreen === "check" && activeDrawer === "action" && returnDrawer !== "none") {
+      setActiveDrawer(returnDrawer);
+      setReturnDrawer("none");
+      setActionItem(null);
+      return;
+    }
+    closeDrawers();
+  }, [activeDrawer, closeDrawers, currentScreen, returnDrawer]);
 
   // Rule 4: screen transitions must clean up incompatible drawer state.
   const openPaymentOnArrival = useOrderStore((s) => s.openPaymentOnArrival);
   const setOpenPaymentOnArrival = useOrderStore((s) => s.setOpenPaymentOnArrival);
 
   useEffect(() => {
-    // App-shell drawers are only meaningful on `check`. Close on any other screen.
-    if (currentScreen !== "check" && activeDrawer !== "none") {
+    // App-shell drawers are meaningful on both `check` and `order`.
+    if (currentScreen !== "check" && currentScreen !== "order" && activeDrawer !== "none") {
       closeDrawers();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -83,14 +92,16 @@ export default function App() {
   }, [currentScreen, openPaymentOnArrival, setOpenPaymentOnArrival, closeDrawers]);
 
   // Open the fullscreen payment flow overlay.
-  const openPaymentFlow = useCallback(() => {
+  const openPaymentFlow = useCallback((mode: PaymentStartMode = "default") => {
     closeDrawers();
+    setPaymentStartMode(mode);
     setShowPaymentFlow(true);
   }, [closeDrawers]);
 
   // Close the payment flow overlay and return to the check/menu/actions flow.
   const closePaymentFlow = useCallback(() => {
     setShowPaymentFlow(false);
+    setPaymentStartMode("default");
   }, []);
 
   const handleSetMenuOpen = (open: boolean) => {
@@ -124,21 +135,28 @@ export default function App() {
             externalDrawerType={actionOpen ? "action" : "none"}
             onOpenItemActions={(item) => {
               setActionItem(item);
+              setReturnDrawer(activeDrawer === "menu" || activeDrawer === "search" ? activeDrawer : "none");
               openDrawer("action");
             }}
             onOpenPaymentDrawer={openPaymentFlow}
           />
         );
       case "order":
-        return <OrderScreen />;
+        return (
+          <OrderScreen
+            onOpenItemActions={(item) => {
+              setActionItem(item);
+              setReturnDrawer("none");
+              openDrawer("action");
+            }}
+          />
+        );
       case "orders":
         return <OrdersScreen />;
       default:
         return <LoginScreen />;
     }
   };
-
-  if (!showPivot && !showPaymentFlow) return renderScreen();
 
   const pivotItems = [
     { id: "tables", label: language === "zh" ? "樓面圖" : "Floormap", icon: Map },
@@ -152,7 +170,7 @@ export default function App() {
         {renderScreen()}
         <ActionDrawer
           open={actionOpen}
-          onClose={closeDrawers}
+          onClose={closeActionDrawer}
           onPay={openPaymentFlow}
           onSplitCheck={openPaymentFlow}
           onMultiplePayment={openPaymentFlow}
@@ -161,7 +179,7 @@ export default function App() {
         {/* Fullscreen payment flow overlay */}
         {showPaymentFlow && (
           <div className="absolute inset-0 z-[100] bg-white">
-            <PaymentScreen onClose={closePaymentFlow} />
+            <PaymentScreen onClose={closePaymentFlow} startMode={paymentStartMode} />
           </div>
         )}
       </div>

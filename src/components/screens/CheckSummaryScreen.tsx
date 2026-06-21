@@ -13,6 +13,7 @@ import {
   BookOpen,
   Printer,
   LayoutGrid,
+  ChevronDown,
 } from "lucide-react";
 import { useOrderStore } from "@/store/order-store";
 import { getPriceBreakdown, formatCurrency, formatSignedCurrency } from "@/lib/pricing";
@@ -38,8 +39,9 @@ import SearchDrawer from "@/components/menu/SearchDrawer";
 import Header from "@/components/ui/Header";
 
 type ExternalDrawerType = "none" | "action" | "payment";
+type PaymentOpenMode = "default" | "split";
 
-export default function CheckSummaryScreen({ menuOpen: externalMenuOpen, setMenuOpen: externalSetMenuOpen, searchOpen: externalSearchOpen, setSearchOpen: externalSetSearchOpen, itemActionOpen = false, externalDrawerType = "none", onOpenItemActions, onOpenPaymentDrawer, onBack }: { menuOpen?: boolean; setMenuOpen?: (v: boolean) => void; searchOpen?: boolean; setSearchOpen?: (v: boolean) => void; itemActionOpen?: boolean; externalDrawerType?: ExternalDrawerType; onOpenItemActions?: (item: { id: string; name: string }) => void; onOpenPaymentDrawer?: () => void; onBack?: () => void } = {}) {
+export default function CheckSummaryScreen({ menuOpen: externalMenuOpen, setMenuOpen: externalSetMenuOpen, searchOpen: externalSearchOpen, setSearchOpen: externalSetSearchOpen, itemActionOpen = false, externalDrawerType = "none", onOpenItemActions, onOpenPaymentDrawer, onBack }: { menuOpen?: boolean; setMenuOpen?: (v: boolean) => void; searchOpen?: boolean; setSearchOpen?: (v: boolean) => void; itemActionOpen?: boolean; externalDrawerType?: ExternalDrawerType; onOpenItemActions?: (item: { id: string; name: string }) => void; onOpenPaymentDrawer?: (mode?: PaymentOpenMode) => void; onBack?: () => void } = {}) {
   const {
     currentStaff,
     selectedTable,
@@ -56,10 +58,8 @@ export default function CheckSummaryScreen({ menuOpen: externalMenuOpen, setMenu
     setTable,
     openMenuOnArrival,
     setOpenMenuOnArrival,
-    lastAddedItemId,
     updateNote,
     updatePriceAdjustment,
-    toggleBreakline,
     language,
   } = useOrderStore();
 
@@ -82,18 +82,23 @@ export default function CheckSummaryScreen({ menuOpen: externalMenuOpen, setMenu
       setOpenMenuOnArrival(false);
     }
   }, [openMenuOnArrival, setOpenMenuOnArrival, setMenuOpen, setSearchOpen]);
+
   const [cartOpen, setCartOpen] = useState(false);
   const [showNoteDrawer, setShowNoteDrawer] = useState(false);
   const [orderNote, setOrderNote] = useState("");
   const [noteDraft, setNoteDraft] = useState("");
   // "general" = order-level note, item id = item-specific note
   const [noteTarget, setNoteTarget] = useState<string>("general");
+  const [noteTargetDropdownOpen, setNoteTargetDropdownOpen] = useState(false);
   // Price adjustment draft: sign (+1 or -1) and value string
   const [priceAdjSign, setPriceAdjSign] = useState<1 | -1>(1);
   const [priceAdjValue, setPriceAdjValue] = useState("");
-  const [breaklineDraft, setBreaklineDraft] = useState(false);
   const [showTableActions, setShowTableActions] = useState(false);
   const selectedItemId: string | null = null;
+
+  useEffect(() => {
+    if (!showNoteDrawer) setNoteTargetDropdownOpen(false);
+  }, [showNoteDrawer]);
 
   const collapseToCheck = () => {
     if (menuOpen) setMenuOpen(false);
@@ -106,6 +111,12 @@ export default function CheckSummaryScreen({ menuOpen: externalMenuOpen, setMenu
   const sentItems = cartItems.filter((i) => i.sent);
   const anyUnsent = unsentItems.length > 0;
   const isEmpty = cartItems.length === 0;
+  const selectedNoteTargetItem = noteTarget === "general" ? null : cartItems.find((item) => item.id === noteTarget);
+  const selectedNoteTargetLabel = noteTarget === "general"
+    ? L.generalNote
+    : selectedNoteTargetItem
+      ? `${getItemDisplayName(selectedNoteTargetItem.menuItemId, selectedNoteTargetItem.name, language)}${selectedNoteTargetItem.quantity > 1 ? ` ×${selectedNoteTargetItem.quantity}` : ""}`
+      : L.generalNote;
 
   const preDiscountSubtotal = cartItems.reduce((sum, item) => {
     if (item.comped) return sum;
@@ -158,7 +169,16 @@ export default function CheckSummaryScreen({ menuOpen: externalMenuOpen, setMenu
   const handlePay = () => {
     if (anyUnsent) markAllSent();
     if (onOpenPaymentDrawer) {
-      onOpenPaymentDrawer();
+      onOpenPaymentDrawer("default");
+      return;
+    }
+    setScreen("payment");
+  };
+
+  const handleSplit = () => {
+    if (anyUnsent) markAllSent();
+    if (onOpenPaymentDrawer) {
+      onOpenPaymentDrawer("split");
       return;
     }
     setScreen("payment");
@@ -329,6 +349,7 @@ export default function CheckSummaryScreen({ menuOpen: externalMenuOpen, setMenu
             {L.pay}
           </button>
           <button
+            onClick={handleSplit}
             disabled={isEmpty}
             className="flex items-center gap-2.5 px-3 h-[48px] rounded-xl border border-gray-200 text-[13px] font-medium bg-white transition-colors active:opacity-70 disabled:opacity-40"
           >
@@ -395,23 +416,11 @@ export default function CheckSummaryScreen({ menuOpen: externalMenuOpen, setMenu
               </button>
               <button
                 onClick={() => {
-                  // Default to the last added item, or "general" if none
-                  const defaultTarget = lastAddedItemId && cartItems.find(i => i.id === lastAddedItemId) ? lastAddedItemId : "general";
-                  setNoteTarget(defaultTarget);
-                  // Load the existing note for that target
-                  if (defaultTarget === "general") {
-                    setNoteDraft(orderNote);
-                    setPriceAdjSign(1);
-                    setPriceAdjValue("");
-                    setBreaklineDraft(false);
-                  } else {
-                    const item = cartItems.find(i => i.id === defaultTarget);
-                    setNoteDraft(item?.note || "");
-                    const adj = item?.priceAdjustment || 0;
-                    setPriceAdjSign(adj < 0 ? -1 : 1);
-                    setPriceAdjValue(adj !== 0 ? String(Math.abs(adj)) : "");
-                    setBreaklineDraft(!!item?.breaklineBelow);
-                  }
+                  // Always default to whole-order note on open.
+                  setNoteTarget("general");
+                  setNoteDraft(orderNote);
+                  setPriceAdjSign(1);
+                  setPriceAdjValue("");
                   setShowNoteDrawer(true);
                 }}
                 disabled={isEmpty}
@@ -439,124 +448,127 @@ export default function CheckSummaryScreen({ menuOpen: externalMenuOpen, setMenu
             <div className="w-10 h-1 rounded-full bg-gray-300 mx-auto mb-3" />
             <p className="text-[13px] font-semibold mb-2">{language === "zh" ? "新增備註" : "Add Note"}</p>
 
-            {/* Target selector - radio list */}
-            <div className="flex flex-col gap-1 mb-3 max-h-[220px] overflow-y-auto">
-              <label
-                className={`flex items-center gap-2.5 px-3 py-2 rounded-lg cursor-pointer transition-colors ${
-                  noteTarget === "general" ? "bg-[var(--primary)]/8" : "hover:bg-gray-50"
-                }`}
-                onClick={() => { setNoteTarget("general"); setNoteDraft(orderNote); setPriceAdjSign(1); setPriceAdjValue(""); setBreaklineDraft(false); }}
+            {/* Target selector - dropdown */}
+            <div className="mb-3 relative">
+              <button
+                type="button"
+                onClick={() => setNoteTargetDropdownOpen((prev) => !prev)}
+                className="w-full h-11 rounded-xl border border-[var(--outline-variant)] px-3 flex items-center justify-between text-left"
+                aria-expanded={noteTargetDropdownOpen}
               >
-                <span className={`w-[18px] h-[18px] shrink-0 rounded-full border-2 flex items-center justify-center transition-colors ${
-                  noteTarget === "general" ? "border-[var(--primary)] bg-[var(--primary)]" : "border-gray-300"
-                }`}>
-                  {noteTarget === "general" && <span className="w-2 h-2 rounded-full bg-white" />}
-                </span>
-                <span className="text-[13px] font-medium">{L.generalNote}</span>
-                {orderNote && <span className="ml-auto text-[11px] text-gray-400 truncate max-w-[100px]">{orderNote}</span>}
-              </label>
-              {cartItems.map((item) => (
-                <label
-                  key={item.id}
-                  className={`flex items-center gap-2.5 px-3 py-2 rounded-lg cursor-pointer transition-colors ${
-                    noteTarget === item.id ? "bg-[var(--primary)]/8" : "hover:bg-gray-50"
-                  }`}
-                  onClick={() => {
-                    setNoteTarget(item.id);
-                    setNoteDraft(item.note || "");
-                    const adj = item.priceAdjustment || 0;
-                    setPriceAdjSign(adj < 0 ? -1 : 1);
-                    setPriceAdjValue(adj !== 0 ? String(Math.abs(adj)) : "");
-                    setBreaklineDraft(!!item.breaklineBelow);
-                  }}
-                >
-                  <span className={`w-[18px] h-[18px] shrink-0 rounded-full border-2 flex items-center justify-center transition-colors ${
-                    noteTarget === item.id ? "border-[var(--primary)] bg-[var(--primary)]" : "border-gray-300"
-                  }`}>
-                    {noteTarget === item.id && <span className="w-2 h-2 rounded-full bg-white" />}
-                  </span>
-                  <span className="text-[13px] truncate">{getItemDisplayName(item.menuItemId, item.name, language)}{item.quantity > 1 ? ` ×${item.quantity}` : ""}</span>
-                  {(item.note || item.priceAdjustment) && (
-                    <span className="ml-auto text-[11px] text-gray-400 truncate max-w-[100px]">
-                      {item.note || (item.priceAdjustment ? `${item.priceAdjustment > 0 ? "+" : ""}${item.priceAdjustment.toFixed(2)}` : "")}
-                    </span>
-                  )}
-                </label>
-              ))}
-            </div>
+                <span className="text-[13px] font-medium truncate">{selectedNoteTargetLabel}</span>
+                <ChevronDown className={`w-4 h-4 text-[var(--outline)] transition-transform ${noteTargetDropdownOpen ? "rotate-180" : ""}`} />
+              </button>
 
-            {/* Note + Price adjustment row */}
-            <div className={`flex gap-3 items-start ${noteTarget !== "general" ? "" : ""}`}>
-              <div className={noteTarget !== "general" ? "flex-1 min-w-0" : "w-full"}>
-                <p className="text-[12px] text-[var(--outline)] mb-2">{L.addNoteForKitchen}</p>
-                <textarea
-                  autoFocus
-                  value={noteDraft}
-                  onChange={(e) => setNoteDraft(e.target.value)}
-                  placeholder={L.addNotes}
-                  rows={3}
-                  className="w-full rounded-xl border border-[var(--outline-variant)] px-3 py-2.5 text-[13px] outline-none resize-none focus:border-[var(--primary)]"
-                />
-              </div>
-              {noteTarget !== "general" && (
-                <div className="shrink-0">
-                  <p className="text-[12px] text-[var(--outline)] mb-2">{L.priceAdj}</p>
-                  <div className="flex items-center gap-1.5">
-                    <div className="flex rounded-xl border border-[var(--outline-variant)] overflow-hidden shrink-0">
-                      <button
-                        type="button"
-                        onClick={() => setPriceAdjSign(1)}
-                        className={`w-9 h-11 flex items-center justify-center text-[15px] font-semibold ${
-                          priceAdjSign === 1
-                            ? "bg-[var(--primary-light)] text-[var(--primary)]"
-                            : "text-[var(--outline)] active:bg-gray-50"
-                        }`}
-                        aria-pressed={priceAdjSign === 1}
-                        aria-label="Increase price"
-                      >+</button>
-                      <button
-                        type="button"
-                        onClick={() => setPriceAdjSign(-1)}
-                        className={`w-9 h-11 flex items-center justify-center text-[15px] font-semibold border-l border-[var(--outline-variant)] ${
-                          priceAdjSign === -1
-                            ? "bg-[var(--primary-light)] text-[var(--primary)]"
-                            : "text-[var(--outline)] active:bg-gray-50"
-                        }`}
-                        aria-pressed={priceAdjSign === -1}
-                        aria-label="Decrease price"
-                      >−</button>
-                    </div>
-                    <input
-                      type="number"
-                      inputMode="decimal"
-                      pattern="[0-9]*"
-                      min="0"
-                      step="0.01"
-                      placeholder="0.00"
-                      value={priceAdjValue}
-                      onChange={(e) => setPriceAdjValue(e.target.value)}
-                      className="w-16 h-11 rounded-xl border border-[var(--outline-variant)] px-2 text-[13px] outline-none focus:border-[var(--primary)]"
-                    />
-                  </div>
+              {noteTargetDropdownOpen && (
+                <div className="absolute left-0 right-0 top-full mt-2 z-[220] bg-white shadow-lg flex flex-col gap-1 max-h-[220px] overflow-y-auto rounded-xl border border-[var(--outline-variant)] p-1">
+                  <label
+                    className={`flex items-center gap-2.5 px-3 py-2 rounded-lg cursor-pointer transition-colors ${
+                      noteTarget === "general" ? "bg-[var(--primary)]/8" : "hover:bg-gray-50"
+                    }`}
+                    onClick={() => {
+                      setNoteTarget("general");
+                      setNoteDraft(orderNote);
+                      setPriceAdjSign(1);
+                      setPriceAdjValue("");
+                      setNoteTargetDropdownOpen(false);
+                    }}
+                  >
+                    <span className={`w-[18px] h-[18px] shrink-0 rounded-full border-2 flex items-center justify-center transition-colors ${
+                      noteTarget === "general" ? "border-[var(--primary)] bg-[var(--primary)]" : "border-gray-300"
+                    }`}>
+                      {noteTarget === "general" && <span className="w-2 h-2 rounded-full bg-white" />}
+                    </span>
+                    <span className="text-[13px] font-medium">{L.generalNote}</span>
+                    {orderNote && <span className="ml-auto text-[11px] text-gray-400 truncate max-w-[100px]">{orderNote}</span>}
+                  </label>
+                  {cartItems.map((item) => (
+                    <label
+                      key={item.id}
+                      className={`flex items-center gap-2.5 px-3 py-2 rounded-lg cursor-pointer transition-colors ${
+                        noteTarget === item.id ? "bg-[var(--primary)]/8" : "hover:bg-gray-50"
+                      }`}
+                      onClick={() => {
+                        setNoteTarget(item.id);
+                        setNoteDraft(item.note || "");
+                        const adj = item.priceAdjustment || 0;
+                        setPriceAdjSign(adj < 0 ? -1 : 1);
+                        setPriceAdjValue(adj !== 0 ? String(Math.abs(adj)) : "");
+                        setNoteTargetDropdownOpen(false);
+                      }}
+                    >
+                      <span className={`w-[18px] h-[18px] shrink-0 rounded-full border-2 flex items-center justify-center transition-colors ${
+                        noteTarget === item.id ? "border-[var(--primary)] bg-[var(--primary)]" : "border-gray-300"
+                      }`}>
+                        {noteTarget === item.id && <span className="w-2 h-2 rounded-full bg-white" />}
+                      </span>
+                      <span className="text-[13px] truncate">{getItemDisplayName(item.menuItemId, item.name, language)}{item.quantity > 1 ? ` ×${item.quantity}` : ""}</span>
+                      {(item.note || item.priceAdjustment) && (
+                        <span className="ml-auto text-[11px] text-gray-400 truncate max-w-[100px]">
+                          {item.note || (item.priceAdjustment ? `${item.priceAdjustment > 0 ? "+" : ""}${item.priceAdjustment.toFixed(2)}` : "")}
+                        </span>
+                      )}
+                    </label>
+                  ))}
                 </div>
               )}
             </div>
 
-            {/* Add breakline checkbox (item only) */}
+            {/* Large full-width note input */}
+            <div className="w-full">
+              <p className="text-[12px] text-[var(--outline)] mb-2">{L.addNoteForKitchen}</p>
+              <textarea
+                autoFocus
+                value={noteDraft}
+                onChange={(e) => setNoteDraft(e.target.value)}
+                placeholder={L.addNotes}
+                rows={4}
+                className="w-full min-h-[136px] rounded-2xl border border-[var(--outline-variant)] px-4 py-3 text-[15px] outline-none resize-none focus:border-[var(--primary)]"
+              />
+            </div>
+
+            {/* Price adjustment below note input (item target only) */}
             {noteTarget !== "general" && (
-              <label className="flex items-center gap-2.5 mt-1 mb-1 cursor-pointer">
-                <span
-                  className={`w-[18px] h-[18px] shrink-0 rounded flex items-center justify-center border-2 transition-colors ${
-                    breaklineDraft ? "border-[var(--primary)] bg-[var(--primary)]" : "border-gray-300"
-                  }`}
-                  onClick={(e) => { e.preventDefault(); setBreaklineDraft(!breaklineDraft); }}
-                >
-                  {breaklineDraft && (
-                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2.5 6L5 8.5L9.5 3.5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                  )}
-                </span>
-                <span className="text-[13px] text-black">{L.addBreakline}</span>
-              </label>
+              <div className="mt-4">
+                <p className="text-[12px] text-[var(--outline)] mb-2">{L.priceAdj}</p>
+                <div className="flex items-center gap-2">
+                  <div className="flex rounded-xl border border-[var(--outline-variant)] overflow-hidden shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => setPriceAdjSign(1)}
+                      className={`w-10 h-12 flex items-center justify-center text-[16px] font-semibold ${
+                        priceAdjSign === 1
+                          ? "bg-[var(--primary-light)] text-[var(--primary)]"
+                          : "text-[var(--outline)] active:bg-gray-50"
+                      }`}
+                      aria-pressed={priceAdjSign === 1}
+                      aria-label="Increase price"
+                    >+</button>
+                    <button
+                      type="button"
+                      onClick={() => setPriceAdjSign(-1)}
+                      className={`w-10 h-12 flex items-center justify-center text-[16px] font-semibold border-l border-[var(--outline-variant)] ${
+                        priceAdjSign === -1
+                          ? "bg-[var(--primary-light)] text-[var(--primary)]"
+                          : "text-[var(--outline)] active:bg-gray-50"
+                      }`}
+                      aria-pressed={priceAdjSign === -1}
+                      aria-label="Decrease price"
+                    >−</button>
+                  </div>
+                  <input
+                    type="number"
+                    inputMode="decimal"
+                    pattern="[0-9]*"
+                    min="0"
+                    step="0.01"
+                    placeholder="0.00"
+                    value={priceAdjValue}
+                    onChange={(e) => setPriceAdjValue(e.target.value)}
+                    className="flex-1 h-12 rounded-xl border border-[var(--outline-variant)] px-3 text-[14px] outline-none focus:border-[var(--primary)]"
+                  />
+                </div>
+              </div>
             )}
 
             <div className="flex gap-2 mt-3">
@@ -575,14 +587,9 @@ export default function CheckSummaryScreen({ menuOpen: externalMenuOpen, setMenu
                     } else {
                       updateNote(noteTarget, "");
                       updatePriceAdjustment(noteTarget, 0);
-                      const currentItem = cartItems.find(i => i.id === noteTarget);
-                      if (currentItem?.breaklineBelow) {
-                        toggleBreakline(noteTarget, "below");
-                      }
                     }
                     setNoteDraft("");
                     setPriceAdjValue("");
-                    setBreaklineDraft(false);
                     setShowNoteDrawer(false);
                   }}
                   className="flex-1 h-10 rounded-xl border border-red-300 bg-red-50 text-[13px] font-medium text-red-600 active:bg-red-100"
@@ -600,11 +607,6 @@ export default function CheckSummaryScreen({ menuOpen: externalMenuOpen, setMenu
                     const numVal = parseFloat(priceAdjValue);
                     const adjAmount = !isNaN(numVal) && numVal > 0 ? numVal * priceAdjSign : 0;
                     updatePriceAdjustment(noteTarget, adjAmount);
-                    // Sync breakline state
-                    const currentItem = cartItems.find(i => i.id === noteTarget);
-                    if (currentItem && !!currentItem.breaklineBelow !== breaklineDraft) {
-                      toggleBreakline(noteTarget, "below");
-                    }
                   }
                   setShowNoteDrawer(false);
                 }}
@@ -615,10 +617,9 @@ export default function CheckSummaryScreen({ menuOpen: externalMenuOpen, setMenu
                     const item = cartItems.find(i => i.id === noteTarget);
                     const origNote = item?.note || "";
                     const origAdj = item?.priceAdjustment || 0;
-                    const origBreakline = !!item?.breaklineBelow;
                     const numVal = parseFloat(priceAdjValue);
                     const newAdj = !isNaN(numVal) && numVal > 0 ? numVal * priceAdjSign : 0;
-                    return noteDraft.trim() === origNote && newAdj === origAdj && breaklineDraft === origBreakline;
+                    return noteDraft.trim() === origNote && newAdj === origAdj;
                   }
                 })()}
                 className="flex-1 h-10 rounded-xl text-[13px] font-semibold text-white active:opacity-80 disabled:opacity-40"
@@ -670,16 +671,10 @@ function CheckItem({
       >
         <button
           onClick={() => {
-            // When a drawer is open, ignore taps on cart items entirely.
-            // The user must use the check button in the header to return
-            // to the full order-summary view.
-            if (drawerOpen) {
-              return;
-            }
             onInteract?.();
             onTap();
           }}
-          className={`w-full flex items-start gap-3 px-4 py-2.5 text-left transition-colors ${drawerOpen ? "" : "active:bg-[var(--surface)]"}`}
+          className="w-full flex items-start gap-3 px-4 py-2.5 text-left transition-colors active:bg-[var(--surface)]"
         >
           {/* Qty badge */}
           <span

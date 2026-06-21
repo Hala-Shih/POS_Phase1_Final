@@ -34,7 +34,15 @@ export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMul
 
 
   // Localisation helpers
-  const n = (item: { name: string; nameCn?: string }) => language === "zh" && item.nameCn ? item.nameCn : item.name;
+  const n = (item: { name: string; nameCn?: string; menuItemId?: string }) => {
+    if (language !== "zh") return item.name;
+    if (item.nameCn) return item.nameCn;
+    if (item.menuItemId) {
+      const mi = allMenuItems.find((m) => m.id === item.menuItemId);
+      if (mi?.nameCn) return mi.nameCn;
+    }
+    return item.name;
+  };
   const L = language === "zh" ? {
     order: "訂單", cancel: "取消", saveNote: "儲存備註", saveChanges: "儲存修改",
     addToOrder: "加入訂單", addNoteForKitchen: "新增廚房備註", addNotes: "輸入備註",
@@ -630,77 +638,71 @@ export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMul
             {/* Notes input (expanded inline) */}
             {showNoteInput ? (
               <div className="px-4 py-4">
-                <div className="flex gap-3 items-start">
-                  {/* Note column */}
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[12px] text-[var(--outline)] mb-2">{L.addNoteForKitchen}</p>
-                    <textarea
-                      autoFocus
-                      value={selectedNoteTab ? (noteDrafts[selectedNoteTab.key] ?? "") : ""}
-                      onChange={(e) => {
-                        if (!selectedNoteTab) return;
-                        const next = e.target.value;
-                        setNoteText(next);
-                        setNoteDrafts((prev) => ({ ...prev, [selectedNoteTab.key]: next }));
-                      }}
-                      placeholder={L.addNotes}
-                      rows={1}
-                      className="w-full h-11 rounded-xl border border-[var(--outline-variant)] px-3 py-2 text-[13px] outline-none resize-none focus:border-[var(--primary)]"
-                    />
-                  </div>
+                {/* Large full-width note field */}
+                <p className="text-[12px] text-[var(--outline)] mb-2">{L.addNoteForKitchen}</p>
+                <textarea
+                  autoFocus
+                  value={selectedNoteTab ? (noteDrafts[selectedNoteTab.key] ?? "") : ""}
+                  onChange={(e) => {
+                    if (!selectedNoteTab) return;
+                    const next = e.target.value;
+                    setNoteText(next);
+                    setNoteDrafts((prev) => ({ ...prev, [selectedNoteTab.key]: next }));
+                  }}
+                  placeholder={L.addNotes}
+                  rows={3}
+                  className="w-full h-24 rounded-2xl border border-[var(--outline-variant)] px-4 py-3 text-[15px] outline-none resize-none focus:border-[var(--primary)]"
+                />
 
-                  {/* Optional price adjustment for this item. Sign toggle + numeric
-                      input — `inputMode="decimal"` triggers the Android numeric
-                      keypad. Leave blank for no adjustment. */}
-                  <div className="shrink-0">
-                    <p className="text-[12px] text-[var(--outline)] mb-2">{L.priceAdj}</p>
-                    <div className="flex items-center gap-1.5">
-                      <div className="flex rounded-xl border border-[var(--outline-variant)] overflow-hidden shrink-0">
-                        <button
-                          type="button"
-                          onClick={() => setNoteAdjustSign("+")}
-                          className={`w-9 h-11 flex items-center justify-center text-[15px] font-semibold ${
-                            noteAdjustSign === "+"
-                              ? "bg-[var(--primary-light)] text-[var(--primary)]"
-                              : "text-[var(--outline)] active:bg-gray-50"
-                          }`}
-                          aria-pressed={noteAdjustSign === "+"}
-                          aria-label="Increase price"
-                        >
-                          +
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setNoteAdjustSign("-")}
-                          className={`w-9 h-11 flex items-center justify-center text-[15px] font-semibold border-l border-[var(--outline-variant)] ${
-                            noteAdjustSign === "-"
-                              ? "bg-[var(--primary-light)] text-[var(--primary)]"
-                              : "text-[var(--outline)] active:bg-gray-50"
-                          }`}
-                          aria-pressed={noteAdjustSign === "-"}
-                          aria-label="Decrease price"
-                        >
-                          −
-                        </button>
-                      </div>
-                      <input
-                        type="number"
-                        inputMode="decimal"
-                        pattern="[0-9]*"
-                        min="0"
-                        step="0.01"
-                        value={noteAdjustInput}
-                        onChange={(e) => {
-                          const sanitized = e.target.value
-                            .replace(/[^\d.]/g, "")
-                            .replace(/(\..*)\./g, "$1")
-                            .replace(/^(\d+\.\d{0,2}).*$/, "$1");
-                          setNoteAdjustInput(sanitized);
-                        }}
-                        placeholder="0.00"
-                        className="w-16 h-11 rounded-xl border border-[var(--outline-variant)] px-2 text-[13px] outline-none focus:border-[var(--primary)]"
-                      />
+                {/* Price adjustment below note field */}
+                <div className="mt-4">
+                  <p className="text-[12px] text-[var(--outline)] mb-2">{L.priceAdj}</p>
+                  <div className="flex items-center gap-2">
+                    <div className="flex rounded-xl border border-[var(--outline-variant)] overflow-hidden shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => setNoteAdjustSign("+")}
+                        className={`w-10 h-12 flex items-center justify-center text-[16px] font-semibold ${
+                          noteAdjustSign === "+"
+                            ? "bg-[var(--primary-light)] text-[var(--primary)]"
+                            : "text-[var(--outline)] active:bg-gray-50"
+                        }`}
+                        aria-pressed={noteAdjustSign === "+"}
+                        aria-label="Increase price"
+                      >
+                        +
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setNoteAdjustSign("-")}
+                        className={`w-10 h-12 flex items-center justify-center text-[16px] font-semibold border-l border-[var(--outline-variant)] ${
+                          noteAdjustSign === "-"
+                            ? "bg-[var(--primary-light)] text-[var(--primary)]"
+                            : "text-[var(--outline)] active:bg-gray-50"
+                        }`}
+                        aria-pressed={noteAdjustSign === "-"}
+                        aria-label="Decrease price"
+                      >
+                        −
+                      </button>
                     </div>
+                    <input
+                      type="number"
+                      inputMode="decimal"
+                      pattern="[0-9]*"
+                      min="0"
+                      step="0.01"
+                      value={noteAdjustInput}
+                      onChange={(e) => {
+                        const sanitized = e.target.value
+                          .replace(/[^\d.]/g, "")
+                          .replace(/(\..*)\./g, "$1")
+                          .replace(/^(\d+\.\d{0,2}).*$/, "$1");
+                        setNoteAdjustInput(sanitized);
+                      }}
+                      placeholder="0.00"
+                      className="flex-1 h-12 rounded-xl border border-[var(--outline-variant)] px-3 text-[14px] outline-none focus:border-[var(--primary)]"
+                    />
                   </div>
                 </div>
 

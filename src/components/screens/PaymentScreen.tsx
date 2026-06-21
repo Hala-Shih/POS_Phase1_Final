@@ -26,6 +26,7 @@ const MOCK_GIFT_CARDS: Record<string, { pin: string; balance: number }> = {
 };
 
 type SplitType = "even" | "amount" | "item";
+type PaymentStartMode = "default" | "split";
 type ConfirmedSplit =
   | { type: "even"; guests: number }
   | { type: "amount" }
@@ -82,7 +83,7 @@ function buildItemizedUnits(items: CartItem[], language: "en" | "zh"): ItemizedU
   });
 }
 
-export default function PaymentScreen({ onClose: externalClose }: { onClose?: () => void } = {}) {
+export default function PaymentScreen({ onClose: externalClose, startMode = "default" }: { onClose?: () => void; startMode?: PaymentStartMode } = {}) {
   const { cartItems, cartTotal, cartCount, guestCount, selectedTable, currentStaff, setScreen, resetOrder, setStaff, setTable, setOpenMenuOnArrival, setOpenPaymentOnArrival, language, transferTable, getEffectiveTables } =
     useOrderStore();
 
@@ -219,6 +220,17 @@ export default function PaymentScreen({ onClose: externalClose }: { onClose?: ()
     remainingCount: number;
     remainingTotal: number;
   } | null>(null);
+  const didApplyStartModeRef = useRef(false);
+
+  useEffect(() => {
+    if (didApplyStartModeRef.current) return;
+    didApplyStartModeRef.current = true;
+    if (startMode === "split") {
+      setSplitType(null);
+      setSplitGuestCount(Math.max(2, guestCount));
+      setShowSplitDrawer(true);
+    }
+  }, [guestCount, startMode]);
 
   // Gift card state
   const [showGiftCardDrawer, setShowGiftCardDrawer] = useState(false);

@@ -187,9 +187,10 @@ const menuItems = (menuData as MenuBook[]).flatMap((b) =>
 interface CartDrawerProps {
   open: boolean;
   onClose: () => void;
+  onItemTap?: (item: CartItem) => void;
 }
 
-export default function CartDrawer({ open, onClose }: CartDrawerProps) {
+export default function CartDrawer({ open, onClose, onItemTap }: CartDrawerProps) {
   const dragControls = useDragControls();
   const { cartItems, cartTotal, cartCount, updateQuantity, removeItem, updateNote, updatePriceAdjustment, setItemDiscount, setItemComped, setItemPriceOverride, toggleBreakline, markAllSent, setScreen, language } =
     useOrderStore();
@@ -380,6 +381,10 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
                           <div
                             className="flex items-start gap-2 px-4 py-2.5"
                             onClick={() => {
+                              if (onItemTap) {
+                                onItemTap(item);
+                                return;
+                              }
                               // If note is open, just close it first
                               if (noteEditId) {
                                 setNoteEditId(null);
@@ -812,6 +817,10 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
                         <div
                           className="flex items-start gap-2 px-4 py-2.5"
                           onClick={() => {
+                            if (onItemTap) {
+                              onItemTap(item);
+                              return;
+                            }
                             if (noteEditId) { setNoteEditId(null); return; }
                             const closing = expandedId === item.id;
                             setExpandedId(closing ? null : item.id);

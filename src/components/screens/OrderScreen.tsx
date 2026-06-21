@@ -17,7 +17,7 @@ import { Search, X, Trash2, Plus, Minus } from "lucide-react";
 
 const categories = menuData as MenuBook[];
 
-export default function OrderScreen() {
+export default function OrderScreen({ onOpenItemActions }: { onOpenItemActions?: (item: { id: string; name: string }) => void } = {}) {
   const {
     currentStaff,
     selectedTable,
@@ -361,7 +361,14 @@ export default function OrderScreen() {
         </div>
       )}
 
-      <CartDrawer open={cartOpen} onClose={() => setCartOpen(false)} />
+      <CartDrawer
+        open={cartOpen}
+        onClose={() => setCartOpen(false)}
+        onItemTap={(item) => {
+          setCartOpen(false);
+          onOpenItemActions?.({ id: item.id, name: n(item) });
+        }}
+      />
 
       {comboItem && (
         <ComboConfigSheet
