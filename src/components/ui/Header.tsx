@@ -26,6 +26,7 @@ interface HeaderProps {
   disableBack?: boolean;
   onLogout?: () => void;
   onBackToHome?: () => void;
+  forceEnableBackToHome?: boolean;
 }
 
 export default function Header({
@@ -47,6 +48,7 @@ export default function Header({
   checkTotal,
   disableBack,
   onBackToHome,
+  forceEnableBackToHome,
 }: HeaderProps) {
   const transferStaffDrag = useDragControls();
   const transferTableDrag = useDragControls();
@@ -63,7 +65,11 @@ export default function Header({
   const setTransferSheetOpen = useOrderStore((s) => s.setTransferSheetOpen);
   const language = useOrderStore((s) => s.language);
   const currentScreen = useOrderStore((s) => s.currentScreen);
-  const homeOptionDisabled = currentScreen === "tables" || currentScreen === "home";
+  const homeOptionDisabled = !forceEnableBackToHome && (currentScreen === "tables" || currentScreen === "home");
+
+  const L = language === "zh"
+    ? { shareTable: "共享桌位", transferTable: "轉移桌位", clearTable: "清除桌位", combineTable: "合併桌位", voidOrder: "撤銷訂單" }
+    : { shareTable: "Share Table", transferTable: "Transfer Table", clearTable: "Clear Table", combineTable: "Combine Table", voidOrder: "Void order" };
 
   // Sync transfer-table sheet open state with the global store so app-level
   // chrome (e.g., FooterNav) can react to it.
@@ -155,7 +161,7 @@ export default function Header({
                     className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-[var(--foreground)] hover:bg-gray-50 active:bg-gray-100"
                   >
                     <Share2 size={16} className="text-[var(--outline)]" />
-                    Share Table
+                    {L.shareTable}
                   </button>
                   <button
                     onClick={() => {
@@ -166,21 +172,21 @@ export default function Header({
                     className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-[var(--foreground)] hover:bg-gray-50 active:bg-gray-100"
                   >
                     <Repeat size={16} className="text-[var(--outline)]" />
-                    Transfer Table
+                    {L.transferTable}
                   </button>
                   <button
                     onClick={() => setShowTableMenu(false)}
                     className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-[var(--foreground)] hover:bg-gray-50 active:bg-gray-100"
                   >
                     <Trash2 size={16} className="text-[var(--outline)]" />
-                    Clear Table
+                    {L.clearTable}
                   </button>
                   <button
                     onClick={() => setShowTableMenu(false)}
                     className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-[var(--foreground)] hover:bg-gray-50 active:bg-gray-100"
                   >
                     <Merge size={16} className="text-[var(--outline)]" />
-                    Combine Table
+                    {L.combineTable}
                   </button>
                   {onVoidOrder && (
                     <div className="border-t border-[var(--outline-variant)]">
@@ -192,7 +198,7 @@ export default function Header({
                       className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-red-600 hover:bg-gray-50 active:bg-gray-100"
                     >
                       <Ban size={16} />
-                      Void order
+                      {L.voidOrder}
                     </button>
                     </div>
                   )}

@@ -439,8 +439,8 @@ export default function ComboConfigSheet({
                     )}
                     <h3 className="text-sm font-semibold">{cn(group)}</h3>
                     {group.required && (
-                      <span className={`text-[12px] ${isGroupSkipped ? "text-[var(--error)]" : "text-[var(--outline)]"}`}>
-                        {L.required}
+                      <span className="text-[12px] text-[var(--error)]">
+                        {L.required}*
                       </span>
                     )}
                     {isMulti && (
@@ -502,7 +502,7 @@ export default function ComboConfigSheet({
                         <p className="text-xs font-semibold text-[var(--outline)] mb-1.5">
                           {shortGroupName(cn(group))}: {cn(comp)} - {cn(mg)}
                           {mg.required && (
-                            <span className={`font-normal ml-1 text-[12px] ${isModSkipped ? "text-[var(--error)]" : ""}`}>{L.required}</span>
+                            <span className="font-normal ml-1 text-[12px] text-[var(--error)]">{L.required}*</span>
                           )}
                         </p>
                         <div className="grid grid-cols-3 gap-1.5">

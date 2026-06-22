@@ -337,7 +337,7 @@ export default function ItemConfigSheet({
                 <h3 className="text-sm font-semibold mb-2">
                   {cn(group)}
                   {group.required ? (
-                    <span className={`text-[12px] font-normal ml-1 ${isSkipped ? "text-[var(--error)]" : "text-[var(--outline)]"}`}>{L.required}</span>
+                    <span className="text-[12px] font-normal ml-1 text-[var(--error)]">{L.required}*</span>
                   ) : (
                     <span className="text-[12px] font-normal ml-1 text-[var(--outline)]">{L.optional}</span>
                   )}

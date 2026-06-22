@@ -601,7 +601,11 @@ export default function PaymentScreen({ onClose: externalClose, startMode = "def
         onVoidOrder={() => { resetOrder(); setScreen("tables"); }}
         tableList={getEffectiveTables(tablesData as Table[])}
         currentTableId={selectedTable?.id}
-        onBackToHome={() => setScreen("tables")}
+        onBackToHome={() => {
+          if (externalClose) externalClose();
+          setScreen("tables");
+        }}
+        forceEnableBackToHome
       />
 
       {/* Content */}
@@ -2826,8 +2830,8 @@ export default function PaymentScreen({ onClose: externalClose, startMode = "def
                       setTotalSettled(0);
                       setPartialPayAmount(null);
                       setLastChangeDue(null);
-                      resetOrder();
                       if (externalClose) externalClose();
+                      resetOrder();
                       setScreen("tables");
                     }}
                     className="w-full h-14 rounded-full flex items-center justify-center active:opacity-80 transition-colors"

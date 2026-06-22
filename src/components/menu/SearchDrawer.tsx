@@ -501,10 +501,10 @@ export default function SearchDrawer({ open, onClose }: SearchDrawerProps) {
                         {n(group)}
                         <span
                           className={`font-normal ml-1 text-[12px] ${
-                            isSkipped ? "text-[var(--error)]" : "text-[var(--outline)]"
+                            group.required ? "text-[var(--error)]" : "text-[var(--outline)]"
                           }`}
                         >
-                          {group.required ? L.required : L.optional}
+                          {group.required ? `${L.required}*` : L.optional}
                         </span>
                       </p>
 
