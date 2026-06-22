@@ -66,6 +66,8 @@ export default function Header({
   const setTransferSheetOpen = useOrderStore((s) => s.setTransferSheetOpen);
   const language = useOrderStore((s) => s.language);
   const currentScreen = useOrderStore((s) => s.currentScreen);
+  const setScreen = useOrderStore((s) => s.setScreen);
+  const [pendingTransferStaff, setPendingTransferStaff] = useState<Staff | null>(null);
   const homeOptionDisabled = !forceEnableBackToHome && (currentScreen === "tables" || currentScreen === "home");
 
   const L = language === "zh"
@@ -252,7 +254,7 @@ export default function Header({
       {/* Transfer drawer */}
       <AnimatePresence>
       {showTransfer && (
-        <div className="absolute inset-0 z-50 flex flex-col">
+        <div className="absolute inset-0 z-[9999]">
           {/* Scrim */}
           <motion.div
             initial={{ opacity: 0 }}
@@ -261,7 +263,8 @@ export default function Header({
             className="absolute inset-0 bg-black/40"
             onClick={() => setShowTransfer(false)}
           />
-          {/* Sheet */}
+          {/* Sheet — constrained to 360x640 */}
+          <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-[360px]">
           <motion.div
             initial={{ y: "100%" }}
             animate={{ y: 0 }}
@@ -277,7 +280,7 @@ export default function Header({
                 setShowTransfer(false);
               }
             }}
-            className="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl max-h-[70%] flex flex-col z-10"
+            className="bg-white rounded-t-2xl max-h-[450px] flex flex-col z-10"
           >
             <div
               onPointerDown={(e) => transferStaffDrag.start(e)}
@@ -296,41 +299,63 @@ export default function Header({
               {staffList
                 ?.filter((s) => s.id !== currentStaffId)
                 .map((staff) => {
-                  const isSelected = selectedTransferStaffId === staff.id;
                   return (
                     <button
                       key={staff.id}
                       onClick={() => {
-                        setSelectedTransferStaffId(staff.id);
-                        setTimeout(() => {
-                          setShowTransfer(false);
-                          setSelectedTransferStaffId(null);
-                          onTransfer?.(staff);
-                        }, 400);
+                        setPendingTransferStaff(staff);
                       }}
-                      className={`w-full flex items-center gap-3 px-4 py-3 transition-colors ${
-                        isSelected ? "bg-[var(--primary-light)]" : "active:bg-gray-50"
-                      }`}
+                      className="w-full flex items-center gap-3 px-4 py-3 transition-colors active:bg-gray-50"
                     >
-                      <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-                        isSelected
-                          ? "bg-[var(--primary)] text-white"
-                          : "bg-[var(--primary-light)] text-[var(--primary)]"
-                      }`}>
+                      <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium bg-[var(--primary-light)] text-[var(--primary)]">
                         {staff.name.charAt(0)}
                       </div>
                       <div className="flex flex-col items-start flex-1">
                         <span className="text-sm font-medium text-[var(--foreground)]">{staff.name}</span>
                         <span className="text-xs text-[var(--outline)] capitalize">{staff.role}</span>
                       </div>
-                      {isSelected && (
-                        <Check size={18} className="text-[var(--primary)]" />
-                      )}
                     </button>
                   );
                 })}
             </div>
           </motion.div>
+          </div>
+          {/* Confirmation toast */}
+          <AnimatePresence>
+          {pendingTransferStaff && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="absolute inset-0 flex items-center justify-center z-[100] px-6"
+            >
+              <div className="w-full bg-white rounded-2xl shadow-xl px-5 py-5 flex flex-col gap-4">
+                <p className="text-sm text-center text-[var(--foreground)]">
+                  Transfer table to <span className="font-semibold">{pendingTransferStaff.name}</span>? You will be returned to the floor map.
+                </p>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setPendingTransferStaff(null)}
+                    className="flex-1 h-11 rounded-xl border border-[var(--outline-variant)] text-sm font-medium text-[var(--foreground)] active:bg-gray-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={() => {
+                      onTransfer?.(pendingTransferStaff);
+                      setPendingTransferStaff(null);
+                      setShowTransfer(false);
+                      setScreen("tables");
+                    }}
+                    className="flex-1 h-11 rounded-xl bg-[var(--primary)] text-sm font-medium text-white active:opacity-80"
+                  >
+                    Confirm
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+          </AnimatePresence>
         </div>
       )}
       </AnimatePresence>
