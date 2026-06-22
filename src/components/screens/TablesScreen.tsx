@@ -8,6 +8,7 @@ import tablesData from "@/data/tables.json";
 import staffData from "@/data/staff.json";
 import { Table, Staff } from "@/lib/types";
 import { Map, Keyboard } from "lucide-react";
+import { getLatestCheckoutTotal } from "@/lib/table-utils";
 
 const baseTables = tablesData as Table[];
 const areas = ["All", ...Array.from(new Set(baseTables.map((t) => t.area)))];
@@ -49,6 +50,7 @@ export default function TablesScreen() {
   }));
 
   const handleTableSelect = (table: Table) => {
+    if (table.status === "checkout") return;
     if (table.hasActiveOrder) {
       loadTableOrder(table);
       setScreen("check");
@@ -469,11 +471,11 @@ export default function TablesScreen() {
                       key={table.id}
                       onClick={() => {
                         if (isDraggingRef.current) return;
-                        if (table.status !== "unavailable") handleTableSelect(table);
+                        if (table.status !== "unavailable" && table.status !== "checkout") handleTableSelect(table);
                       }}
                       style={getTableStyle(table)}
                       className={`flex flex-col items-center justify-center active:scale-95 transition-transform ${
-                        table.status === "unavailable" ? "opacity-60 cursor-default" : ""
+                        table.status === "unavailable" || table.status === "checkout" ? "opacity-60 cursor-default" : ""
                       }`}
                     >
                       {/* Occupied badge: color matches table state */}
@@ -494,11 +496,11 @@ export default function TablesScreen() {
                         />
                       )}
 
-                      {/* Checkout badge: white circle with number */}
-                      {table.status === "checkout" && table.guestCount && (
-                        <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-white border border-black flex items-center justify-center">
-                          <span className="text-[10px] font-bold leading-none text-black">
-                            {table.guestCount}
+                      {/* Checkout badge: white circle with check total */}
+                      {table.status === "checkout" && getLatestCheckoutTotal(table.id) != null && (
+                        <span className="absolute -top-1 -right-1 min-w-5 h-5 px-1 rounded-full bg-white border border-black flex items-center justify-center">
+                          <span className="text-[9px] font-bold leading-none text-black">
+                            ${getLatestCheckoutTotal(table.id)!.toFixed(2)}
                           </span>
                         </span>
                       )}

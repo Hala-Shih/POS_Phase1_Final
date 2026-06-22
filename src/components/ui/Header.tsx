@@ -1,10 +1,11 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { ArrowLeft, Users, MapPin, ArrowRightLeft, House, X, Ban, Check, ClipboardList, Share2, Repeat, Trash2, Merge } from "lucide-react";
+import { ArrowLeft, MapPin, ArrowRightLeft, House, X, Ban, Check, ClipboardList, Share2, Repeat, Trash2, Merge } from "lucide-react";
 import { motion, AnimatePresence, useDragControls } from "framer-motion";
 import { Staff, Table } from "@/lib/types";
 import { useOrderStore } from "@/store/order-store";
+import { getLatestCheckoutTotal } from "@/lib/table-utils";
 
 interface HeaderProps {
   onBack?: () => void;
@@ -126,15 +127,6 @@ export default function Header({
             >
               <ClipboardList size={14} />
               <span>${checkTotal.toFixed(2)}</span>
-            </button>
-          )}
-          {guestCount != null && guestCount > 0 && (
-            <button
-              onClick={onGuestCountTap}
-              className="flex items-center gap-1 text-sm text-[var(--outline)] active:opacity-70"
-            >
-              <Users size={14} />
-              <span>{guestCount}</span>
             </button>
           )}
           {tableName && (
@@ -508,10 +500,10 @@ export default function Header({
                                 )}
 
                                 {/* Checkout badge */}
-                                {table.status === "checkout" && table.guestCount && (
-                                  <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-white border border-black flex items-center justify-center">
-                                    <span className="text-[10px] font-bold leading-none text-black">
-                                      {table.guestCount}
+                                {table.status === "checkout" && getLatestCheckoutTotal(table.id) != null && (
+                                  <span className="absolute -top-1 -right-1 min-w-5 h-5 px-1 rounded-full bg-white border border-black flex items-center justify-center">
+                                    <span className="text-[9px] font-bold leading-none text-black">
+                                      ${getLatestCheckoutTotal(table.id)!.toFixed(2)}
                                     </span>
                                   </span>
                                 )}
