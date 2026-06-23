@@ -490,13 +490,11 @@ export default function MenuSheet({ open, onClose, actionButtons, initialConfigI
                                 key={item.id}
                                 onPointerDown={(e) => {
                                   if (!item.soldOut) {
-                                    const touch = e.touches?.[0] || (e as any);
-                                    startSwipeDetection(item.id, touch.clientX);
+                                    startSwipeDetection(item.id, e.clientX);
                                   }
                                 }}
                                 onPointerMove={(e) => {
-                                  const touch = e.touches?.[0] || (e as any);
-                                  handleSwipeMove(touch.clientX);
+                                  handleSwipeMove(e.clientX);
                                 }}
                                 onPointerUp={cancelSwipe}
                                 onPointerCancel={cancelSwipe}
