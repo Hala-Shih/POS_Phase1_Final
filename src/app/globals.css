@@ -57,7 +57,7 @@ body {
   position: relative;
   background: var(--background);
   border: 1px solid var(--preview-frame);
-  border-radius: 12px;
+  border-radius: 0;
   box-shadow:
     0 0 0 4px var(--preview-edge),
     0 10px 24px rgba(15, 23, 42, 0.16);
