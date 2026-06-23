@@ -328,6 +328,12 @@ export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMul
   };
 
   const handleSaveNote = () => {
+    // Compute optional signed price adjustment from the Notes panel.
+    const adjMagnitude = parseFloat(noteAdjustInput);
+    const signedAdjustment = !isNaN(adjMagnitude) && adjMagnitude > 0
+      ? (noteAdjustSign === "-" ? -adjMagnitude : adjMagnitude)
+      : 0;
+
     if (hasQuantityBasedOrders && cartItem) {
       // Build notesPerTabIndex: tab index -> note text
       const notesPerTabIndex: Record<number, string> = {};
@@ -336,9 +342,13 @@ export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMul
         notesPerTabIndex[idx] = nextNote;
       });
       splitAndUpdateNotes(cartItem.id, notesPerTabIndex);
+      // Adjustment applies to the whole original cart line; preserved by split.
+      updatePriceAdjustment(cartItem.id, signedAdjustment);
       setShowNoteInput(false);
       setActiveNoteOrderKey(null);
       setNoteDrafts({});
+      setNoteAdjustSign("+");
+      setNoteAdjustInput("");
       handleClose();
       return;
     }
@@ -346,6 +356,7 @@ export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMul
     if (selectedNoteTab) {
       const nextNote = (noteDrafts[selectedNoteTab.key] ?? "").trim();
       updateNote(selectedNoteTab.cartItemId, nextNote);
+      updatePriceAdjustment(selectedNoteTab.cartItemId, signedAdjustment);
     }
     setShowNoteInput(false);
     setActiveNoteOrderKey(null);
@@ -630,9 +641,9 @@ export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMul
 
             {/* Notes input (expanded inline) */}
             {showNoteInput ? (
-              <div className="px-4 py-3 flex flex-col h-full">
+              <div className="px-4 py-4">
                 {/* Large full-width note field */}
-                <p className="text-[11px] text-[var(--outline)] mb-1.5">{L.addNotes}</p>
+                <p className="text-[12px] text-[var(--outline)] mb-2">{L.addNoteForKitchen}</p>
                 <textarea
                   autoFocus
                   value={selectedNoteTab ? (noteDrafts[selectedNoteTab.key] ?? "") : ""}
@@ -643,11 +654,63 @@ export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMul
                     setNoteDrafts((prev) => ({ ...prev, [selectedNoteTab.key]: next }));
                   }}
                   placeholder={L.addNotes}
-                  rows={2}
-                  className="flex-1 min-h-0 rounded-2xl border border-[var(--outline-variant)] px-4 py-3 text-[14px] outline-none resize-none focus:border-[var(--primary)]"
+                  rows={3}
+                  className="w-full h-24 rounded-2xl border border-[var(--outline-variant)] px-4 py-3 text-[15px] outline-none resize-none focus:border-[var(--primary)]"
                 />
 
-                <div className="flex gap-2 mt-2 shrink-0">
+                {/* Price adjustment below note field */}
+                <div className="mt-4">
+                  <p className="text-[12px] text-[var(--outline)] mb-2">{L.priceAdj}</p>
+                  <div className="flex items-center gap-2">
+                    <div className="flex rounded-xl border border-[var(--outline-variant)] overflow-hidden shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => setNoteAdjustSign("+")}
+                        className={`w-10 h-12 flex items-center justify-center text-[16px] font-semibold ${
+                          noteAdjustSign === "+"
+                            ? "bg-[var(--primary-light)] text-[var(--primary)]"
+                            : "text-[var(--outline)] active:bg-gray-50"
+                        }`}
+                        aria-pressed={noteAdjustSign === "+"}
+                        aria-label="Increase price"
+                      >
+                        +
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setNoteAdjustSign("-")}
+                        className={`w-10 h-12 flex items-center justify-center text-[16px] font-semibold border-l border-[var(--outline-variant)] ${
+                          noteAdjustSign === "-"
+                            ? "bg-[var(--primary-light)] text-[var(--primary)]"
+                            : "text-[var(--outline)] active:bg-gray-50"
+                        }`}
+                        aria-pressed={noteAdjustSign === "-"}
+                        aria-label="Decrease price"
+                      >
+                        −
+                      </button>
+                    </div>
+                    <input
+                      type="number"
+                      inputMode="decimal"
+                      pattern="[0-9]*"
+                      min="0"
+                      step="0.01"
+                      value={noteAdjustInput}
+                      onChange={(e) => {
+                        const sanitized = e.target.value
+                          .replace(/[^\d.]/g, "")
+                          .replace(/(\..*)\./, "$1")
+                          .replace(/^(\d+\.\d{0,2}).*$/, "$1");
+                        setNoteAdjustInput(sanitized);
+                      }}
+                      placeholder="0.00"
+                      className="flex-1 h-12 rounded-xl border border-[var(--outline-variant)] px-3 text-[14px] outline-none focus:border-[var(--primary)]"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex gap-2 mt-3">
                   <button
                     onClick={() => setShowNoteInput(false)}
                     className="flex-1 h-9 rounded-xl border border-[var(--outline-variant)] text-[12px] font-medium active:bg-gray-50"
@@ -660,7 +723,13 @@ export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMul
                     disabled={(() => {
                       if (!selectedNoteTab) return true;
                       const noteFilled = (noteDrafts[selectedNoteTab.key] ?? selectedNoteTab.note ?? "").trim().length > 0;
-                      return !noteFilled;
+                      const adjVal = parseFloat(noteAdjustInput);
+                      const adjFilled = !isNaN(adjVal) && adjVal > 0;
+                      const existingAdj = cartItem?.priceAdjustment || 0;
+                      const adjChanged = adjFilled
+                        ? (noteAdjustSign === "-" ? -adjVal : adjVal) !== existingAdj
+                        : existingAdj !== 0;
+                      return !(noteFilled || adjChanged);
                     })()}
                     className="flex-1 h-9 rounded-xl text-[12px] font-semibold text-white active:opacity-80 disabled:opacity-40"
                     style={{ background: "#6750A4" }}
