@@ -557,28 +557,32 @@ export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMul
             ) : (
               /* Quantity editor + note order tabs */
               <div className="flex items-center gap-3 px-4 pb-2">
-                <button
-                  onClick={() => {
-                    if (cartItem.sent) return;
-                    if (cartItem.quantity <= 1) { removeItem(cartItem.id); handleClose(); }
-                    else updateQuantity(cartItem.id, -1);
-                  }}
-                  className="w-7 h-7 rounded-full border border-[var(--outline-variant)] flex items-center justify-center active:bg-gray-100 disabled:opacity-30 shrink-0"
-                  disabled={cartItem.sent}
-                >
-                  {cartItem.quantity <= 1 ? <Trash2 size={12} className="text-[var(--error)]" /> : <Minus size={12} />}
-                </button>
-                <span className="text-[13px] font-semibold min-w-[16px] text-center shrink-0">{cartItem.quantity}</span>
-                <button
-                  onClick={() => {
-                    if (cartItem.sent) return;
-                    updateQuantity(cartItem.id, 1);
-                  }}
-                  className="w-7 h-7 rounded-full border border-[var(--outline-variant)] flex items-center justify-center active:bg-gray-100 disabled:opacity-30 shrink-0"
-                  disabled={cartItem.sent}
-                >
-                  <Plus size={12} />
-                </button>
+                {!showNoteInput && (
+                  <>
+                    <button
+                      onClick={() => {
+                        if (cartItem.sent) return;
+                        if (cartItem.quantity <= 1) { removeItem(cartItem.id); handleClose(); }
+                        else updateQuantity(cartItem.id, -1);
+                      }}
+                      className="w-7 h-7 rounded-full border border-[var(--outline-variant)] flex items-center justify-center active:bg-gray-100 disabled:opacity-30 shrink-0"
+                      disabled={cartItem.sent}
+                    >
+                      {cartItem.quantity <= 1 ? <Trash2 size={12} className="text-[var(--error)]" /> : <Minus size={12} />}
+                    </button>
+                    <span className="text-[13px] font-semibold min-w-[16px] text-center shrink-0">{cartItem.quantity}</span>
+                    <button
+                      onClick={() => {
+                        if (cartItem.sent) return;
+                        updateQuantity(cartItem.id, 1);
+                      }}
+                      className="w-7 h-7 rounded-full border border-[var(--outline-variant)] flex items-center justify-center active:bg-gray-100 disabled:opacity-30 shrink-0"
+                      disabled={cartItem.sent}
+                    >
+                      <Plus size={12} />
+                    </button>
+                  </>
+                )}
 
                 {/* Order tabs — inline, horizontally scrollable when overflowing */}
                 {noteOrderTabs.length > 1 && isItemLevel2PanelOpen && (
