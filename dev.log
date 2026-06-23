@@ -1,0 +1,14 @@
+
+> handpos@0.1.0 dev
+> next dev
+
+  ▲ Next.js 14.2.35
+  - Local:        http://localhost:3000
+
+ ✓ Starting...
+ ✓ Ready in 949ms
+ ○ Compiling / ...
+ ✓ Compiled / in 1404ms (1487 modules)
+ GET / 200 in 1613ms
+ ✓ Compiled in 216ms (738 modules)
+ GET / 200 in 29ms

@@ -328,6 +328,12 @@ export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMul
   };
 
   const handleSaveNote = () => {
+    // Compute optional signed price adjustment from the Notes panel.
+    const adjMagnitude = parseFloat(noteAdjustInput);
+    const signedAdjustment = !isNaN(adjMagnitude) && adjMagnitude > 0
+      ? (noteAdjustSign === "-" ? -adjMagnitude : adjMagnitude)
+      : 0;
+
     if (hasQuantityBasedOrders && cartItem) {
       // Build notesPerTabIndex: tab index -> note text
       const notesPerTabIndex: Record<number, string> = {};
@@ -336,9 +342,13 @@ export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMul
         notesPerTabIndex[idx] = nextNote;
       });
       splitAndUpdateNotes(cartItem.id, notesPerTabIndex);
+      // Adjustment applies to the whole original cart line; preserved by split.
+      updatePriceAdjustment(cartItem.id, signedAdjustment);
       setShowNoteInput(false);
       setActiveNoteOrderKey(null);
       setNoteDrafts({});
+      setNoteAdjustSign("+");
+      setNoteAdjustInput("");
       handleClose();
       return;
     }
@@ -346,6 +356,7 @@ export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMul
     if (selectedNoteTab) {
       const nextNote = (noteDrafts[selectedNoteTab.key] ?? "").trim();
       updateNote(selectedNoteTab.cartItemId, nextNote);
+      updatePriceAdjustment(selectedNoteTab.cartItemId, signedAdjustment);
     }
     setShowNoteInput(false);
     setActiveNoteOrderKey(null);
@@ -611,7 +622,7 @@ export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMul
 
           {/* Modifier / combo / note / discount details with inline deltas
               per Rule 15. Tap to drill into the modifier panel. */}
-          {!showNoteInput && (hasModifiers || cartItem.note || cartItem.discount || cartItem.priceOverride != null) && (
+          {(hasModifiers || cartItem.note || cartItem.discount || cartItem.priceOverride != null) && (
             <button
               onClick={hasModifiers ? openModifyPanel : undefined}
               disabled={!hasModifiers}
@@ -642,6 +653,58 @@ export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMul
                   rows={3}
                   className="w-full h-24 rounded-2xl border border-[var(--outline-variant)] px-4 py-3 text-[15px] outline-none resize-none focus:border-[var(--primary)]"
                 />
+
+                {/* Price adjustment below note field */}
+                <div className="mt-4">
+                  <p className="text-[12px] text-[var(--outline)] mb-2">{L.priceAdj}</p>
+                  <div className="flex items-center gap-2">
+                    <div className="flex rounded-xl border border-[var(--outline-variant)] overflow-hidden shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => setNoteAdjustSign("+")}
+                        className={`w-10 h-12 flex items-center justify-center text-[16px] font-semibold ${
+                          noteAdjustSign === "+"
+                            ? "bg-[var(--primary-light)] text-[var(--primary)]"
+                            : "text-[var(--outline)] active:bg-gray-50"
+                        }`}
+                        aria-pressed={noteAdjustSign === "+"}
+                        aria-label="Increase price"
+                      >
+                        +
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setNoteAdjustSign("-")}
+                        className={`w-10 h-12 flex items-center justify-center text-[16px] font-semibold border-l border-[var(--outline-variant)] ${
+                          noteAdjustSign === "-"
+                            ? "bg-[var(--primary-light)] text-[var(--primary)]"
+                            : "text-[var(--outline)] active:bg-gray-50"
+                        }`}
+                        aria-pressed={noteAdjustSign === "-"}
+                        aria-label="Decrease price"
+                      >
+                        −
+                      </button>
+                    </div>
+                    <input
+                      type="number"
+                      inputMode="decimal"
+                      pattern="[0-9]*"
+                      min="0"
+                      step="0.01"
+                      value={noteAdjustInput}
+                      onChange={(e) => {
+                        const sanitized = e.target.value
+                          .replace(/[^\d.]/g, "")
+                          .replace(/(\..*)\./g, "$1")
+                          .replace(/^(\d+\.\d{0,2}).*$/, "$1");
+                        setNoteAdjustInput(sanitized);
+                      }}
+                      placeholder="0.00"
+                      className="flex-1 h-12 rounded-xl border border-[var(--outline-variant)] px-3 text-[14px] outline-none focus:border-[var(--primary)]"
+                    />
+                  </div>
+                </div>
 
                 <div className="flex gap-2 mt-3">
                   <button
