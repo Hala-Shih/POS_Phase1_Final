@@ -626,9 +626,9 @@ export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMul
 
             {/* Notes input (expanded inline) */}
             {showNoteInput ? (
-              <div className="px-4 py-4">
+              <div className="px-4 py-3 flex flex-col h-full">
                 {/* Large full-width note field */}
-                <p className="text-[12px] text-[var(--outline)] mb-2">{L.addNoteForKitchen}</p>
+                <p className="text-[11px] text-[var(--outline)] mb-1.5">{L.addNotes}</p>
                 <textarea
                   autoFocus
                   value={selectedNoteTab ? (noteDrafts[selectedNoteTab.key] ?? "") : ""}
@@ -639,14 +639,14 @@ export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMul
                     setNoteDrafts((prev) => ({ ...prev, [selectedNoteTab.key]: next }));
                   }}
                   placeholder={L.addNotes}
-                  rows={3}
-                  className="w-full h-24 rounded-2xl border border-[var(--outline-variant)] px-4 py-3 text-[15px] outline-none resize-none focus:border-[var(--primary)]"
+                  rows={2}
+                  className="flex-1 min-h-0 rounded-2xl border border-[var(--outline-variant)] px-4 py-3 text-[14px] outline-none resize-none focus:border-[var(--primary)]"
                 />
 
-                <div className="flex gap-2 mt-3">
+                <div className="flex gap-2 mt-2 shrink-0">
                   <button
                     onClick={() => setShowNoteInput(false)}
-                    className="flex-1 h-10 rounded-xl border border-[var(--outline-variant)] text-[13px] font-medium active:bg-gray-50"
+                    className="flex-1 h-9 rounded-xl border border-[var(--outline-variant)] text-[12px] font-medium active:bg-gray-50"
                     style={{ color: "#49454F" }}
                   >
                     {L.cancel}
@@ -656,15 +656,9 @@ export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMul
                     disabled={(() => {
                       if (!selectedNoteTab) return true;
                       const noteFilled = (noteDrafts[selectedNoteTab.key] ?? selectedNoteTab.note ?? "").trim().length > 0;
-                      const adjVal = parseFloat(noteAdjustInput);
-                      const adjFilled = !isNaN(adjVal) && adjVal > 0;
-                      const existingAdj = cartItem?.priceAdjustment || 0;
-                      const adjChanged = adjFilled
-                        ? (noteAdjustSign === "-" ? -adjVal : adjVal) !== existingAdj
-                        : existingAdj !== 0;
-                      return !(noteFilled || adjChanged);
+                      return !noteFilled;
                     })()}
-                    className="flex-1 h-10 rounded-xl text-[13px] font-semibold text-white active:opacity-80 disabled:opacity-40"
+                    className="flex-1 h-9 rounded-xl text-[12px] font-semibold text-white active:opacity-80 disabled:opacity-40"
                     style={{ background: "#6750A4" }}
                   >
                     {L.saveNote}
