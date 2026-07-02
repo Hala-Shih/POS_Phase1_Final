@@ -238,6 +238,24 @@ export default function CheckSummaryScreen({ menuOpen: externalMenuOpen, setMenu
           </div>
         ) : (
           <>
+            {/* Paid banner for closed orders */}
+            {selectedTable?.orderStatus === "closed" && (
+              <div className="w-full px-4 py-2 flex items-center justify-center" style={{ background: "#6750A4" }}>
+                <span className="text-sm font-semibold tracking-widest uppercase text-white">
+                  {language === "zh" ? "已結帳" : "Paid"}
+                </span>
+              </div>
+            )}
+
+            {/* Void banner for voided orders */}
+            {selectedTable?.orderStatus === "voided" && (
+              <div className="w-full px-4 py-2 flex items-center justify-center" style={{ background: "#B3261E" }}>
+                <span className="text-sm font-semibold tracking-widest uppercase text-white">
+                  {language === "zh" ? "已取消" : "Void"}
+                </span>
+              </div>
+            )}
+
             {/* Unsent group */}
             {unsentItems.length > 0 && (
               <div>
@@ -947,6 +965,10 @@ function ItemDescription({
 
       {breakdown.isComped && (
         <p className="text-[11px] text-[var(--primary)] italic mt-0.5">{language === "zh" ? "招待" : "Comped"}</p>
+      )}
+
+      {item.toGo && (
+        <p className="text-[11px] text-[var(--primary)] italic mt-0.5">{language === "zh" ? "外帶" : "Take out"}</p>
       )}
     </>
   );

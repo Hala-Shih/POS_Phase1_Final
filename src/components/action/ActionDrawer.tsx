@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { X, Send, PauseCircle, Tag, Trash2, Users, CreditCard, Split, WalletCards, AlertTriangle, Check, StickyNote, Minus, Plus, Pencil, DollarSign, ArrowDownToLine, ChevronLeft, Banknote, Printer } from "lucide-react";
+import { X, Send, PauseCircle, Tag, Trash2, Users, CreditCard, Split, WalletCards, AlertTriangle, Check, StickyNote, Minus, Plus, Pencil, DollarSign, ArrowDownToLine, ChevronLeft, Banknote, Printer, Gift, ShoppingBag } from "lucide-react";
 import { useOrderStore } from "@/store/order-store";
 import menuData from "@/data/menu.json";
 import { MenuBook, MenuItem, Modifier, CartItemModifier } from "@/lib/types";
@@ -29,7 +29,7 @@ interface ActionDrawerProps {
 }
 
 export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMultiplePayment, itemContext }: ActionDrawerProps) {
-  const { cartItems, cartTotal, checkTip, checkDiscount, setCheckTip, markAllSent, resetOrder, setItemDiscount, setCheckDiscount, removeItem, updateQuantity, updateNote, updatePriceAdjustment, setItemPriceOverride, toggleBreakline, updateItemModifiers, updateComboSelections, splitAndUpdateNotes, splitCartItemToSingleItems, splitOneAndUpdateModifiers, consolidateCart, addItem, language } = useOrderStore();
+  const { cartItems, cartTotal, checkTip, checkDiscount, setCheckTip, markAllSent, resetOrder, setItemDiscount, setCheckDiscount, removeItem, updateQuantity, updateNote, updatePriceAdjustment, setItemPriceOverride, setItemComped, setItemToGo, toggleBreakline, updateItemModifiers, updateComboSelections, splitAndUpdateNotes, splitCartItemToSingleItems, splitOneAndUpdateModifiers, consolidateCart, addItem, language } = useOrderStore();
 
 
 
@@ -50,7 +50,7 @@ export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMul
     required: "必選", optional: "選填", custom: "自訂", back: "返回",
     selectPreset: "選擇預設折扣", removeDiscount: "移除折扣",
     modify: "修改", notes: "備註", addBreakline: "加分隔線", off: "關閉",
-    applyDiscount: "套用折扣", priceOverride: "覆蓋價格", removeItem: "刪除品項",
+    applyDiscount: "套用折扣", comp: "免單", priceOverride: "覆蓋價格", toGo: "外帶", removeItem: "刪除品項",
     applyDiscountTitle: "套用折扣", addTip: "新增小費", voidOrder: "取消訂單", actions: "操作",
     applyToFullCheck: "套用至整張帳單",
     sendToKitchen: "送至廚房", sent: "已送出", unsent: "未送出", allItemsSent: "全部已送出",
@@ -75,7 +75,7 @@ export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMul
     required: "Required", optional: "Optional", custom: "Custom", back: "Back",
     selectPreset: "Select a preset discount", removeDiscount: "Remove discount",
     modify: "Modify", notes: "Notes", addBreakline: "Add breakline", off: "Off",
-    applyDiscount: "Apply discount", priceOverride: "Price override", removeItem: "Remove item",
+    applyDiscount: "Apply discount", comp: "Comp", priceOverride: "Price override", toGo: "To Go", removeItem: "Remove item",
     applyDiscountTitle: "Apply Discount", addTip: "Add Tip", voidOrder: "Void Order", actions: "Actions",
     applyToFullCheck: "Apply to full check",
     sendToKitchen: "Send to kitchen", sent: "Sent!", unsent: "unsent", allItemsSent: "All items sent",
@@ -979,6 +979,22 @@ export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMul
                   label={L.priceOverride}
                   value={cartItem.priceOverride != null ? `$${cartItem.priceOverride.toFixed(2)}` : undefined}
                   onClick={() => { setPriceInput(cartItem.priceOverride?.toFixed(2) ?? ""); setShowPriceOverride(true); }}
+                />
+                <ItemActionButton
+                  icon={<Gift size={16} />}
+                  label={L.comp}
+                  active={!!cartItem.comped}
+                  activeLabel={language === "zh" ? "開啟" : "On"}
+                  value={!cartItem.comped ? L.off : undefined}
+                  onClick={() => { setItemComped(cartItem.id, !cartItem.comped); }}
+                />
+                <ItemActionButton
+                  icon={<ShoppingBag size={16} />}
+                  label={L.toGo}
+                  active={!!cartItem.toGo}
+                  activeLabel={language === "zh" ? "開啟" : "On"}
+                  value={!cartItem.toGo ? L.off : undefined}
+                  onClick={() => { setItemToGo(cartItem.id, !cartItem.toGo); }}
                 />
                 <ItemActionButton
                   icon={<Trash2 size={16} />}

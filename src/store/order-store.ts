@@ -171,6 +171,7 @@ interface OrderState {
   updatePriceAdjustment: (cartItemId: string, amount: number) => void;
   setItemDiscount: (cartItemId: string, discount: CartItemDiscount | null) => void;
   setItemComped: (cartItemId: string, comped: boolean) => void;
+  setItemToGo: (cartItemId: string, toGo: boolean) => void;
   setItemPriceOverride: (cartItemId: string, price: number | null) => void;
   toggleBreakline: (cartItemId: string, position: "above" | "below") => void;
   updateItemModifiers: (cartItemId: string, modifiers: CartItemModifier[]) => void;
@@ -422,6 +423,14 @@ export const useOrderStore = create<OrderState>((set, get) => ({
               totalPrice: computeItemTotal(i.basePrice, i.quantity, i.modifiers, i.comboSelections, i.priceAdjustment, comped, comped ? null : i.priceOverride, i.discount),
             }
           : i
+      ),
+    });
+  },
+
+  setItemToGo: (cartItemId, toGo) => {
+    set({
+      cartItems: get().cartItems.map((i) =>
+        i.id === cartItemId ? { ...i, toGo } : i
       ),
     });
   },

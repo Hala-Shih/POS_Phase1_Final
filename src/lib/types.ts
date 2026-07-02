@@ -125,6 +125,7 @@ export interface CartItem {
   priceAdjustment?: number;
   discount?: CartItemDiscount | null;
   comped?: boolean;
+  toGo?: boolean;
   priceOverride?: number | null;
   breaklineAbove?: boolean;
   breaklineBelow?: boolean;
