@@ -155,6 +155,10 @@ interface OrderState {
   // Guest count
   guestCount: number;
   setGuestCount: (count: number) => void;
+  guestCountReturnScreen: Screen | null;
+  setGuestCountReturnScreen: (screen: Screen | null) => void;
+  guestCountReturnOpenMenu: boolean;
+  setGuestCountReturnOpenMenu: (open: boolean) => void;
 
   // Cart
   cartItems: CartItem[];
@@ -275,6 +279,10 @@ export const useOrderStore = create<OrderState>((set, get) => ({
 
   guestCount: 0,
   setGuestCount: (count) => set({ guestCount: count }),
+  guestCountReturnScreen: null,
+  setGuestCountReturnScreen: (screen) => set({ guestCountReturnScreen: screen }),
+  guestCountReturnOpenMenu: false,
+  setGuestCountReturnOpenMenu: (open) => set({ guestCountReturnOpenMenu: open }),
 
   cartItems: [],
   lastAddedItemId: null,
@@ -719,6 +727,8 @@ export const useOrderStore = create<OrderState>((set, get) => ({
       currentScreen: "tables",
       selectedTable: null,
       guestCount: 0,
+      guestCountReturnScreen: null,
+      guestCountReturnOpenMenu: false,
       cartItems: [],
       checkTip: 0,
       checkDiscount: null,

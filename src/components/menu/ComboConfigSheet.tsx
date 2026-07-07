@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 
-import { Check, Plus, ArrowLeft, Trash2 } from "lucide-react";
+import { Check, Plus, Minus, ArrowLeft, Trash2 } from "lucide-react";
 import { useOrderStore } from "@/store/order-store";
 import {
   MenuItem,
@@ -93,8 +93,34 @@ export default function ComboConfigSheet({
   // Track whether user has made any change to existing orders
   const [changedOrderIds, setChangedOrderIds] = useState<Set<string>>(new Set());
 
+  // Swipe-to-edit count state (mirrors MenuSheet interaction pattern).
+  const [editingCountKey, setEditingCountKey] = useState<string | null>(null);
+  const swipeStartRef = useRef<{ x: number; key: string } | null>(null);
+  const swipeTriggeredRef = useRef(false);
+  const SWIPE_THRESHOLD = 40;
+
   const activeOrder = orders[activeOrderIndex] || orders[0];
   const quantity = orders.length;
+
+  const startSwipeDetection = (key: string, x: number) => {
+    if (swipeTriggeredRef.current) return;
+    swipeStartRef.current = { x, key };
+    swipeTriggeredRef.current = false;
+  };
+
+  const handleSwipeMove = (x: number) => {
+    if (!swipeStartRef.current || swipeTriggeredRef.current) return;
+    const delta = Math.abs(x - swipeStartRef.current.x);
+    if (delta >= SWIPE_THRESHOLD) {
+      swipeTriggeredRef.current = true;
+      setEditingCountKey(swipeStartRef.current.key);
+    }
+  };
+
+  const cancelSwipe = () => {
+    swipeStartRef.current = null;
+    swipeTriggeredRef.current = false;
+  };
 
   // Refs for auto-scroll (keyed by group id or "groupId:compId:modGroupId")
   const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
@@ -117,6 +143,11 @@ export default function ComboConfigSheet({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [item.id]);
 
+  useEffect(() => {
+    setEditingCountKey(null);
+    cancelSwipe();
+  }, [activeOrderIndex]);
+
   const updateActiveOrder = (updater: (prev: ComboState) => ComboState) => {
     setOrders((prev) => {
       const updated = [...prev];
@@ -130,34 +161,72 @@ export default function ComboConfigSheet({
     }
   };
 
+  const getComponentCount = (order: ComboState, groupId: string, componentId: string) =>
+    (order.selectedComponent[groupId] || []).filter((c) => c.id === componentId).length;
+
+  const setComponentCount = (group: ComboGroup, component: ComboComponent, nextCount: number) => {
+    updateActiveOrder((prev) => {
+      const current = prev.selectedComponent[group.id] || [];
+      const currentCount = current.filter((c) => c.id === component.id).length;
+      const otherCount = current.length - currentCount;
+      const bounded = Math.max(0, Math.min(nextCount, Math.max(0, group.maxSelect - otherCount)));
+      if (bounded === currentCount) return prev;
+
+      const withoutTarget = current.filter((c) => c.id !== component.id);
+      const withTarget = [...withoutTarget, ...Array.from({ length: bounded }, () => component)];
+
+      const nextComponentModifiers = { ...prev.componentModifiers };
+      if (bounded === 0 && nextComponentModifiers[group.id]?.[component.id]) {
+        const groupMods = { ...(nextComponentModifiers[group.id] || {}) };
+        delete groupMods[component.id];
+        nextComponentModifiers[group.id] = groupMods;
+      }
+
+      return {
+        ...prev,
+        selectedComponent: { ...prev.selectedComponent, [group.id]: withTarget },
+        componentModifiers: nextComponentModifiers,
+      };
+    });
+  };
+
+  const incrementComponent = (group: ComboGroup, component: ComboComponent) => {
+    const currentCount = getComponentCount(activeOrder, group.id, component.id);
+    setComponentCount(group, component, currentCount + 1);
+  };
+
+  const decrementComponent = (group: ComboGroup, component: ComboComponent) => {
+    const currentCount = getComponentCount(activeOrder, group.id, component.id);
+    setComponentCount(group, component, currentCount - 1);
+  };
+
   const selectComponent = (group: ComboGroup, component: ComboComponent) => {
-    const firstRequiredModGroup =
-      component.modifierGroups.find((mg) => mg.required) || component.modifierGroups[0];
+    if (group.maxSelect > 1) {
+      incrementComponent(group, component);
+      return;
+    }
 
     updateActiveOrder((prev) => {
       const current = prev.selectedComponent[group.id] || [];
       const idx = current.findIndex((c) => c.id === component.id);
-      let newList: ComboComponent[];
-      if (idx >= 0) {
-        // Deselect
-        newList = current.filter((_, i) => i !== idx);
-      } else if (group.maxSelect === 1) {
-        // Single-select: replace
-        newList = [component];
-      } else if (current.length >= group.maxSelect) {
-        // At max: replace oldest
-        newList = [...current.slice(1), component];
-      } else {
-        newList = [...current, component];
-      }
+      const newList = idx >= 0 ? [] : [component];
       return {
         ...prev,
         selectedComponent: { ...prev.selectedComponent, [group.id]: newList },
       };
     });
-
-
   };
+
+  const getModifierCount = (
+    order: ComboState,
+    groupId: string,
+    componentId: string,
+    modGroupId: string,
+    modifierId: string
+  ) =>
+    (order.componentModifiers[groupId]?.[componentId]?.[modGroupId] || []).filter(
+      (m) => m.id === modifierId
+    ).length;
 
   const selectModifier = (
     groupId: string,
@@ -170,16 +239,13 @@ export default function ComboConfigSheet({
       const groupMods = prev.componentModifiers[groupId] || {};
       const compMods = groupMods[componentId] || {};
       const current = compMods[modGroupId] || [];
-      const exists = current.find((m) => m.id === modifier.id);
-
       let newMods: Modifier[];
-      if (exists) {
-        newMods = current.filter((m) => m.id !== modifier.id);
-      } else if (maxSelect === 1) {
-        newMods = [modifier];
-      } else if (current.length >= maxSelect) {
-        newMods = [...current.slice(1), modifier];
+
+      if (maxSelect === 1) {
+        const exists = current.find((m) => m.id === modifier.id);
+        newMods = exists ? [] : [modifier];
       } else {
+        if (current.length >= maxSelect) return prev;
         newMods = [...current, modifier];
       }
 
@@ -199,6 +265,37 @@ export default function ComboConfigSheet({
     });
 
     // Auto-advance after modifier selection
+  };
+
+  const decrementModifier = (
+    groupId: string,
+    componentId: string,
+    modGroupId: string,
+    modifier: Modifier
+  ) => {
+    updateActiveOrder((prev) => {
+      const groupMods = prev.componentModifiers[groupId] || {};
+      const compMods = groupMods[componentId] || {};
+      const current = compMods[modGroupId] || [];
+      const idx = current.findIndex((m) => m.id === modifier.id);
+      if (idx < 0) return prev;
+      const newMods = [...current];
+      newMods.splice(idx, 1);
+
+      return {
+        ...prev,
+        componentModifiers: {
+          ...prev.componentModifiers,
+          [groupId]: {
+            ...groupMods,
+            [componentId]: {
+              ...compMods,
+              [modGroupId]: newMods,
+            },
+          },
+        },
+      };
+    });
   };
 
   const isModSelected = (
@@ -434,9 +531,6 @@ export default function ComboConfigSheet({
                 {/* Group header */}
                 <div className="py-2">
                   <div className="flex items-center gap-2">
-                    {complete && (
-                      <Check size={14} className="text-[var(--primary)]" />
-                    )}
                     <h3 className="text-sm font-semibold">{cn(group)}</h3>
                     {group.required && (
                       <span className="text-[12px] text-[var(--error)]">
@@ -453,18 +547,90 @@ export default function ComboConfigSheet({
                         {remainingRequired > 0 ? L.chooseMore(remainingRequired) : L.ready}
                       </span>
                     )}
+                    {complete && (
+                      <Check size={14} className="text-[var(--primary)] shrink-0" />
+                    )}
                   </div>
                 </div>
 
                 {/* Components grid */}
                 <div className="grid grid-cols-2 gap-1.5">
                   {group.components.map((comp) => {
-                    const isSelected = selectedList.some((c) => c.id === comp.id);
+                    const selectedCount = getComponentCount(activeOrder, group.id, comp.id);
+                    const isSelected = selectedCount > 0;
+                    const useCountState = group.maxSelect > 1 || group.minSelect > 1;
+                    const editorKey = `comp:${group.id}:${comp.id}`;
+                    const isEditing = editingCountKey === editorKey;
+
+                    if (useCountState && isEditing) {
+                      const totalSelected = selectedList.length;
+                      return (
+                        <div
+                          key={comp.id}
+                          className="flex items-center justify-between px-2 rounded-xl"
+                          style={{
+                            minHeight: 44,
+                            border: "2px solid #6750A4",
+                            background: "#F3EDF7",
+                          }}
+                          onClick={(e) => e.stopPropagation()}
+                          onPointerUp={cancelSwipe}
+                          onPointerCancel={cancelSwipe}
+                          onContextMenu={(e) => e.preventDefault()}
+                        >
+                          <button
+                            onPointerDown={(e) => e.stopPropagation()}
+                            onClick={() => {
+                                      if (selectedCount <= 1) setEditingCountKey(null);
+                              decrementComponent(group, comp);
+                            }}
+                            className="w-8 h-8 flex items-center justify-center rounded-full active:bg-white/60"
+                          >
+                                    {selectedCount <= 1 ? (
+                                      <Trash2 size={16} style={{ color: "#B3261E" }} />
+                                    ) : (
+                                      <Minus size={18} style={{ color: "#6750A4" }} />
+                                    )}
+                          </button>
+                                  <button
+                                    onClick={() => setEditingCountKey(null)}
+                                    className="text-[16px] font-bold text-[#6750A4] min-w-[24px] text-center active:opacity-70"
+                                  >
+                                    {selectedCount}
+                                  </button>
+                          <button
+                            onPointerDown={(e) => e.stopPropagation()}
+                            onClick={() => incrementComponent(group, comp)}
+                            disabled={totalSelected >= group.maxSelect}
+                            className="w-8 h-8 flex items-center justify-center rounded-full active:bg-white/60 disabled:opacity-30"
+                          >
+                            <Plus size={18} style={{ color: "#6750A4" }} />
+                          </button>
+                        </div>
+                      );
+                    }
 
                     return (
                       <button
                         key={comp.id}
-                        onClick={() => selectComponent(group, comp)}
+                        onPointerDown={(e) => {
+                          if (useCountState && selectedCount > 0) {
+                            startSwipeDetection(editorKey, e.clientX);
+                          }
+                        }}
+                        onPointerMove={(e) => {
+                          if (useCountState) handleSwipeMove(e.clientX);
+                        }}
+                        onPointerUp={cancelSwipe}
+                        onPointerCancel={cancelSwipe}
+                        onContextMenu={(e) => e.preventDefault()}
+                        onClick={() => {
+                          if (swipeTriggeredRef.current) {
+                            swipeTriggeredRef.current = false;
+                            return;
+                          }
+                          selectComponent(group, comp);
+                        }}
                         className={`flex items-center justify-between px-3 py-2.5 rounded-xl border transition-colors text-left ${
                           isSelected
                             ? "border-[var(--primary)] bg-[var(--primary-light)]"
@@ -478,7 +644,12 @@ export default function ComboConfigSheet({
                               +${formatUpcharge(comp.price)}
                             </span>
                           )}
-                          {isSelected && (
+                          {useCountState && selectedCount > 0 && (
+                            <span className="min-w-[18px] h-[18px] px-1 rounded-full border border-[var(--primary)] bg-[var(--primary-light)] text-[10px] leading-[16px] text-center text-[var(--primary)] font-semibold">
+                              {selectedCount}
+                            </span>
+                          )}
+                          {!useCountState && isSelected && (
                             <Check size={14} className="text-[var(--primary)]" />
                           )}
                         </div>
@@ -488,7 +659,9 @@ export default function ComboConfigSheet({
                 </div>
 
                 {/* Modifier groups for selected components */}
-                {selectedList.filter((comp) => comp.modifierGroups.length > 0).map((comp) => (
+                {group.components
+                  .filter((comp) => getComponentCount(activeOrder, group.id, comp.id) > 0 && comp.modifierGroups.length > 0)
+                  .map((comp) => (
                   <div key={comp.id} className="mt-2 mb-1 pl-1">
                     {comp.modifierGroups.map((mg, mgIdx) => {
                       const mgSelectedCount = (activeOrder.componentModifiers[group.id]?.[comp.id]?.[mg.id] || []).length;
@@ -497,6 +670,7 @@ export default function ComboConfigSheet({
                         .some((other) => (activeOrder.componentModifiers[group.id]?.[comp.id]?.[other.id] || []).length > 0);
                       const isModSkipped = mg.required && mgSelectedCount < mg.minSelect &&
                         (laterMgEngaged || laterGroupHasSelection);
+                      const useCountState = mg.maxSelect > 1 || mg.minSelect > 1;
                       return (
                       <div key={mg.id} ref={(el) => { sectionRefs.current[`${group.id}:${comp.id}:${mg.id}`] = el; }} className="mb-2">
                         <p className="text-xs font-semibold text-[var(--outline)] mb-1.5">
@@ -507,15 +681,80 @@ export default function ComboConfigSheet({
                         </p>
                         <div className="grid grid-cols-3 gap-1.5">
                           {mg.options.map((opt) => {
-                            const modSelected = isModSelected(
-                              group.id, comp.id, mg.id, opt.id
-                            );
+                            const modCount = getModifierCount(activeOrder, group.id, comp.id, mg.id, opt.id);
+                            const modSelected = modCount > 0;
+                            const editorKey = `mod:${group.id}:${comp.id}:${mg.id}:${opt.id}`;
+                            const isEditing = editingCountKey === editorKey;
+
+                            if (useCountState && isEditing) {
+                              const totalSelected = (activeOrder.componentModifiers[group.id]?.[comp.id]?.[mg.id] || []).length;
+                              return (
+                                <div
+                                  key={opt.id}
+                                  className="flex items-center justify-between px-2 rounded-lg"
+                                  style={{
+                                    minHeight: 44,
+                                    border: "2px solid #6750A4",
+                                    background: "#F3EDF7",
+                                  }}
+                                  onClick={(e) => e.stopPropagation()}
+                                  onPointerUp={cancelSwipe}
+                                  onPointerCancel={cancelSwipe}
+                                  onContextMenu={(e) => e.preventDefault()}
+                                >
+                                  <button
+                                    onPointerDown={(e) => e.stopPropagation()}
+                                    onClick={() => {
+                                      if (modCount <= 1) setEditingCountKey(null);
+                                      decrementModifier(group.id, comp.id, mg.id, opt);
+                                    }}
+                                    className="w-8 h-8 flex items-center justify-center rounded-full active:bg-white/60"
+                                  >
+                                    {modCount <= 1 ? (
+                                      <Trash2 size={16} style={{ color: "#B3261E" }} />
+                                    ) : (
+                                      <Minus size={18} style={{ color: "#6750A4" }} />
+                                    )}
+                                  </button>
+                                  <button
+                                    onClick={() => setEditingCountKey(null)}
+                                    className="text-[16px] font-bold text-[#6750A4] min-w-[24px] text-center active:opacity-70"
+                                  >
+                                    {modCount}
+                                  </button>
+                                  <button
+                                    onPointerDown={(e) => e.stopPropagation()}
+                                    onClick={() => selectModifier(group.id, comp.id, mg.id, opt, mg.maxSelect)}
+                                    disabled={totalSelected >= mg.maxSelect}
+                                    className="w-8 h-8 flex items-center justify-center rounded-full active:bg-white/60 disabled:opacity-30"
+                                  >
+                                    <Plus size={18} style={{ color: "#6750A4" }} />
+                                  </button>
+                                </div>
+                              );
+                            }
+
                             return (
                               <button
                                 key={opt.id}
-                                onClick={() =>
-                                  selectModifier(group.id, comp.id, mg.id, opt, mg.maxSelect)
-                                }
+                                onPointerDown={(e) => {
+                                  if (useCountState && modCount > 0) {
+                                    startSwipeDetection(editorKey, e.clientX);
+                                  }
+                                }}
+                                onPointerMove={(e) => {
+                                  if (useCountState) handleSwipeMove(e.clientX);
+                                }}
+                                onPointerUp={cancelSwipe}
+                                onPointerCancel={cancelSwipe}
+                                onContextMenu={(e) => e.preventDefault()}
+                                onClick={() => {
+                                  if (swipeTriggeredRef.current) {
+                                    swipeTriggeredRef.current = false;
+                                    return;
+                                  }
+                                  selectModifier(group.id, comp.id, mg.id, opt, mg.maxSelect);
+                                }}
                                 className={`min-h-[44px] px-3 py-1.5 rounded-lg border text-xs font-medium transition-colors text-left ${
                                   modSelected
                                     ? "border-[var(--primary)] bg-[var(--primary-light)]"
@@ -524,7 +763,12 @@ export default function ComboConfigSheet({
                               >
                                 <span className="flex items-center gap-1">
                                   {cn(opt)}
-                                  {modSelected && (
+                                  {useCountState && modCount > 0 && (
+                                    <span className="min-w-[16px] h-[16px] px-1 rounded-full border border-[var(--primary)] bg-[var(--primary-light)] text-[10px] leading-[14px] text-center text-[var(--primary)] font-semibold">
+                                      {modCount}
+                                    </span>
+                                  )}
+                                  {!useCountState && modSelected && (
                                     <Check size={10} className="text-[var(--primary)]" />
                                   )}
                                 </span>

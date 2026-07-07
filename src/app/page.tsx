@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Map, ClipboardList, FileText } from "lucide-react";
+import { Map, ClipboardList, FileText, Settings } from "lucide-react";
 import { useOrderStore } from "@/store/order-store";
 import LoginScreen from "@/components/screens/LoginScreen";
 import TablesScreen from "@/components/screens/TablesScreen";
@@ -162,6 +162,7 @@ export default function App() {
     { id: "tables", label: language === "zh" ? "樓面圖" : "Floormap", icon: Map },
     { id: "orders", label: language === "zh" ? "訂單" : "Orders", icon: ClipboardList },
     { id: "check", label: language === "zh" ? "總結" : "Summary", icon: FileText },
+    { id: "settings", label: language === "zh" ? "設定" : "Settings", icon: Settings },
   ] as const;
 
   return (
@@ -188,12 +189,13 @@ export default function App() {
           {pivotItems.map((item) => {
             const active = currentScreen === item.id;
             const isSummary = item.id === "check";
+            const isSettings = item.id === "settings";
             const Icon = item.icon;
             return (
               <button
                 key={item.id}
                 onClick={() => {
-                  if (isSummary) return;
+                  if (isSummary || isSettings) return;
                   setScreen(item.id);
                 }}
                 className={`h-9 px-4 rounded-full text-sm font-medium transition-colors inline-flex items-center gap-1.5 ${

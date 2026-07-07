@@ -9,7 +9,19 @@ import type { Staff } from "@/lib/types";
 
 export default function GuestCountScreen() {
   const [count, setCount] = useState("");
-  const { currentStaff, setStaff, selectedTable, setGuestCount, setScreen, language } = useOrderStore();
+  const {
+    currentStaff,
+    setStaff,
+    selectedTable,
+    setGuestCount,
+    setScreen,
+    language,
+    guestCountReturnScreen,
+    setGuestCountReturnScreen,
+    guestCountReturnOpenMenu,
+    setGuestCountReturnOpenMenu,
+    setOpenMenuOnArrival,
+  } = useOrderStore();
 
   const L = language === "zh"
     ? { enterGuestCount: "輸入人數", save: "儲存" }
@@ -19,14 +31,26 @@ export default function GuestCountScreen() {
     const num = parseInt(count, 10);
     if (num > 0) {
       setGuestCount(num);
-      setScreen("check");
+      if (guestCountReturnScreen === "check" && guestCountReturnOpenMenu) {
+        setOpenMenuOnArrival(true);
+      }
+      setScreen(guestCountReturnScreen ?? "check");
+      setGuestCountReturnScreen(null);
+      setGuestCountReturnOpenMenu(false);
     }
   };
 
   return (
     <div className="h-full flex flex-col">
       <Header
-        onBack={() => setScreen("tables")}
+        onBack={() => {
+          if (guestCountReturnScreen === "check" && guestCountReturnOpenMenu) {
+            setOpenMenuOnArrival(true);
+          }
+          setScreen(guestCountReturnScreen ?? "tables");
+          setGuestCountReturnScreen(null);
+          setGuestCountReturnOpenMenu(false);
+        }}
         serverName={currentStaff?.name}
         tableName={selectedTable?.name}
         onTransfer={(staff) => setStaff(staff)}

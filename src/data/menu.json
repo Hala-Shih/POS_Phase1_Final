@@ -1592,8 +1592,8 @@
                 "id": "cg-legendary-side",
                 "name": "Side",
                 "required": true,
-                "minSelect": 1,
-                "maxSelect": 1,
+                "minSelect": 2,
+                "maxSelect": 2,
                 "components": [
                   {
                     "id": "cc-legendary-side-fried-chicken",

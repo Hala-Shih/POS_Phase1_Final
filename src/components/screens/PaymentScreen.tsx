@@ -84,7 +84,7 @@ function buildItemizedUnits(items: CartItem[], language: "en" | "zh"): ItemizedU
 }
 
 export default function PaymentScreen({ onClose: externalClose, startMode = "default" }: { onClose?: () => void; startMode?: PaymentStartMode } = {}) {
-  const { cartItems, cartTotal, cartCount, guestCount, selectedTable, currentStaff, setScreen, resetOrder, setStaff, setTable, setOpenMenuOnArrival, setOpenPaymentOnArrival, language, transferTable, getEffectiveTables } =
+  const { cartItems, cartTotal, cartCount, guestCount, selectedTable, currentStaff, setScreen, resetOrder, setStaff, setTable, setOpenMenuOnArrival, setOpenPaymentOnArrival, setGuestCountReturnScreen, setGuestCountReturnOpenMenu, language, transferTable, getEffectiveTables } =
     useOrderStore();
 
   const P = language === "zh" ? {
@@ -590,7 +590,13 @@ export default function PaymentScreen({ onClose: externalClose, startMode = "def
         tableName={selectedTable?.name}
         guestCount={guestCount}
         checkTotal={orderBaseTotal}
-        onGuestCountTap={() => { setOpenPaymentOnArrival(true); setScreen("guest-count"); goBack(); }}
+        onGuestCountTap={() => {
+          setGuestCountReturnScreen("check");
+          setGuestCountReturnOpenMenu(false);
+          setOpenPaymentOnArrival(true);
+          setScreen("guest-count");
+          goBack();
+        }}
         onTableTap={() => {}}
         onCollapseDrawers={() => goBack()}
         onLogout={() => { resetOrder(); setScreen("login"); }}

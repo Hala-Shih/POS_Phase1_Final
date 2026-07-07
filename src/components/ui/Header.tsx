@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { ArrowLeft, MapPin, ArrowRightLeft, House, X, Ban, Check, ClipboardList, Share2, Repeat, Trash2, Merge } from "lucide-react";
+import { ArrowLeft, MapPin, Users, ArrowRightLeft, House, X, Ban, Check, ClipboardList, Share2, Repeat, Trash2, Merge } from "lucide-react";
 import { motion, AnimatePresence, useDragControls } from "framer-motion";
 import { Staff, Table } from "@/lib/types";
 import { useOrderStore } from "@/store/order-store";
@@ -129,6 +129,15 @@ export default function Header({
             >
               <ClipboardList size={14} />
               <span>${checkTotal.toFixed(2)}</span>
+            </button>
+          )}
+          {onGuestCountTap && (guestCount ?? 0) > 0 && (
+            <button
+              onClick={onGuestCountTap}
+              className="flex items-center gap-1 text-sm text-[var(--outline)] active:opacity-70"
+            >
+              <Users size={14} />
+              <span>{guestCount}</span>
             </button>
           )}
           {tableName && (

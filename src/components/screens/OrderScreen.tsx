@@ -33,6 +33,8 @@ export default function OrderScreen({ onOpenItemActions }: { onOpenItemActions?:
     updateComboSelections,
     cartItems,
     setScreen,
+    setGuestCountReturnScreen,
+    setGuestCountReturnOpenMenu,
     resetOrder,
     setStaff,
     setTable,
@@ -207,7 +209,11 @@ export default function OrderScreen({ onOpenItemActions }: { onOpenItemActions?:
         serverName={currentStaff?.name}
         tableName={selectedTable?.name}
         guestCount={guestCount}
-        onGuestCountTap={() => setScreen("guest-count")}
+        onGuestCountTap={() => {
+          setGuestCountReturnScreen("order");
+          setGuestCountReturnOpenMenu(false);
+          setScreen("guest-count");
+        }}
         onTableTap={() => setScreen("tables")}
         onTransfer={handleTransfer}
         staffList={staffData as Staff[]}
@@ -427,7 +433,11 @@ export default function OrderScreen({ onOpenItemActions }: { onOpenItemActions?:
               serverName={currentStaff?.name}
               tableName={selectedTable?.name}
               guestCount={guestCount}
-              onGuestCountTap={() => setScreen("guest-count")}
+              onGuestCountTap={() => {
+                setGuestCountReturnScreen("order");
+                setGuestCountReturnOpenMenu(false);
+                setScreen("guest-count");
+              }}
               onTableTap={() => setScreen("tables")}
               onTransfer={handleTransfer}
               staffList={staffData as Staff[]}

@@ -53,6 +53,8 @@ export default function CheckSummaryScreen({ menuOpen: externalMenuOpen, setMenu
     checkDiscount,
     markAllSent,
     setScreen,
+    setGuestCountReturnScreen,
+    setGuestCountReturnOpenMenu,
     resetOrder,
     setStaff,
     setTable,
@@ -198,7 +200,11 @@ export default function CheckSummaryScreen({ menuOpen: externalMenuOpen, setMenu
         serverName={currentStaff?.name}
         tableName={selectedTable?.name}
         guestCount={guestCount}
-        onGuestCountTap={() => setScreen("guest-count")}
+        onGuestCountTap={() => {
+          setGuestCountReturnScreen("check");
+          setGuestCountReturnOpenMenu(menuOpen);
+          setScreen("guest-count");
+        }}
         onTableTap={() => setScreen("tables")}
         onTransfer={handleTransfer}
         staffList={staffData as Staff[]}
