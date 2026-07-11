@@ -164,6 +164,7 @@ export default function App() {
     { id: "check", label: language === "zh" ? "總結" : "Summary", icon: FileText },
     { id: "settings", label: language === "zh" ? "設定" : "Settings", icon: Settings },
   ] as const;
+  const isEnglish = language === "en";
 
   return (
     <div className="h-full flex flex-col">
@@ -185,30 +186,38 @@ export default function App() {
         )}
       </div>
       {showPivot && (
-        <nav className="h-14 shrink-0 border-t border-[var(--outline-variant)] bg-white flex items-center justify-around px-2">
-          {pivotItems.map((item) => {
-            const active = currentScreen === item.id;
-            const isSummary = item.id === "check";
-            const isSettings = item.id === "settings";
-            const Icon = item.icon;
-            return (
-              <button
-                key={item.id}
-                onClick={() => {
-                  if (isSummary || isSettings) return;
-                  setScreen(item.id);
-                }}
-                className={`h-9 px-4 rounded-full text-sm font-medium transition-colors inline-flex items-center gap-1.5 ${
-                  active
-                    ? "bg-[var(--primary-light)] text-[var(--primary)]"
-                    : "text-[var(--outline)] active:bg-gray-100"
-                }`}
-              >
-                <Icon size={14} />
-                {item.label}
-              </button>
-            );
-          })}
+        <nav className="h-14 shrink-0 border-t border-[var(--outline-variant)] bg-white overflow-x-auto no-scrollbar">
+          <div
+            className={`h-full w-max min-w-full px-2 flex items-center justify-around ${
+              isEnglish ? "gap-0.5" : "gap-1"
+            }`}
+          >
+            {pivotItems.map((item) => {
+              const active = currentScreen === item.id;
+              const isSummary = item.id === "check";
+              const isSettings = item.id === "settings";
+              const Icon = item.icon;
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => {
+                    if (isSummary || isSettings) return;
+                    setScreen(item.id);
+                  }}
+                  className={`h-9 rounded-full text-sm font-medium transition-colors inline-flex items-center gap-1.5 whitespace-nowrap flex-none ${
+                    isEnglish ? "px-3" : "px-4"
+                  } ${
+                    active
+                      ? "bg-[var(--primary-light)] text-[var(--primary)]"
+                      : "text-[var(--outline)] active:bg-gray-100"
+                  }`}
+                >
+                  <Icon size={14} />
+                  {item.label}
+                </button>
+              );
+            })}
+          </div>
         </nav>
       )}
     </div>
