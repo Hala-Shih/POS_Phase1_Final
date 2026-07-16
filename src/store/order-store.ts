@@ -170,6 +170,8 @@ interface OrderState {
     comboSelections?: CartComboSelection[];
   }) => void;
   removeItem: (cartItemId: string) => void;
+  voidItem: (cartItemId: string, reason: string) => void;
+  partialVoidItem: (cartItemId: string, removeQty: number, reason: string) => void;
   updateQuantity: (cartItemId: string, delta: number) => void;
   updateNote: (cartItemId: string, note: string) => void;
   updatePriceAdjustment: (cartItemId: string, amount: number) => void;
@@ -332,6 +334,45 @@ export const useOrderStore = create<OrderState>((set, get) => ({
 
   removeItem: (cartItemId) =>
     set({ cartItems: get().cartItems.filter((i) => i.id !== cartItemId) }),
+
+  voidItem: (cartItemId, reason) =>
+    set({
+      cartItems: get().cartItems.map((i) =>
+        i.id === cartItemId ? { ...i, voided: true, voidedReason: reason } : i
+      ),
+    }),
+
+  partialVoidItem: (cartItemId, removeQty, reason) => {
+    const item = get().cartItems.find((i) => i.id === cartItemId);
+    if (!item) return;
+    if (removeQty >= item.quantity) {
+      set({
+        cartItems: get().cartItems.map((i) =>
+          i.id === cartItemId ? { ...i, voided: true, voidedReason: reason } : i
+        ),
+      });
+    } else {
+      const ghost: CartItem = {
+        ...item,
+        id: generateId(),
+        quantity: removeQty,
+        totalPrice: computeItemTotal(item.basePrice, removeQty, item.modifiers, item.comboSelections, item.priceAdjustment, item.comped, item.priceOverride, item.discount),
+        voided: true,
+        voidedReason: reason,
+      };
+      const remaining = item.quantity - removeQty;
+      set({
+        cartItems: get().cartItems.flatMap((i) =>
+          i.id === cartItemId
+            ? [
+                { ...i, quantity: remaining, totalPrice: computeItemTotal(i.basePrice, remaining, i.modifiers, i.comboSelections, i.priceAdjustment, i.comped, i.priceOverride, i.discount) },
+                ghost,
+              ]
+            : [i]
+        ),
+      });
+    }
+  },
 
   updateQuantity: (cartItemId, delta) => {
     const { cartItems } = get();
@@ -704,10 +745,10 @@ export const useOrderStore = create<OrderState>((set, get) => ({
     }),
 
   cartTotal: () =>
-    get().cartItems.reduce((sum, item) => sum + item.totalPrice, 0),
+    get().cartItems.reduce((sum, item) => item.voided ? sum : sum + item.totalPrice, 0),
 
   cartCount: () =>
-    get().cartItems.reduce((sum, item) => sum + item.quantity, 0),
+    get().cartItems.reduce((sum, item) => item.voided ? sum : sum + item.quantity, 0),
 
   checkTip: 0,
   setCheckTip: (value) => set({ checkTip: Math.max(0, Math.round(value * 100) / 100) }),

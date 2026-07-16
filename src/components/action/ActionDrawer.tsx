@@ -29,7 +29,7 @@ interface ActionDrawerProps {
 }
 
 export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMultiplePayment, itemContext }: ActionDrawerProps) {
-  const { cartItems, cartTotal, checkTip, checkDiscount, setCheckTip, markAllSent, resetOrder, setItemDiscount, setCheckDiscount, removeItem, updateQuantity, updateNote, updatePriceAdjustment, setItemPriceOverride, setItemComped, setItemToGo, toggleBreakline, updateItemModifiers, updateComboSelections, splitAndUpdateNotes, splitCartItemToSingleItems, splitOneAndUpdateModifiers, consolidateCart, addItem, language } = useOrderStore();
+  const { cartItems, cartTotal, checkTip, checkDiscount, setCheckTip, markAllSent, resetOrder, setItemDiscount, setCheckDiscount, removeItem, voidItem, partialVoidItem, updateQuantity, updateNote, updatePriceAdjustment, setItemPriceOverride, setItemComped, setItemToGo, toggleBreakline, updateItemModifiers, updateComboSelections, splitAndUpdateNotes, splitCartItemToSingleItems, splitOneAndUpdateModifiers, consolidateCart, addItem, language } = useOrderStore();
 
 
 
@@ -51,6 +51,7 @@ export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMul
     selectPreset: "選擇預設折扣", removeDiscount: "移除折扣",
     modify: "修改", notes: "備註", addBreakline: "加分隔線", off: "關閉",
     applyDiscount: "套用折扣", comp: "免單", priceOverride: "覆蓋價格", toGo: "外帶", removeItem: "刪除品項",
+    reasonToRemove: "移除原因", confirmRemove: "確認移除", reasonPlaceholder: "請輸入移除此品項的原因…", removeAmount: "移除數量",
     applyDiscountTitle: "套用折扣", addTip: "新增小費", voidOrder: "取消訂單", actions: "操作",
     applyToFullCheck: "套用至整張帳單",
     sendToKitchen: "送至廚房", sent: "已送出", unsent: "未送出", allItemsSent: "全部已送出",
@@ -76,6 +77,7 @@ export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMul
     selectPreset: "Select a preset discount", removeDiscount: "Remove discount",
     modify: "Modify", notes: "Notes", addBreakline: "Add breakline", off: "Off",
     applyDiscount: "Apply discount", comp: "Comp", priceOverride: "Price override", toGo: "To Go", removeItem: "Remove item",
+    reasonToRemove: "Reason to Remove", confirmRemove: "Confirm Remove", reasonPlaceholder: "Enter reason for removing this item…", removeAmount: "Remove Amount",
     applyDiscountTitle: "Apply Discount", addTip: "Add Tip", voidOrder: "Void Order", actions: "Actions",
     applyToFullCheck: "Apply to full check",
     sendToKitchen: "Send to kitchen", sent: "Sent!", unsent: "unsent", allItemsSent: "All items sent",
@@ -127,6 +129,9 @@ export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMul
   const [showPriceOverride, setShowPriceOverride] = useState(false);
   const [priceInput, setPriceInput] = useState("");
   const [showModifySheet, setShowModifySheet] = useState(false);
+  const [showRemoveConfirm, setShowRemoveConfirm] = useState(false);
+  const [removeReason, setRemoveReason] = useState("");
+  const [removeQuantity, setRemoveQuantity] = useState(1);
   const [localModSelections, setLocalModSelections] = useState<Record<string, Modifier[]>>({});
   const [originalModSelections, setOriginalModSelections] = useState<Record<string, Modifier[]>>({});
   // Per-order modifier selections when qty > 1 (mirrors MenuSheet order tabs pattern).
@@ -201,6 +206,9 @@ export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMul
     setActiveModifyOrderIndex(0);
     setModifyOrderSelections([]);
     setOriginalOrderSelections([]);
+    setShowRemoveConfirm(false);
+    setRemoveReason("");
+    setRemoveQuantity(1);
     onClose();
   };
 
@@ -374,7 +382,7 @@ export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMul
     handleClose();
   };
 
-  const isItemLevel2PanelOpen = showNoteInput || showPriceOverride || showDiscountPanel || showModifySheet;
+  const isItemLevel2PanelOpen = showNoteInput || showPriceOverride || showDiscountPanel || showModifySheet || showRemoveConfirm;
 
   const handleBackFromItemLevel2 = () => {
     setShowNoteInput(false);
@@ -394,6 +402,9 @@ export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMul
     setModifyOrderSelections([]);
     setOriginalOrderSelections([]);
     setModifyComboCartItemIds([]);
+    setShowRemoveConfirm(false);
+    setRemoveReason("");
+    setRemoveQuantity(1);
   };
   // Shared function: open modify panel with pre-populated selections
   const openModifyPanel = () => {
@@ -568,7 +579,7 @@ export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMul
             ) : (
               /* Quantity editor + note order tabs */
               <div className="flex items-center gap-3 px-4 pb-2">
-                {!showNoteInput && (
+                {!showNoteInput && !showRemoveConfirm && (
                   <>
                     <button
                       onClick={() => {
@@ -596,7 +607,7 @@ export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMul
                 )}
 
                 {/* Order tabs — inline, horizontally scrollable when overflowing */}
-                {noteOrderTabs.length > 1 && isItemLevel2PanelOpen && (
+                {noteOrderTabs.length > 1 && isItemLevel2PanelOpen && !showRemoveConfirm && (
                   <div className="flex gap-2 overflow-x-auto no-scrollbar min-w-0 flex-1">
                     {noteOrderTabs.map((tab) => {
                       const hasOrderNote = ((noteDrafts[tab.key] ?? tab.note ?? "").trim().length > 0);
@@ -837,6 +848,59 @@ export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMul
                   );
                 })}
               </div>
+            ) : showRemoveConfirm ? (
+              /* Remove-sent-item confirmation panel */
+              <div className="px-4 py-4">
+                {/* Quantity selector — only when item qty > 1 */}
+                {cartItem.quantity > 1 && (
+                  <div className="mb-4">
+                    <p className="text-[12px] text-[var(--outline)] mb-2">{L.removeAmount}</p>
+                    <div className="flex gap-2 flex-wrap">
+                      {Array.from({ length: cartItem.quantity }, (_, i) => i + 1).map((qty) => (
+                        <button
+                          key={qty}
+                          onClick={() => setRemoveQuantity(qty)}
+                          className={`px-3 py-1.5 rounded-full border text-xs font-medium transition-colors ${
+                            removeQuantity === qty
+                              ? "border-[#B3261E] bg-red-50 text-[#B3261E]"
+                              : "border-[var(--outline-variant)] text-[var(--outline)]"
+                          }`}
+                        >
+                          {qty}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {/* Reason textarea */}
+                <p className="text-[12px] text-[var(--outline)] mb-2">{L.reasonToRemove}</p>
+                <textarea
+                  autoFocus
+                  value={removeReason}
+                  onChange={(e) => setRemoveReason(e.target.value)}
+                  placeholder={L.reasonPlaceholder}
+                  rows={3}
+                  className="w-full h-24 rounded-2xl border border-[var(--outline-variant)] px-4 py-3 text-[15px] outline-none resize-none focus:border-[var(--error)]"
+                />
+
+                {/* Cancel / Confirm buttons */}
+                <div className="flex gap-2 mt-3">
+                  <button
+                    onClick={() => { setShowRemoveConfirm(false); setRemoveReason(""); }}
+                    className="flex-1 h-9 rounded-xl border border-[var(--outline-variant)] text-[12px] font-medium active:bg-gray-50"
+                    style={{ color: "#49454F" }}
+                  >
+                    {L.cancel}
+                  </button>
+                  <button
+                    onClick={() => { partialVoidItem(cartItem.id, removeQuantity, removeReason.trim()); handleClose(); }}
+                    className="flex-1 h-9 rounded-xl text-[12px] font-semibold text-white active:opacity-80"
+                    style={{ background: "#B3261E" }}
+                  >
+                    {L.confirmRemove}
+                  </button>
+                </div>
+              </div>
             ) : showDiscountPanel ? (
               /* Discount panel */
               <div className="px-4 py-4">
@@ -1000,7 +1064,16 @@ export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMul
                   icon={<Trash2 size={16} />}
                   label={L.removeItem}
                   destructive
-                  onClick={() => { removeItem(cartItem.id); handleClose(); }}
+                  onClick={() => {
+                    if (cartItem.sent) {
+                      setRemoveReason("");
+                      setRemoveQuantity(1);
+                      setShowRemoveConfirm(true);
+                    } else {
+                      removeItem(cartItem.id);
+                      handleClose();
+                    }
+                  }}
                 />
               </div>
             )}

@@ -110,9 +110,10 @@ export default function CheckSummaryScreen({ menuOpen: externalMenuOpen, setMenu
   const total = cartTotal();
   const count = cartCount();
   const unsentItems = cartItems.filter((i) => !i.sent);
-  const sentItems = cartItems.filter((i) => i.sent);
+  const sentItems = cartItems.filter((i) => i.sent && !i.voided);
+  const voidedItems = cartItems.filter((i) => i.voided);
   const anyUnsent = unsentItems.length > 0;
-  const isEmpty = cartItems.length === 0;
+  const isEmpty = cartItems.filter((i) => !i.voided).length === 0;
   const selectedNoteTargetItem = noteTarget === "general" ? null : cartItems.find((item) => item.id === noteTarget);
   const selectedNoteTargetLabel = noteTarget === "general"
     ? L.generalNote
@@ -121,6 +122,7 @@ export default function CheckSummaryScreen({ menuOpen: externalMenuOpen, setMenu
       : L.generalNote;
 
   const preDiscountSubtotal = cartItems.reduce((sum, item) => {
+    if (item.voided) return sum;
     if (item.comped) return sum;
     if (item.priceOverride != null) return sum + item.priceOverride * item.quantity;
     const modifierTotal = item.modifiers.reduce(
@@ -285,7 +287,7 @@ export default function CheckSummaryScreen({ menuOpen: externalMenuOpen, setMenu
             )}
 
             {/* Sent group */}
-            {sentItems.length > 0 && (
+            {(sentItems.length > 0 || voidedItems.length > 0) && (
               <div>
                 <div className="px-4 py-1.5 bg-green-50 border-b border-green-100">
                   <span className="text-xs font-semibold text-green-600 uppercase tracking-wider">{L.sentToKitchen}</span>
@@ -300,6 +302,9 @@ export default function CheckSummaryScreen({ menuOpen: externalMenuOpen, setMenu
                     muted
                     selected={selectedItemId === item.id}
                   />
+                ))}
+                {voidedItems.map((item) => (
+                  <VoidedItem key={item.id} item={item} />
                 ))}
               </div>
             )}
@@ -661,6 +666,30 @@ export default function CheckSummaryScreen({ menuOpen: externalMenuOpen, setMenu
 }
 
 /* ── Subcomponents ── */
+
+function VoidedItem({ item }: { item: ReturnType<typeof useOrderStore.getState>["cartItems"][number] }) {
+  const { language } = useOrderStore();
+  return (
+    <div className="border-b border-gray-50 px-4 py-2.5 flex items-start gap-3 opacity-50">
+      <span className="mt-0.5 w-6 h-6 rounded-md flex items-center justify-center text-[11px] font-bold shrink-0 bg-red-100 text-red-400 line-through">
+        {item.quantity}
+      </span>
+      <div className="flex-1 min-w-0">
+        <p className="text-[13px] font-medium leading-snug text-[var(--outline)] line-through">
+          {getItemDisplayName(item.menuItemId, item.name, language)}
+        </p>
+        {item.voidedReason && (
+          <p className="text-[11px] text-[var(--outline)] mt-0.5 italic leading-snug">
+            {language === "zh" ? "移除原因：" : "Reason: "}{item.voidedReason}
+          </p>
+        )}
+      </div>
+      <span className="text-[13px] font-semibold text-[var(--outline)] shrink-0 tabular-nums line-through">
+        ${(item.basePrice * item.quantity).toFixed(2)}
+      </span>
+    </div>
+  );
+}
 
 function CheckItem({
   item,

@@ -131,6 +131,8 @@ export interface CartItem {
   breaklineBelow?: boolean;
   sent: boolean;
   totalPrice: number;
+  voided?: boolean;
+  voidedReason?: string;
 }
 
 export type OrderStatus = "editing" | "sent" | "closed" | "voided";
