@@ -51,7 +51,8 @@ export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMul
     selectPreset: "選擇預設折扣", removeDiscount: "移除折扣",
     modify: "修改", notes: "備註", addBreakline: "加分隔線", off: "關閉",
     applyDiscount: "套用折扣", comp: "免單", priceOverride: "覆蓋價格", toGo: "外帶", removeItem: "刪除品項",
-    reasonToRemove: "移除原因", confirmRemove: "確認移除", reasonPlaceholder: "請輸入移除此品項的原因…", removeAmount: "移除數量",
+    reasonToRemove: "移除原因", confirmRemove: "確認移除", removeAmount: "移除數量",
+    removeReasonOptions: ["錯誤品項", "重複下單", "缺貨", "過敏疑慮"],
     applyDiscountTitle: "套用折扣", addTip: "新增小費", voidOrder: "取消訂單", actions: "操作",
     applyToFullCheck: "套用至整張帳單",
     sendToKitchen: "送至廚房", sent: "已送出", unsent: "未送出", allItemsSent: "全部已送出",
@@ -77,7 +78,8 @@ export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMul
     selectPreset: "Select a preset discount", removeDiscount: "Remove discount",
     modify: "Modify", notes: "Notes", addBreakline: "Add breakline", off: "Off",
     applyDiscount: "Apply discount", comp: "Comp", priceOverride: "Price override", toGo: "To Go", removeItem: "Remove item",
-    reasonToRemove: "Reason to Remove", confirmRemove: "Confirm Remove", reasonPlaceholder: "Enter reason for removing this item…", removeAmount: "Remove Amount",
+    reasonToRemove: "Reason to Remove", confirmRemove: "Confirm Remove", removeAmount: "Remove Amount",
+    removeReasonOptions: ["Wrong item", "Duplicate order", "Out of stock", "Allery concern"],
     applyDiscountTitle: "Apply Discount", addTip: "Add Tip", voidOrder: "Void Order", actions: "Actions",
     applyToFullCheck: "Apply to full check",
     sendToKitchen: "Send to kitchen", sent: "Sent!", unsent: "unsent", allItemsSent: "All items sent",
@@ -872,16 +874,25 @@ export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMul
                     </div>
                   </div>
                 )}
-                {/* Reason textarea */}
+                {/* Fixed reason pills */}
                 <p className="text-[12px] text-[var(--outline)] mb-2">{L.reasonToRemove}</p>
-                <textarea
-                  autoFocus
-                  value={removeReason}
-                  onChange={(e) => setRemoveReason(e.target.value)}
-                  placeholder={L.reasonPlaceholder}
-                  rows={3}
-                  className="w-full h-24 rounded-2xl border border-[var(--outline-variant)] px-4 py-3 text-[15px] outline-none resize-none focus:border-[var(--error)]"
-                />
+                <div className="flex flex-wrap gap-2">
+                  {L.removeReasonOptions.map((reason) => (
+                    <button
+                      key={reason}
+                      type="button"
+                      onClick={() => setRemoveReason(reason)}
+                      className={`px-3 py-1.5 rounded-full border text-xs font-medium transition-colors ${
+                        removeReason === reason
+                          ? "border-[#B3261E] bg-red-50 text-[#B3261E]"
+                          : "border-[var(--outline-variant)] text-[var(--outline)] active:bg-gray-50"
+                      }`}
+                      aria-pressed={removeReason === reason}
+                    >
+                      {reason}
+                    </button>
+                  ))}
+                </div>
 
                 {/* Cancel / Confirm buttons */}
                 <div className="flex gap-2 mt-3">
@@ -894,7 +905,8 @@ export default function ActionDrawer({ open, onClose, onPay, onSplitCheck, onMul
                   </button>
                   <button
                     onClick={() => { partialVoidItem(cartItem.id, removeQuantity, removeReason.trim()); handleClose(); }}
-                    className="flex-1 h-9 rounded-xl text-[12px] font-semibold text-white active:opacity-80"
+                    disabled={!removeReason.trim()}
+                    className="flex-1 h-9 rounded-xl text-[12px] font-semibold text-white active:opacity-80 disabled:opacity-40"
                     style={{ background: "#B3261E" }}
                   >
                     {L.confirmRemove}
